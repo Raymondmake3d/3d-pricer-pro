@@ -1,6 +1,31 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
+<head><!-- PWA -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#f07b30"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="3D Pricer Pro"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg"/>
+
+<!-- SEO -->
+<meta name="description" content="Precificação inteligente para impressão 3D. Calcule custos, margem e lucro automaticamente."/>
+<meta name="keywords" content="impressão 3D, precificação, filamento, PLA, PETG, maker"/>
+<meta name="author" content="3D Pricer Pro"/>
+
+<!-- Open Graph (WhatsApp, redes sociais) -->
+<meta property="og:title" content="3D Pricer Pro — Precificação para Impressão 3D"/>
+<meta property="og:description" content="Calcule o preço ideal das suas peças 3D em segundos!"/>
+<meta property="og:image" content="https://raymondmake3d.github.io/3d-pricer-pro/icons/icon-512.png"/>
+<meta property="og:url" content="https://raymondmake3d.github.io/3d-pricer-pro"/>
+<meta property="og:type" content="website"/>
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="3D Pricer Pro"/>
+<meta name="twitter:description" content="Precificação inteligente para impressão 3D"/>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>3D Pricer Pro — Precificação Inteligente</title>
@@ -10,8 +35,50 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body>
+<body><!-- Banner de instalação PWA -->
+<div id="pwa-banner" class="pwa-banner hidden">
+  <div class="pwa-banner-content">
+    <span class="pwa-banner-icon">📲</span>
+    <div class="pwa-banner-text">
+      <strong>Instalar 3D Pricer Pro</strong>
+      <small>Use offline, direto do celular!</small>
+    </div>
+  </div>
+  <div class="pwa-banner-actions">
+    <button class="pwa-btn-install" onclick="installPWA()">
+      Instalar
+    </button>
+    <button class="pwa-btn-close" onclick="closePWABanner()">
+      <i class="fas fa-xmark"></i>
+    </button>
+  </div>
+</div>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#f07b30"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="3D Pricer Pro"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg"/>
 
+<!-- SEO -->
+<meta name="description" content="Precificação inteligente para impressão 3D. Calcule custos, margem e lucro automaticamente."/>
+<meta name="keywords" content="impressão 3D, precificação, filamento, PLA, PETG, maker"/>
+<meta name="author" content="3D Pricer Pro"/>
+
+<!-- Open Graph (WhatsApp, redes sociais) -->
+<meta property="og:title" content="3D Pricer Pro — Precificação para Impressão 3D"/>
+<meta property="og:description" content="Calcule o preço ideal das suas peças 3D em segundos!"/>
+<meta property="og:image" content="https://raymondmake3d.github.io/3d-pricer-pro/icons/icon-512.png"/>
+<meta property="og:url" content="https://raymondmake3d.github.io/3d-pricer-pro"/>
+<meta property="og:type" content="website"/>
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="3D Pricer Pro"/>
+<meta name="twitter:description" content="Precificação inteligente para impressão 3D"/>
 <!-- ═══════════════ HEADER ═══════════════ -->
 <header>
   <div class="header-inner">
@@ -33,6 +100,10 @@
     </div>
   </div>
 </header>
+<!-- Banner de instalação PWA -->
+<div id="pwa-banner" class="pwa-banner hidden">
+  <div class="
+
 
 <!-- ═══════════════ TABS ═══════════════ -->
 <div class="tabs-wrapper">

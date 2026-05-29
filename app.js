@@ -969,7 +969,29 @@ function skipOnboarding() {
 // ═══════════════════════════════════════════════════════
 // INICIALIZAÇÃO GERAL
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// PWA — INSTALAÇÃO
+// ═══════════════════════════════════════════════════════
 
+function installPWA() {
+  if (!deferredPrompt) {
+    showToast('Use o menu do navegador para instalar!', 'fa-circle-info');
+    return;
+  }
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(choice => {
+    if (choice.outcome === 'accepted') {
+      showToast('Instalando o app... 🚀', 'fa-rocket');
+    }
+    deferredPrompt = null;
+  });
+}
+
+function closePWABanner() {
+  const banner = document.getElementById('pwa-banner');
+  if (banner) banner.classList.add('hidden');
+  localStorage.setItem('pwa-banner-closed', '1');
+}
 document.addEventListener('DOMContentLoaded', () => {
 
   // Tema salvo
@@ -1009,9 +1031,98 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Onboarding (apenas na primeira visita)
   setTimeout(showOnboarding, 800);
-
   console.log(
     '%c3D Pricer Pro v2.0 ✅',
     'color:#f07b30;font-weight:bold;font-size:16px'
   );
-});
+
+  // ── Registra Service Worker (PWA) ──
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/3d-pricer-pro/sw.js')
+        .then(reg => {
+          console.log('[PWA] Service Worker registrado:', reg.scope);
+
+          // Verifica atualizações
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' &&
+                  navigator.serviceWorker.controller) {
+                showToast(
+                  'Nova versão disponível! Recarregue o app.',
+                  'fa-arrow-rotate-right'
+                );
+              }
+            });
+          });
+        })
+        .catch(err => console.warn('[PWA] Erro no SW:', err));
+    });
+  }
+
+  // ── Botão de instalação do PWA ──
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Mostra botão de instalação
+    const banner = document.getElementById('pwa-banner');
+    if (banner) banner.classList.remove('hidden');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+
+    // Esconde botão de instalação
+    const banner = document.getElementById('pwa-banner');
+    if (banner) banner.classList.add('hidden');
+
+    showToast('App instalado com sucesso! 🎉', 'fa-mobile-screen');
+  });
+
+}); // fim DOMContentLoaded
+ 
+});  // ── Registra Service Worker (PWA) ──
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/3d-pricer-pro/sw.js')
+        .then(reg => {
+          console.log('[PWA] Service Worker registrado:', reg.scope);
+
+          // Verifica atualizações
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' &&
+                  navigator.serviceWorker.controller) {
+                showToast(
+                  'Nova versão disponível! Recarregue o app.',
+                  'fa-arrow-rotate-right'
+                );
+              }
+            });
+          });
+        })
+        .catch(err => console.warn('[PWA] Erro no SW:', err));
+    });
+  }
+
+  // ── Botão de instalação do PWA ──
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallButton();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    hideInstallButton();
+    showToast('App instalado com sucesso! 🎉', 'fa-mobile-screen');
+  });
