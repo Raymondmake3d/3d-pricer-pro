@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fundo -->
+  <rect width="512" height="512" rx="80" fill="#0a1628"/>
+
+  <!-- Cubo 3D -->
+  <polygon points="256,80 400,160 400,320 256,400 112,320 112,160"
+           fill="none" stroke="#2c4a7c" stroke-width="4"/>
+
+  <!-- Face superior -->
+  <polygon points="256,80 400,160 256,240 112,160"
+           fill="#1a2a4a"/>
+
+  <!-- Face esquerda -->
+  <polygon points="112,160 256,240 256,400 112,320"
+           fill="#0d1b2e"/>
+
+  <!-- Face direita -->
+  <polygon points="400,160 256,240 256,400 400,320"
+           fill="#2c4a7c"/>
+
+  <!-- Linhas do cubo -->
+  <line x1="256" y1="80"  x2="256" y2="240" stroke="#3d6199" stroke-width="3"/>
+  <line x1="112" y1="160" x2="256" y2="240" stroke="#3d6199" stroke-width="3"/>
+  <line x1="400" y1="160" x2="256" y2="240" stroke="#3d6199" stroke-width="3"/>
+
+  <!-- Cifrão laranja no centro -->
+  <text x="256" y="290"
+        font-family="Arial Black, sans-serif"
+        font-size="120"
+        font-weight="900"
+        fill="url(#grad)"
+        text-anchor="middle"
+        dominant-baseline="middle">$</text>
+
+  <!-- Gradiente laranja → amarelo -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#f07b30"/>
+      <stop offset="100%" stop-color="#f5c842"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Pontos decorativos -->
+  <circle cx="112" cy="160" r="8" fill="#f07b30"/>
+  <circle cx="400" cy="160" r="8" fill="#f07b30"/>
+  <circle cx="256" cy="80"  r="8" fill="#f5c842"/>
+  <circle cx="256" cy="400" r="8" fill="#f07b30"/>
+  <circle cx="112" cy="320" r="8" fill="#3d6199"/>
+  <circle cx="400" cy="320" r="8" fill="#3d6199"/>
+</svg>
