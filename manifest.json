@@ -2,35 +2,6 @@
   "name": "3D Pricer Pro",
   "short_name": "3D Pricer",
   "description": "Precificação inteligente para impressão 3D",
-  "start_url": "/3d-pricer-pro/index.html",
-  "scope": "/3d-pricer-pro/",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#0a1628",
-  "theme_color": "#f07b30",
-  "lang": "pt-BR",
-  "categories": ["business", "productivity", "utilities"],
-  "icons": [
-   
-  ],
-  "shortcuts": [
-    {
-      "name": "Nova Precificação",
-      "short_name": "Calcular",
-      "description": "Abrir calculadora de precificação",
-      "url": "/3d-pricer-pro/index.html#calc",
-      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Dashboard",
-      "short_name": "Dashboard",
-      "description": "Ver métricas do negócio",
-      "url": "/3d-pricer-pro/index.html#dashboard",
-      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
-    }{
-  "name": "3D Pricer Pro",
-  "short_name": "3D Pricer",
-  "description": "Precificação inteligente para impressão 3D",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -40,21 +11,10 @@
   "lang": "pt-BR",
   "icons": [
     {
-      "src": "icons/icon.svg",
+      "src": "./icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
-    }
-  ]
-}
-  ],
-  "screenshots": [
-    {
-      "src": "icons/screenshot-1.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Calculadora de Precificação"
     }
   ]
 }
