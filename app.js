@@ -1074,13 +1074,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 }); // fim DOMContentLoaded
  
-});  // ── Registra Service Worker (PWA) ──
+  // ── Service Worker DESATIVADO TEMPORARIAMENTE ──
+  /*
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker
-        .register('/3d-pricer-pro/sw.js')
+        .register('./sw.js')
         .then(reg => {
           console.log('[PWA] Service Worker registrado:', reg.scope);
+        })
+        .catch(err => {
+          console.warn('[PWA] Erro no SW:', err);
+        });
+    });
+  }
+  */
 
           // Verifica atualizações
           reg.addEventListener('updatefound', () => {
