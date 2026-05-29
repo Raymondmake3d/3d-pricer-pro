@@ -1036,29 +1036,17 @@ document.addEventListener('DOMContentLoaded', () => {
     'color:#f07b30;font-weight:bold;font-size:16px'
   );
 
-  // ── Registra Service Worker (PWA) ──
+   // ── Registra Service Worker (PWA) ──
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker
-        .register('/3d-pricer-pro/sw.js')
+        .register('./sw.js')  // ← caminho relativo!
         .then(reg => {
           console.log('[PWA] Service Worker registrado:', reg.scope);
-
-          // Verifica atualizações
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' &&
-                  navigator.serviceWorker.controller) {
-                showToast(
-                  'Nova versão disponível! Recarregue o app.',
-                  'fa-arrow-rotate-right'
-                );
-              }
-            });
-          });
         })
-        .catch(err => console.warn('[PWA] Erro no SW:', err));
+        .catch(err => {
+          console.warn('[PWA] Erro no SW:', err);
+        });
     });
   }
 
