@@ -1103,7 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             });
           });
-        })
+        }
         .catch(err => console.warn('[PWA] Erro no SW:', err));
     });
   }
