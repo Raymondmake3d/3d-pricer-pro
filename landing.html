@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>3D Pricer Pro — Precificação Inteligente</title>
+  <title>3D Pricer Pro — Precificação Inteligente para Impressão 3D</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
@@ -24,10 +24,10 @@
       --gray:   #f0f2f5;
       --muted:  #94a3b8;
       --border: #1e3a5f;
+      --green:  #27ae60;
     }
 
     html { scroll-behavior: smooth; }
-
     body {
       font-family: 'Poppins', sans-serif;
       background: var(--dark);
@@ -39,8 +39,7 @@
        NAVBAR
     ══════════════════════════════════ */
     nav {
-      position: fixed; top: 0; left: 0; right: 0;
-      z-index: 100;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
       padding: 1rem 2rem;
       background: rgba(10,22,40,0.85);
@@ -49,16 +48,16 @@
       transition: all 0.3s;
     }
     nav.scrolled {
-      padding: 0.7rem 2rem;
+      padding: 0.6rem 2rem;
       background: rgba(10,22,40,0.97);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
-
     .nav-logo {
       display: flex; align-items: center; gap: 0.5rem;
       font-size: 1.3rem; font-weight: 700;
       text-decoration: none; color: var(--white);
     }
-    .nav-logo i { color: var(--orange); font-size: 1.5rem; }
+    .nav-logo i    { color: var(--orange); font-size: 1.5rem; }
     .nav-logo strong { color: var(--orange); }
     .nav-logo em {
       font-style: normal; font-size: 0.7rem;
@@ -66,18 +65,14 @@
       padding: 2px 7px; border-radius: 20px;
       font-weight: 700; margin-left: 2px;
     }
-
     .nav-links {
-      display: flex; align-items: center; gap: 1.8rem;
-      list-style: none;
+      display: flex; align-items: center; gap: 1.8rem; list-style: none;
     }
     .nav-links a {
       color: rgba(255,255,255,0.65); text-decoration: none;
-      font-size: 0.88rem; font-weight: 500;
-      transition: color 0.2s;
+      font-size: 0.88rem; font-weight: 500; transition: color 0.2s;
     }
     .nav-links a:hover { color: var(--white); }
-
     .nav-cta {
       background: linear-gradient(135deg, var(--orange), var(--yellow));
       color: var(--dark) !important; font-weight: 700 !important;
@@ -89,7 +84,6 @@
       transform: translateY(-1px);
       box-shadow: 0 6px 20px rgba(240,123,48,0.4);
     }
-
     .nav-toggle {
       display: none; background: none; border: none;
       color: var(--white); font-size: 1.4rem; cursor: pointer;
@@ -104,8 +98,6 @@
       position: relative; overflow: hidden;
       padding: 7rem 2rem 4rem;
     }
-
-    /* Gradiente de fundo animado */
     .hero::before {
       content: '';
       position: absolute; inset: 0;
@@ -116,68 +108,62 @@
       animation: heroGlow 8s ease-in-out infinite alternate;
     }
     @keyframes heroGlow {
-      from { opacity: 0.7; transform: scale(1); }
-      to   { opacity: 1;   transform: scale(1.05); }
+      from { opacity:0.7; transform:scale(1); }
+      to   { opacity:1;   transform:scale(1.05); }
     }
-
-    /* Grid de pontos decorativos */
     .hero::after {
       content: '';
       position: absolute; inset: 0;
-      background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
       background-size: 32px 32px;
       pointer-events: none;
     }
-
     .hero-inner {
       position: relative; z-index: 1;
       max-width: 1100px; width: 100%;
       display: grid; grid-template-columns: 1fr 1fr;
       gap: 4rem; align-items: center;
     }
-
     .hero-badge {
       display: inline-flex; align-items: center; gap: 0.5rem;
       background: rgba(240,123,48,0.15);
       border: 1px solid rgba(240,123,48,0.3);
       color: var(--orange); padding: 0.4rem 1rem;
       border-radius: 50px; font-size: 0.8rem; font-weight: 600;
-      margin-bottom: 1.5rem; letter-spacing: 0.3px;
+      margin-bottom: 1.5rem;
     }
     .hero-badge i { animation: pulse 2s infinite; }
     @keyframes pulse {
-      0%,100% { opacity: 1; }
-      50%      { opacity: 0.5; }
+      0%,100% { opacity:1; }
+      50%      { opacity:0.4; }
     }
-
     .hero-title {
-      font-size: clamp(2.2rem, 5vw, 3.5rem);
-      font-weight: 900; line-height: 1.1;
-      margin-bottom: 1.2rem;
+      font-size: clamp(2.2rem,5vw,3.5rem);
+      font-weight: 900; line-height: 1.1; margin-bottom: 1.2rem;
     }
-    .hero-title .line1 { display: block; color: var(--white); }
+    .hero-title .line1 { display:block; color:var(--white); }
     .hero-title .line2 {
       display: block;
       background: linear-gradient(135deg, var(--orange), var(--yellow));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .hero-title .line3 { display: block; color: rgba(255,255,255,0.6); font-weight: 300; font-size: 0.55em; margin-top: 0.3rem; }
-
+    .hero-title .line3 {
+      display: block; color: rgba(255,255,255,0.55);
+      font-weight: 300; font-size: 0.52em; margin-top: 0.4rem;
+    }
     .hero-desc {
       color: rgba(255,255,255,0.65); font-size: 1rem;
-      line-height: 1.7; margin-bottom: 2rem; font-weight: 300;
+      line-height: 1.75; margin-bottom: 2rem; font-weight: 300;
     }
     .hero-desc strong { color: var(--orange); font-weight: 600; }
-
     .hero-actions {
       display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2.5rem;
     }
-
     .btn-primary {
       background: linear-gradient(135deg, var(--orange), var(--yellow));
       color: var(--dark); border: none; border-radius: 50px;
-      padding: 0.9rem 2rem; font-family: 'Poppins', sans-serif;
+      padding: 0.9rem 2rem; font-family: 'Poppins',sans-serif;
       font-size: 1rem; font-weight: 700; cursor: pointer;
       display: flex; align-items: center; gap: 0.5rem;
       text-decoration: none;
@@ -188,12 +174,11 @@
       transform: translateY(-2px);
       box-shadow: 0 12px 32px rgba(240,123,48,0.5);
     }
-
     .btn-secondary {
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.2);
       color: var(--white); border-radius: 50px;
-      padding: 0.9rem 2rem; font-family: 'Poppins', sans-serif;
+      padding: 0.9rem 2rem; font-family: 'Poppins',sans-serif;
       font-size: 1rem; font-weight: 600; cursor: pointer;
       display: flex; align-items: center; gap: 0.5rem;
       text-decoration: none;
@@ -203,29 +188,25 @@
       background: rgba(255,255,255,0.14);
       border-color: rgba(255,255,255,0.35);
     }
-
     .hero-stats {
-      display: flex; gap: 2rem; flex-wrap: wrap;
+      display: flex; gap: 2.5rem; flex-wrap: wrap;
     }
-    .stat {
-      display: flex; flex-direction: column; gap: 2px;
-    }
+    .stat { display:flex; flex-direction:column; gap:2px; }
     .stat strong {
-      font-size: 1.6rem; font-weight: 800;
+      font-size: 1.8rem; font-weight: 800;
       background: linear-gradient(135deg, var(--orange), var(--yellow));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .stat span { font-size: 0.78rem; color: rgba(255,255,255,0.5); font-weight: 400; }
+    .stat span { font-size:0.78rem; color:rgba(255,255,255,0.45); font-weight:400; }
 
-    /* ── Visual lado direito ── */
+    /* Mockup */
     .hero-visual {
-      position: relative; display: flex;
+      position: relative; display:flex;
       align-items: center; justify-content: center;
     }
-
     .mockup-card {
-      background: rgba(26,42,74,0.8);
+      background: rgba(26,42,74,0.85);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 20px; padding: 1.8rem;
       backdrop-filter: blur(20px);
@@ -234,87 +215,148 @@
       animation: float 5s ease-in-out infinite;
     }
     @keyframes float {
-      0%,100% { transform: translateY(0); }
-      50%      { transform: translateY(-12px); }
+      0%,100% { transform:translateY(0); }
+      50%      { transform:translateY(-12px); }
     }
-
     .mockup-header {
-      display: flex; align-items: center; gap: 0.6rem;
-      margin-bottom: 1.4rem;
+      display:flex; align-items:center; gap:0.6rem; margin-bottom:1.4rem;
     }
-    .mockup-dots { display: flex; gap: 5px; }
+    .mockup-dots { display:flex; gap:5px; }
     .mockup-dots span {
-      width: 10px; height: 10px; border-radius: 50%;
+      width:10px; height:10px; border-radius:50%;
     }
-    .mockup-dots span:nth-child(1) { background: #ff5f57; }
-    .mockup-dots span:nth-child(2) { background: #febc2e; }
-    .mockup-dots span:nth-child(3) { background: #28c840; }
+    .mockup-dots span:nth-child(1) { background:#ff5f57; }
+    .mockup-dots span:nth-child(2) { background:#febc2e; }
+    .mockup-dots span:nth-child(3) { background:#28c840; }
     .mockup-title {
-      font-size: 0.8rem; color: rgba(255,255,255,0.5);
-      font-weight: 500; flex: 1; text-align: center;
+      font-size:0.78rem; color:rgba(255,255,255,0.45);
+      font-weight:500; flex:1; text-align:center;
     }
-
     .mockup-price-main {
-      text-align: center; margin-bottom: 1.4rem;
-      padding: 1.2rem;
+      text-align:center; margin-bottom:1.4rem; padding:1.2rem;
       background: linear-gradient(135deg, rgba(240,123,48,0.2), rgba(245,200,66,0.1));
-      border-radius: 14px; border: 1px solid rgba(240,123,48,0.2);
+      border-radius:14px; border:1px solid rgba(240,123,48,0.2);
     }
     .mockup-price-main small {
-      display: block; font-size: 0.72rem;
-      color: rgba(255,255,255,0.5); margin-bottom: 0.3rem;
-      text-transform: uppercase; letter-spacing: 0.5px;
+      display:block; font-size:0.72rem;
+      color:rgba(255,255,255,0.45); margin-bottom:0.3rem;
+      text-transform:uppercase; letter-spacing:0.5px;
     }
     .mockup-price-main strong {
-      font-size: 2.2rem; font-weight: 800;
+      font-size:2.2rem; font-weight:800;
       background: linear-gradient(135deg, var(--orange), var(--yellow));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
     }
-
-    .mockup-rows { display: flex; flex-direction: column; gap: 0.6rem; }
+    .mockup-rows { display:flex; flex-direction:column; gap:0.55rem; }
     .mockup-row {
-      display: flex; justify-content: space-between;
-      align-items: center; font-size: 0.8rem;
-      padding: 0.5rem 0.7rem; border-radius: 8px;
-      background: rgba(255,255,255,0.04);
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:0.78rem; padding:0.5rem 0.7rem; border-radius:8px;
+      background:rgba(255,255,255,0.04);
     }
-    .mockup-row span:first-child { color: rgba(255,255,255,0.5); }
-    .mockup-row span:last-child  { color: var(--white); font-weight: 600; }
-    .mockup-row.highlight span:last-child { color: var(--orange); }
+    .mockup-row span:first-child { color:rgba(255,255,255,0.45); }
+    .mockup-row span:last-child  { color:var(--white); font-weight:600; }
+    .mockup-row.highlight span:last-child { color:var(--orange); }
 
     /* Badges flutuantes */
     .float-badge {
+      position:absolute;
+      background:var(--navy);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:12px; padding:0.6rem 1rem;
+      display:flex; align-items:center; gap:0.5rem;
+      font-size:0.78rem; font-weight:600;
+      box-shadow:0 8px 24px rgba(0,0,0,0.3);
+      white-space:nowrap;
+    }
+    .float-badge.top-left {
+      top:-1rem; left:-3rem;
+      animation: floatB1 4s ease-in-out infinite;
+    }
+    .float-badge.top-right {
+      top:2rem; right:-2rem;
+      animation: floatB2 4s ease-in-out infinite;
+    }
+    .float-badge.bot-left {
+      bottom:0; left:-2.5rem;
+      animation: floatB3 4s ease-in-out infinite;
+    }
+    @keyframes floatB1 { 0%,100%{transform:translateY(0)}  50%{transform:translateY(-8px)} }
+    @keyframes floatB2 { 0%,100%{transform:translateY(-4px)} 50%{transform:translateY(4px)} }
+    @keyframes floatB3 { 0%,100%{transform:translateY(0)}  50%{transform:translateY(-6px)} }
+    .float-badge i { color:var(--orange); }
+
+    /* ══════════════════════════════════
+       BANNER PWA
+    ══════════════════════════════════ */
+    .pwa-banner-landing {
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      border-top: 1px solid rgba(240,123,48,0.3);
+      border-bottom: 1px solid rgba(240,123,48,0.3);
+      padding: 1rem 2rem;
+      display: flex; align-items: center;
+      justify-content: center; gap: 1.5rem;
+      flex-wrap: wrap; text-align: center;
+    }
+    .pwa-banner-landing p {
+      font-size: 0.9rem; color: rgba(255,255,255,0.85);
+    }
+    .pwa-banner-landing strong { color: var(--orange); }
+    .pwa-banner-landing .btn-primary {
+      font-size: 0.85rem; padding: 0.6rem 1.5rem;
+    }
+
+    /* ══════════════════════════════════
+       COMO FUNCIONA
+    ══════════════════════════════════ */
+    .how-it-works {
+      padding: 6rem 2rem;
+      background: linear-gradient(180deg, var(--dark) 0%, #0d1b2e 100%);
+    }
+    .steps-grid {
+      max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 2rem; position: relative;
+    }
+    .steps-grid::before {
+      content: '';
       position: absolute;
-      background: var(--navy);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px; padding: 0.6rem 1rem;
-      display: flex; align-items: center; gap: 0.5rem;
-      font-size: 0.78rem; font-weight: 600;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      animation: floatBadge 4s ease-in-out infinite;
-      white-space: nowrap;
+      top: 32px; left: calc(16.66% + 1rem);
+      right: calc(16.66% + 1rem);
+      height: 2px;
+      background: linear-gradient(90deg, var(--orange), var(--yellow));
+      opacity: 0.3;
     }
-    .float-badge:nth-child(2) { animation-delay: -1s; }
-    .float-badge:nth-child(3) { animation-delay: -2s; }
-    @keyframes floatBadge {
-      0%,100% { transform: translateY(0); }
-      50%      { transform: translateY(-6px); }
+    .step-card {
+      text-align: center; position: relative;
     }
-    .float-badge.top-left  { top: -1rem;  left: -3rem; }
-    .float-badge.top-right { top: 2rem;   right: -2rem; }
-    .float-badge.bot-left  { bottom: 0;   left: -2.5rem; }
-    .float-badge i { color: var(--orange); }
+    .step-number {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--orange), var(--yellow));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; font-weight: 900; color: var(--dark);
+      margin: 0 auto 1.2rem;
+      box-shadow: 0 8px 24px rgba(240,123,48,0.35);
+      position: relative; z-index: 1;
+    }
+    .step-title {
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 0.5rem; color: var(--white);
+    }
+    .step-desc {
+      font-size: 0.83rem; color: rgba(255,255,255,0.5);
+      line-height: 1.65; font-weight: 300;
+    }
 
     /* ══════════════════════════════════
        FEATURES
     ══════════════════════════════════ */
     .features {
       padding: 6rem 2rem;
-      background: linear-gradient(180deg, var(--dark) 0%, #0d1b2e 100%);
+      background: #0d1b2e;
     }
     .section-header {
-      text-align: center; max-width: 600px;
+      text-align: center; max-width: 620px;
       margin: 0 auto 4rem;
     }
     .section-tag {
@@ -327,9 +369,8 @@
       text-transform: uppercase; letter-spacing: 0.5px;
     }
     .section-title {
-      font-size: clamp(1.8rem, 4vw, 2.5rem);
-      font-weight: 800; line-height: 1.2;
-      margin-bottom: 0.8rem;
+      font-size: clamp(1.8rem,4vw,2.5rem);
+      font-weight: 800; line-height: 1.2; margin-bottom: 0.8rem;
     }
     .section-title span {
       background: linear-gradient(135deg, var(--orange), var(--yellow));
@@ -337,16 +378,13 @@
       background-clip: text;
     }
     .section-desc {
-      color: rgba(255,255,255,0.55); font-size: 1rem;
+      color: rgba(255,255,255,0.5); font-size: 1rem;
       line-height: 1.7; font-weight: 300;
     }
-
     .features-grid {
       max-width: 1100px; margin: 0 auto;
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem;
     }
-
     .feature-card {
       background: rgba(26,42,74,0.5);
       border: 1px solid rgba(255,255,255,0.07);
@@ -356,8 +394,7 @@
     }
     .feature-card::before {
       content: '';
-      position: absolute; top: 0; left: 0; right: 0;
-      height: 3px;
+      position: absolute; top:0; left:0; right:0; height:3px;
       background: linear-gradient(90deg, var(--orange), var(--yellow));
       opacity: 0; transition: opacity 0.3s;
     }
@@ -366,45 +403,79 @@
       border-color: rgba(240,123,48,0.2);
       box-shadow: 0 20px 50px rgba(0,0,0,0.3);
     }
-    .feature-card:hover::before { opacity: 1; }
-
+    .feature-card:hover::before { opacity:1; }
     .feature-icon {
-      width: 52px; height: 52px; border-radius: 14px;
-      background: linear-gradient(135deg, rgba(240,123,48,0.2), rgba(245,200,66,0.1));
+      width:52px; height:52px; border-radius:14px;
+      background: linear-gradient(135deg,rgba(240,123,48,0.2),rgba(245,200,66,0.1));
       border: 1px solid rgba(240,123,48,0.2);
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem; margin-bottom: 1.2rem;
-      color: var(--orange);
+      font-size: 1.4rem; margin-bottom: 1.2rem; color: var(--orange);
     }
-    .feature-title {
-      font-size: 1rem; font-weight: 700;
-      margin-bottom: 0.6rem; color: var(--white);
-    }
-    .feature-desc {
-      font-size: 0.85rem; color: rgba(255,255,255,0.5);
-      line-height: 1.65; font-weight: 300;
-    }
+    .feature-title { font-size:1rem; font-weight:700; margin-bottom:0.6rem; }
+    .feature-desc  { font-size:0.84rem; color:rgba(255,255,255,0.5); line-height:1.65; font-weight:300; }
     .feature-tag {
-      display: inline-block; margin-top: 1rem;
+      display: inline-block; margin-top:1rem;
       background: rgba(240,123,48,0.12);
-      color: var(--orange); padding: 3px 10px;
-      border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+      color: var(--orange); padding:3px 10px;
+      border-radius:20px; font-size:0.72rem; font-weight:600;
+    }
+    .feature-tag.green {
+      background: rgba(39,174,96,0.12); color: var(--green);
+    }
+    .feature-tag.blue {
+      background: rgba(44,74,124,0.2); color: #7eb3ff;
+    }
+
+    /* ══════════════════════════════════
+       FERRAMENTAS (NOVA SEÇÃO)
+    ══════════════════════════════════ */
+    .tools-section {
+      padding: 6rem 2rem;
+      background: linear-gradient(180deg, #0d1b2e 0%, var(--dark) 100%);
+    }
+    .tools-grid {
+      max-width: 1000px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(2,1fr);
+      gap: 1.5rem;
+    }
+    .tool-card {
+      background: rgba(26,42,74,0.4);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 18px; padding: 1.8rem;
+      display: flex; gap: 1.2rem; align-items: flex-start;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .tool-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+    }
+    .tool-icon {
+      width: 52px; height: 52px; flex-shrink: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg,rgba(240,123,48,0.15),rgba(245,200,66,0.08));
+      border: 1px solid rgba(240,123,48,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; color: var(--orange);
+    }
+    .tool-info h3 { font-size:0.95rem; font-weight:700; margin-bottom:0.4rem; }
+    .tool-info p  { font-size:0.82rem; color:rgba(255,255,255,0.5); line-height:1.6; font-weight:300; }
+    .tool-new {
+      display: inline-block; margin-top:0.6rem;
+      background: rgba(39,174,96,0.15); color: var(--green);
+      padding: 2px 8px; border-radius:20px;
+      font-size:0.68rem; font-weight:700;
+      text-transform: uppercase; letter-spacing:0.5px;
     }
 
     /* ══════════════════════════════════
        PLANOS
     ══════════════════════════════════ */
-    .plans {
-      padding: 6rem 2rem;
-      background: #0d1b2e;
-    }
-
+    .plans { padding: 6rem 2rem; background: var(--dark); }
     .plans-grid {
       max-width: 1000px; margin: 0 auto;
-      display: grid; grid-template-columns: repeat(3, 1fr);
+      display: grid; grid-template-columns: repeat(3,1fr);
       gap: 1.5rem; align-items: start;
     }
-
     .plan-card {
       background: rgba(26,42,74,0.6);
       border: 1px solid rgba(255,255,255,0.08);
@@ -412,241 +483,300 @@
       position: relative; transition: transform 0.3s;
     }
     .plan-card:hover { transform: translateY(-4px); }
-
     .plan-card.featured {
-      background: linear-gradient(160deg, rgba(44,74,124,0.8), rgba(26,42,74,0.9));
+      background: linear-gradient(160deg,rgba(44,74,124,0.8),rgba(26,42,74,0.9));
       border-color: rgba(240,123,48,0.4);
       box-shadow: 0 0 0 1px rgba(240,123,48,0.15), 0 30px 60px rgba(0,0,0,0.3);
       transform: scale(1.04);
     }
     .plan-card.featured:hover { transform: scale(1.04) translateY(-4px); }
-
     .plan-popular {
-      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
-      background: linear-gradient(135deg, var(--orange), var(--yellow));
-      color: var(--dark); padding: 4px 16px; border-radius: 20px;
-      font-size: 0.72rem; font-weight: 800; white-space: nowrap;
-      text-transform: uppercase; letter-spacing: 0.5px;
+      position: absolute; top:-14px; left:50%; transform:translateX(-50%);
+      background: linear-gradient(135deg,var(--orange),var(--yellow));
+      color: var(--dark); padding:4px 16px; border-radius:20px;
+      font-size:0.72rem; font-weight:800; white-space:nowrap;
+      text-transform:uppercase; letter-spacing:0.5px;
     }
-
     .plan-name {
-      font-size: 0.85rem; font-weight: 600;
-      color: var(--orange); text-transform: uppercase;
-      letter-spacing: 0.8px; margin-bottom: 0.5rem;
+      font-size:0.85rem; font-weight:600; color:var(--orange);
+      text-transform:uppercase; letter-spacing:0.8px; margin-bottom:0.5rem;
     }
     .plan-price {
-      font-size: 2.8rem; font-weight: 900; line-height: 1;
-      margin-bottom: 0.3rem;
+      font-size:2.8rem; font-weight:900; line-height:1; margin-bottom:0.3rem;
     }
     .plan-price sup {
-      font-size: 1rem; font-weight: 600;
-      vertical-align: top; margin-top: 0.5rem;
-      display: inline-block;
+      font-size:1rem; font-weight:600;
+      vertical-align:top; margin-top:0.5rem; display:inline-block;
     }
-    .plan-price.free { color: var(--muted); font-size: 2rem; }
-    .plan-period {
-      font-size: 0.8rem; color: rgba(255,255,255,0.4);
-      margin-bottom: 1.5rem;
-    }
+    .plan-price.free { color:var(--muted); font-size:2rem; }
+    .plan-period { font-size:0.8rem; color:rgba(255,255,255,0.4); margin-bottom:1.5rem; }
     .plan-desc {
-      font-size: 0.82rem; color: rgba(255,255,255,0.5);
-      line-height: 1.6; margin-bottom: 1.5rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size:0.82rem; color:rgba(255,255,255,0.5); line-height:1.6;
+      margin-bottom:1.5rem; padding-bottom:1.5rem;
+      border-bottom:1px solid rgba(255,255,255,0.08);
     }
-
-    .plan-features { list-style: none; margin-bottom: 2rem; }
+    .plan-features { list-style:none; margin-bottom:2rem; }
     .plan-features li {
-      display: flex; align-items: flex-start; gap: 0.6rem;
-      font-size: 0.85rem; color: rgba(255,255,255,0.7);
-      padding: 0.45rem 0;
+      display:flex; align-items:flex-start; gap:0.6rem;
+      font-size:0.85rem; color:rgba(255,255,255,0.7); padding:0.45rem 0;
     }
-    .plan-features li i {
-      color: var(--orange); font-size: 0.75rem;
-      margin-top: 3px; flex-shrink: 0;
-    }
-    .plan-features li.disabled {
-      color: rgba(255,255,255,0.25);
-    }
-    .plan-features li.disabled i { color: rgba(255,255,255,0.2); }
-
+    .plan-features li i { color:var(--orange); font-size:0.75rem; margin-top:3px; flex-shrink:0; }
+    .plan-features li.disabled { color:rgba(255,255,255,0.25); }
+    .plan-features li.disabled i { color:rgba(255,255,255,0.2); }
     .btn-plan {
-      width: 100%; padding: 0.85rem;
-      border-radius: 50px; font-family: 'Poppins', sans-serif;
-      font-size: 0.9rem; font-weight: 700; cursor: pointer;
-      border: none; transition: all 0.2s;
+      width:100%; padding:0.85rem; border-radius:50px;
+      font-family:'Poppins',sans-serif; font-size:0.9rem;
+      font-weight:700; cursor:pointer; border:none; transition:all 0.2s;
     }
     .btn-plan.outline {
-      background: transparent;
-      border: 2px solid rgba(255,255,255,0.2);
-      color: var(--white);
+      background:transparent; border:2px solid rgba(255,255,255,0.2); color:var(--white);
     }
-    .btn-plan.outline:hover {
-      border-color: var(--orange); color: var(--orange);
-    }
+    .btn-plan.outline:hover { border-color:var(--orange); color:var(--orange); }
     .btn-plan.primary {
-      background: linear-gradient(135deg, var(--orange), var(--yellow));
-      color: var(--dark);
-      box-shadow: 0 8px 24px rgba(240,123,48,0.3);
+      background:linear-gradient(135deg,var(--orange),var(--yellow)); color:var(--dark);
+      box-shadow:0 8px 24px rgba(240,123,48,0.3);
     }
-    .btn-plan.primary:hover { box-shadow: 0 12px 32px rgba(240,123,48,0.5); }
+    .btn-plan.primary:hover { box-shadow:0 12px 32px rgba(240,123,48,0.5); }
 
     /* ══════════════════════════════════
        DEPOIMENTOS
     ══════════════════════════════════ */
     .testimonials {
       padding: 6rem 2rem;
-      background: linear-gradient(180deg, #0d1b2e 0%, var(--dark) 100%);
+      background: linear-gradient(180deg,#0d1b2e 0%,var(--dark) 100%);
     }
-
     .testimonials-grid {
-      max-width: 1000px; margin: 0 auto;
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem;
     }
-
     .testimonial-card {
       background: rgba(26,42,74,0.5);
       border: 1px solid rgba(255,255,255,0.07);
       border-radius: 18px; padding: 1.8rem;
-      transition: transform 0.3s;
+      transition: transform 0.3s, box-shadow 0.3s;
     }
-    .testimonial-card:hover { transform: translateY(-4px); }
-
+    .testimonial-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+    }
     .testimonial-stars {
-      display: flex; gap: 3px; margin-bottom: 1rem;
-      color: var(--yellow); font-size: 0.85rem;
+      display:flex; gap:3px; margin-bottom:1rem;
+      color:var(--yellow); font-size:0.85rem;
     }
     .testimonial-text {
-      font-size: 0.88rem; color: rgba(255,255,255,0.7);
-      line-height: 1.7; margin-bottom: 1.2rem;
-      font-style: italic;
+      font-size:0.88rem; color:rgba(255,255,255,0.7);
+      line-height:1.75; margin-bottom:1.2rem; font-style:italic;
+      position: relative; padding-left: 1.2rem;
     }
-    .testimonial-text::before { content: '"'; color: var(--orange); font-size: 1.5rem; line-height: 0; vertical-align: -0.5rem; }
+    .testimonial-text::before {
+      content:'"';
+      position: absolute; left: 0; top: -4px;
+      color:var(--orange); font-size:1.8rem; line-height:1;
+      font-style: normal; font-weight: 900;
+    }
+    .testimonial-highlight {
+      background: rgba(240,123,48,0.1);
+      border-left: 3px solid var(--orange);
+      border-radius: 0 8px 8px 0;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.8rem;
+      color: var(--orange);
+      font-weight: 600;
+      margin-bottom: 1rem;
+      font-style: normal;
+    }
     .testimonial-author {
-      display: flex; align-items: center; gap: 0.8rem;
+      display:flex; align-items:center; gap:0.8rem;
     }
     .author-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--orange), var(--yellow));
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 1rem; color: var(--dark);
-      flex-shrink: 0;
+      width:42px; height:42px; border-radius:50%;
+      background:linear-gradient(135deg,var(--orange),var(--yellow));
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:1rem; color:var(--dark); flex-shrink:0;
     }
-    .author-name { font-size: 0.88rem; font-weight: 600; }
-    .author-role { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+    .author-name { font-size:0.88rem; font-weight:600; }
+    .author-role { font-size:0.75rem; color:rgba(255,255,255,0.4); }
+
+    /* ══════════════════════════════════
+       FAQ
+    ══════════════════════════════════ */
+    .faq-section {
+      padding: 6rem 2rem;
+      background: var(--dark);
+    }
+    .faq-list {
+      max-width: 700px; margin: 0 auto;
+      display: flex; flex-direction: column; gap: 0.8rem;
+    }
+    .faq-item {
+      background: rgba(26,42,74,0.5);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px; overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .faq-item.open { border-color: rgba(240,123,48,0.3); }
+    .faq-question {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 1.2rem 1.5rem;
+      cursor: pointer; font-size: 0.92rem;
+      font-weight: 600; gap: 1rem;
+      user-select: none;
+    }
+    .faq-question:hover { color: var(--orange); }
+    .faq-question i {
+      color: var(--orange); font-size: 0.8rem;
+      transition: transform 0.3s; flex-shrink: 0;
+    }
+    .faq-item.open .faq-question i { transform: rotate(180deg); }
+    .faq-answer {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.4s ease, padding 0.3s;
+      font-size: 0.88rem; color: rgba(255,255,255,0.6);
+      line-height: 1.7; font-weight: 300;
+      padding: 0 1.5rem;
+    }
+    .faq-item.open .faq-answer {
+      max-height: 300px;
+      padding: 0 1.5rem 1.2rem;
+    }
 
     /* ══════════════════════════════════
        CTA FINAL
     ══════════════════════════════════ */
     .cta-section {
-      padding: 6rem 2rem;
-      background: var(--dark);
-      text-align: center;
-      position: relative; overflow: hidden;
+      padding: 7rem 2rem;
+      background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 50%, #0a1628 100%);
+      text-align: center; position: relative; overflow: hidden;
     }
     .cta-section::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(44,74,124,0.3) 0%, transparent 70%);
+      content:'';
+      position:absolute; inset:0;
+      background:radial-gradient(ellipse 70% 50% at 50% 50%,rgba(44,74,124,0.4) 0%,transparent 70%);
     }
-    .cta-inner { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; }
+    .cta-section::after {
+      content:'';
+      position:absolute; inset:0;
+      background-image:radial-gradient(rgba(255,255,255,0.03) 1px,transparent 1px);
+      background-size:24px 24px;
+    }
+    .cta-inner { position:relative; z-index:1; max-width:650px; margin:0 auto; }
     .cta-title {
-      font-size: clamp(2rem, 5vw, 3rem);
-      font-weight: 900; margin-bottom: 1rem; line-height: 1.2;
+      font-size:clamp(2rem,5vw,3.2rem);
+      font-weight:900; margin-bottom:1rem; line-height:1.2;
     }
     .cta-title span {
-      background: linear-gradient(135deg, var(--orange), var(--yellow));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+      background:linear-gradient(135deg,var(--orange),var(--yellow));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
     }
     .cta-desc {
-      color: rgba(255,255,255,0.55); font-size: 1rem;
-      margin-bottom: 2.5rem; line-height: 1.7; font-weight: 300;
+      color:rgba(255,255,255,0.55); font-size:1rem;
+      margin-bottom:2.5rem; line-height:1.7; font-weight:300;
+    }
+    .cta-actions {
+      display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;
     }
 
     /* ══════════════════════════════════
        FOOTER
     ══════════════════════════════════ */
     footer {
-      background: #060e1a;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      padding: 3rem 2rem 2rem;
+      background:#060e1a;
+      border-top:1px solid rgba(255,255,255,0.06);
+      padding:3rem 2rem 2rem;
     }
     .footer-inner {
-      max-width: 1100px; margin: 0 auto;
-      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
-      gap: 3rem; margin-bottom: 2rem;
+      max-width:1100px; margin:0 auto;
+      display:grid; grid-template-columns:2fr 1fr 1fr 1fr;
+      gap:3rem; margin-bottom:2rem;
     }
     .footer-brand p {
-      color: rgba(255,255,255,0.4); font-size: 0.85rem;
-      line-height: 1.7; margin-top: 0.8rem; font-weight: 300;
+      color:rgba(255,255,255,0.4); font-size:0.85rem;
+      line-height:1.7; margin-top:0.8rem; font-weight:300;
+    }
+    .footer-social {
+      display:flex; gap:0.8rem; margin-top:1.2rem;
+    }
+    .social-btn {
+      width:36px; height:36px; border-radius:50%;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.1);
+      display:flex; align-items:center; justify-content:center;
+      color:rgba(255,255,255,0.5); font-size:0.85rem;
+      text-decoration:none; transition:all 0.2s;
+    }
+    .social-btn:hover {
+      background:rgba(240,123,48,0.15);
+      border-color:rgba(240,123,48,0.3);
+      color:var(--orange);
     }
     .footer-col h4 {
-      font-size: 0.82rem; font-weight: 700; color: var(--white);
-      text-transform: uppercase; letter-spacing: 0.8px;
-      margin-bottom: 1rem;
+      font-size:0.82rem; font-weight:700; color:var(--white);
+      text-transform:uppercase; letter-spacing:0.8px; margin-bottom:1rem;
     }
-    .footer-col ul { list-style: none; }
-    .footer-col ul li { margin-bottom: 0.5rem; }
+    .footer-col ul { list-style:none; }
+    .footer-col ul li { margin-bottom:0.5rem; }
     .footer-col ul li a {
-      color: rgba(255,255,255,0.4); text-decoration: none;
-      font-size: 0.85rem; font-weight: 300;
-      transition: color 0.2s;
+      color:rgba(255,255,255,0.4); text-decoration:none;
+      font-size:0.85rem; font-weight:300; transition:color 0.2s;
     }
-    .footer-col ul li a:hover { color: var(--orange); }
+    .footer-col ul li a:hover { color:var(--orange); }
     .footer-bottom {
-      max-width: 1100px; margin: 0 auto;
-      padding-top: 1.5rem;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      display: flex; justify-content: space-between;
-      align-items: center; flex-wrap: wrap; gap: 1rem;
+      max-width:1100px; margin:0 auto;
+      padding-top:1.5rem;
+      border-top:1px solid rgba(255,255,255,0.06);
+      display:flex; justify-content:space-between;
+      align-items:center; flex-wrap:wrap; gap:1rem;
     }
-    .footer-bottom p { font-size: 0.8rem; color: rgba(255,255,255,0.3); }
-    .footer-badges { display: flex; gap: 0.8rem; }
+    .footer-bottom p { font-size:0.8rem; color:rgba(255,255,255,0.3); }
+    .footer-badges { display:flex; gap:0.8rem; flex-wrap:wrap; }
     .footer-badge {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px; padding: 0.3rem 0.8rem;
-      font-size: 0.72rem; color: rgba(255,255,255,0.4);
-      display: flex; align-items: center; gap: 0.3rem;
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:8px; padding:0.3rem 0.8rem;
+      font-size:0.72rem; color:rgba(255,255,255,0.4);
+      display:flex; align-items:center; gap:0.3rem;
     }
-    .footer-badge i { color: var(--orange); }
+    .footer-badge i { color:var(--orange); }
+
+    /* ══════════════════════════════════
+       ANIMAÇÕES
+    ══════════════════════════════════ */
+    .fade-in {
+      opacity:0; transform:translateY(28px);
+      transition:opacity 0.65s ease, transform 0.65s ease;
+    }
+    .fade-in.visible { opacity:1; transform:translateY(0); }
+    .fade-in-delay-1 { transition-delay:0.12s; }
+    .fade-in-delay-2 { transition-delay:0.24s; }
+    .fade-in-delay-3 { transition-delay:0.36s; }
+    .fade-in-delay-4 { transition-delay:0.48s; }
 
     /* ══════════════════════════════════
        RESPONSIVO
     ══════════════════════════════════ */
-    @media (max-width: 900px) {
-      .hero-inner        { grid-template-columns: 1fr; text-align: center; }
-      .hero-actions      { justify-content: center; }
-      .hero-stats        { justify-content: center; }
-      .hero-visual       { display: none; }
-      .features-grid     { grid-template-columns: 1fr 1fr; }
-      .plans-grid        { grid-template-columns: 1fr; max-width: 420px; }
-      .plan-card.featured { transform: scale(1); }
-      .plan-card.featured:hover { transform: translateY(-4px); }
-      .testimonials-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
-      .footer-inner      { grid-template-columns: 1fr 1fr; }
-      .nav-links         { display: none; }
-      .nav-toggle        { display: block; }
+    @media (max-width:900px) {
+      .hero-inner        { grid-template-columns:1fr; text-align:center; }
+      .hero-actions      { justify-content:center; }
+      .hero-stats        { justify-content:center; }
+      .hero-visual       { display:none; }
+      .steps-grid        { grid-template-columns:1fr; }
+      .steps-grid::before{ display:none; }
+      .features-grid     { grid-template-columns:1fr 1fr; }
+      .tools-grid        { grid-template-columns:1fr; max-width:500px; margin:0 auto; }
+      .plans-grid        { grid-template-columns:1fr; max-width:420px; }
+      .plan-card.featured{ transform:scale(1); }
+      .testimonials-grid { grid-template-columns:1fr; max-width:480px; margin:0 auto; }
+      .footer-inner      { grid-template-columns:1fr 1fr; }
+      .nav-links         { display:none; }
+      .nav-toggle        { display:block; }
     }
-    @media (max-width: 580px) {
-      .features-grid { grid-template-columns: 1fr; }
-      .footer-inner  { grid-template-columns: 1fr; }
-      .float-badge   { display: none; }
+    @media (max-width:580px) {
+      .features-grid { grid-template-columns:1fr; }
+      .footer-inner  { grid-template-columns:1fr; }
+      .float-badge   { display:none; }
+      .pwa-banner-landing { flex-direction:column; }
     }
-
-    /* ══════════════════════════════════
-       ANIMAÇÕES DE ENTRADA
-    ══════════════════════════════════ */
-    .fade-in {
-      opacity: 0; transform: translateY(24px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
-    }
-    .fade-in.visible { opacity: 1; transform: translateY(0); }
-    .fade-in-delay-1 { transition-delay: 0.1s; }
-    .fade-in-delay-2 { transition-delay: 0.2s; }
-    .fade-in-delay-3 { transition-delay: 0.3s; }
 
   </style>
 </head>
@@ -658,15 +788,17 @@
     <i class="fas fa-cube"></i>
     3D <strong>Pricer</strong> <em>Pro</em>
   </a>
-  <ul class="nav-links">
+  <ul class="nav-links" id="nav-links">
+    <li><a href="#how">Como Funciona</a></li>
     <li><a href="#features">Funcionalidades</a></li>
+    <li><a href="#tools">Ferramentas</a></li>
     <li><a href="#plans">Planos</a></li>
-    <li><a href="#testimonials">Depoimentos</a></li>
+    <li><a href="#faq">FAQ</a></li>
     <li><a href="index.html" class="nav-cta">
       <i class="fas fa-rocket"></i> Começar Grátis
     </a></li>
   </ul>
-  <button class="nav-toggle" onclick="toggleMenu()">
+  <button class="nav-toggle" onclick="toggleMenu()" aria-label="Menu">
     <i class="fas fa-bars" id="menu-icon"></i>
   </button>
 </nav>
@@ -679,7 +811,7 @@
     <div class="hero-text">
       <div class="hero-badge">
         <i class="fas fa-circle"></i>
-        Novo em 2026 — Versão Pro disponível
+        Novo em 2026 — 8 módulos profissionais
       </div>
       <h1 class="hero-title">
         <span class="line1">Precifique com</span>
@@ -688,34 +820,39 @@
       </h1>
       <p class="hero-desc">
         O <strong>3D Pricer Pro</strong> calcula automaticamente o preço ideal
-        das suas peças considerando mais de <strong>15 variáveis</strong> —
-        material, energia, depreciação, mão de obra e muito mais.
+        das suas peças considerando <strong>15+ variáveis</strong> —
+        material, energia, depreciação, mão de obra, impostos e muito mais.
+        Tudo offline, sem cadastro, grátis para começar.
       </p>
       <div class="hero-actions">
         <a href="index.html" class="btn-primary">
-          <i class="fas fa-calculator"></i> Começar Agora — Grátis
+          <i class="fas fa-calculator"></i> Calcular Agora — Grátis
         </a>
-        <a href="#features" class="btn-secondary">
-          <i class="fas fa-play-circle"></i> Ver Funcionalidades
+        <a href="#how" class="btn-secondary">
+          <i class="fas fa-play-circle"></i> Como funciona
         </a>
       </div>
       <div class="hero-stats">
         <div class="stat">
-          <strong>15+</strong>
+          <strong class="counter" data-target="15">0</strong>
           <span>Variáveis de custo</span>
         </div>
         <div class="stat">
-          <strong>17</strong>
+          <strong class="counter" data-target="17">0</strong>
           <span>Materiais suportados</span>
         </div>
         <div class="stat">
           <strong>100%</strong>
-          <span>Gratuito para começar</span>
+          <span>Grátis para começar</span>
+        </div>
+        <div class="stat">
+          <strong>PWA</strong>
+          <span>Funciona offline</span>
         </div>
       </div>
     </div>
 
-    <!-- Mockup visual -->
+    <!-- Mockup -->
     <div class="hero-visual">
       <div class="float-badge top-left">
         <i class="fas fa-check-circle"></i> Custo calculado!
@@ -724,9 +861,8 @@
         <i class="fas fa-chart-line"></i> Lucro: R$ 28,40
       </div>
       <div class="float-badge bot-left">
-        <i class="fas fa-bolt"></i> Energia: R$ 1,85
+        <i class="fas fa-bolt"></i> Energia: R$ 1,34
       </div>
-
       <div class="mockup-card">
         <div class="mockup-header">
           <div class="mockup-dots">
@@ -734,32 +870,25 @@
           </div>
           <span class="mockup-title">3D Pricer Pro — Resultado</span>
         </div>
-
         <div class="mockup-price-main">
           <small>💰 Preço Final Sugerido</small>
           <strong>R$ 89,90</strong>
         </div>
-
         <div class="mockup-rows">
           <div class="mockup-row">
-            <span>🧵 Material (85g PETG)</span>
-            <span>R$ 10,20</span>
+            <span>🧵 Material (85g PETG)</span><span>R$ 10,20</span>
           </div>
           <div class="mockup-row">
-            <span>⚡ Energia (4.5h)</span>
-            <span>R$ 1,34</span>
+            <span>⚡ Energia (4.5h)</span><span>R$ 1,34</span>
           </div>
           <div class="mockup-row">
-            <span>🖨️ Depreciação</span>
-            <span>R$ 7,20</span>
+            <span>🖨️ Depreciação</span><span>R$ 7,20</span>
           </div>
           <div class="mockup-row">
-            <span>👷 Mão de Obra</span>
-            <span>R$ 15,00</span>
+            <span>👷 Mão de Obra</span><span>R$ 15,00</span>
           </div>
           <div class="mockup-row highlight">
-            <span>📈 Margem (40%)</span>
-            <span>R$ 28,40</span>
+            <span>📈 Margem (40%)</span><span>R$ 28,40</span>
           </div>
         </div>
       </div>
@@ -768,50 +897,166 @@
   </div>
 </section>
 
+<!-- ══════════════ BANNER PWA ══════════════ -->
+<div class="pwa-banner-landing">
+  <p>📲 <strong>Instale o app</strong> no seu celular e use offline, sem depender de internet!</p>
+  <a href="index.html" class="btn-primary">
+    <i class="fas fa-download"></i> Instalar App Grátis
+  </a>
+</div>
+
+<!-- ══════════════ COMO FUNCIONA ══════════════ -->
+<section class="how-it-works" id="how">
+  <div class="section-header">
+    <div class="section-tag">Como Funciona</div>
+    <h2 class="section-title">3 passos para <span>precificar certo</span></h2>
+    <p class="section-desc">
+      Sem planilhas complicadas. Sem fórmulas manuais.
+      O 3D Pricer Pro faz tudo automaticamente.
+    </p>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card fade-in">
+      <div class="step-number">1</div>
+      <div class="step-title">Configure sua Impressora</div>
+      <div class="step-desc">
+        Informe o custo, consumo em Watts e vida útil.
+        O app calcula a depreciação exata por hora de impressão.
+      </div>
+    </div>
+    <div class="step-card fade-in fade-in-delay-1">
+      <div class="step-number">2</div>
+      <div class="step-title">Informe o Material e Tempo</div>
+      <div class="step-desc">
+        Selecione o filamento ou resina. O app já sugere o preço médio
+        e calcula o custo exato com base no peso da peça.
+      </div>
+    </div>
+    <div class="step-card fade-in fade-in-delay-2">
+      <div class="step-number">3</div>
+      <div class="step-title">Receba o Preço Ideal</div>
+      <div class="step-desc">
+        Preço mínimo, sugerido, premium e com desconto máximo.
+        Exporte em PDF e envie direto pro cliente pelo WhatsApp!
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ══════════════ FEATURES ══════════════ -->
 <section class="features" id="features">
   <div class="section-header">
     <div class="section-tag">Funcionalidades</div>
-    <h2 class="section-title">Tudo que você precisa para<br/><span>precificar como um pro</span></h2>
-    <p class="section-desc">Do custo de energia ao breakeven mensal, o 3D Pricer Pro cobre cada detalhe do seu negócio de impressão 3D.</p>
+    <h2 class="section-title">Tudo para <span>precificar como um pro</span></h2>
+    <p class="section-desc">
+      Do custo de energia ao breakeven mensal, o 3D Pricer Pro
+      cobre cada detalhe do seu negócio de impressão 3D.
+    </p>
   </div>
-
   <div class="features-grid">
     <div class="feature-card fade-in">
       <div class="feature-icon"><i class="fas fa-calculator"></i></div>
       <div class="feature-title">Precificação Completa</div>
-      <div class="feature-desc">15+ variáveis incluindo material, energia, depreciação, manutenção, mão de obra, falhas e custos de plataforma.</div>
+      <div class="feature-desc">
+        15+ variáveis: material, energia, depreciação, manutenção,
+        mão de obra, falhas, impostos e taxas de plataforma.
+      </div>
       <span class="feature-tag">Core</span>
     </div>
     <div class="feature-card fade-in fade-in-delay-1">
       <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
       <div class="feature-title">Simulador de Lucro</div>
-      <div class="feature-desc">Projete receita, breakeven e ROI com 3 cenários (conservador, realista e otimista). Gráfico de 12 meses incluído.</div>
+      <div class="feature-desc">
+        Projete receita, breakeven e ROI com 3 cenários.
+        Gráfico de projeção para 12 meses com crescimento.
+      </div>
       <span class="feature-tag">Pro</span>
     </div>
     <div class="feature-card fade-in fade-in-delay-2">
-      <div class="feature-icon"><i class="fas fa-file-pdf"></i></div>
-      <div class="feature-title">Exportação PDF</div>
-      <div class="feature-desc">Gere relatórios profissionais em PDF com todos os detalhes da precificação. Perfeito para enviar ao cliente.</div>
-      <span class="feature-tag">Pro</span>
+      <div class="feature-icon"><i class="fas fa-users"></i></div>
+      <div class="feature-title">Gestão de Clientes</div>
+      <div class="feature-desc">
+        Cadastre clientes, gere orçamentos formais em PDF,
+        envie pelo WhatsApp e acompanhe o status de cada proposta.
+      </div>
+      <span class="feature-tag green">Novo</span>
     </div>
     <div class="feature-card fade-in">
-      <div class="feature-icon"><i class="fas fa-layer-group"></i></div>
-      <div class="feature-title">17 Materiais</div>
-      <div class="feature-desc">PLA, PETG, ABS, ASA, TPU, PLA-CF, PA-CF, PC e 5 tipos de resina. Com temperaturas, dicas e preços médios automáticos.</div>
-      <span class="feature-tag">Core</span>
+      <div class="feature-icon"><i class="fas fa-cubes"></i></div>
+      <div class="feature-title">Catálogo com Fotos</div>
+      <div class="feature-desc">
+        Monte seu portfólio de peças com fotos reais, preços,
+        estoque e descrição. Exporte em PDF para impressão.
+      </div>
+      <span class="feature-tag green">Novo</span>
     </div>
     <div class="feature-card fade-in fade-in-delay-1">
-      <div class="feature-icon"><i class="fas fa-moon"></i></div>
-      <div class="feature-title">Dark Mode</div>
-      <div class="feature-desc">Interface completa em modo escuro, com persistência automática. Para longas sessões de trabalho sem cansaço visual.</div>
-      <span class="feature-tag">UX</span>
+      <div class="feature-icon"><i class="fas fa-chart-pie"></i></div>
+      <div class="feature-title">Dashboard Completo</div>
+      <div class="feature-desc">
+        Acompanhe faturamento, lucro, ticket médio e evolução
+        do negócio com gráficos e KPIs em tempo real.
+      </div>
+      <span class="feature-tag blue">Analytics</span>
     </div>
     <div class="feature-card fade-in fade-in-delay-2">
-      <div class="feature-icon"><i class="fas fa-clock-rotate-left"></i></div>
-      <div class="feature-title">Histórico Completo</div>
-      <div class="feature-desc">Salve até 50 precificações, recarregue com 1 clique e compare preços ao longo do tempo. Tudo offline, sem cadastro.</div>
-      <span class="feature-tag">Core</span>
+      <div class="feature-icon"><i class="fas fa-mobile-screen"></i></div>
+      <div class="feature-title">PWA — Use Offline</div>
+      <div class="feature-desc">
+        Instale como app nativo no celular ou PC. Funciona
+        100% offline, sem cadastro e sem mensalidade para começar.
+      </div>
+      <span class="feature-tag">Grátis</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ FERRAMENTAS ══════════════ -->
+<section class="tools-section" id="tools">
+  <div class="section-header">
+    <div class="section-tag">Ferramentas Extras</div>
+    <h2 class="section-title">Muito além da <span>precificação</span></h2>
+    <p class="section-desc">
+      Ferramentas profissionais que makers precisam no dia a dia
+      e não encontram em nenhum outro app.
+    </p>
+  </div>
+  <div class="tools-grid">
+    <div class="tool-card fade-in">
+      <div class="tool-icon"><i class="fas fa-weight-hanging"></i></div>
+      <div class="tool-info">
+        <h3>Calculadora de Spool Restante</h3>
+        <p>Saiba exatamente quantas peças ainda cabem no seu carretel
+           e receba alertas quando o material estiver acabando.</p>
+        <span class="tool-new">✨ Novo</span>
+      </div>
+    </div>
+    <div class="tool-card fade-in fade-in-delay-1">
+      <div class="tool-icon"><i class="fas fa-store"></i></div>
+      <div class="tool-info">
+        <h3>Comparador de Plataformas</h3>
+        <p>Compare o lucro real em Shopee, Mercado Livre, Etsy, Amazon
+           e Elo7 com as taxas de cada plataforma aplicadas automaticamente.</p>
+        <span class="tool-new">✨ Novo</span>
+      </div>
+    </div>
+    <div class="tool-card fade-in fade-in-delay-2">
+      <div class="tool-icon"><i class="fas fa-bell"></i></div>
+      <div class="tool-info">
+        <h3>Alertas de Orçamentos Pendentes</h3>
+        <p>Nunca esqueça um orçamento sem resposta. O app alerta
+           os orçamentos aguardando aprovação há mais de 3 dias.</p>
+        <span class="tool-new">✨ Novo</span>
+      </div>
+    </div>
+    <div class="tool-card fade-in fade-in-delay-3">
+      <div class="tool-icon"><i class="fas fa-file-chart-column"></i></div>
+      <div class="tool-info">
+        <h3>Relatório Mensal em PDF</h3>
+        <p>Gere um relatório completo do mês com faturamento, lucro,
+           top peças e status dos orçamentos com 1 clique.</p>
+        <span class="tool-new">✨ Novo</span>
+      </div>
     </div>
   </div>
 </section>
@@ -823,25 +1068,26 @@
     <h2 class="section-title">Simples e <span>transparente</span></h2>
     <p class="section-desc">Comece grátis e evolua conforme o seu negócio cresce.</p>
   </div>
-
   <div class="plans-grid">
 
     <!-- Free -->
-    <div class="plan-card">
+    <div class="plan-card fade-in">
       <div class="plan-name">Free</div>
       <div class="plan-price free">Grátis</div>
       <div class="plan-period">para sempre</div>
-      <div class="plan-desc">Perfeito para makers iniciantes que querem precificar corretamente.</div>
+      <div class="plan-desc">
+        Perfeito para makers iniciantes que querem precificar corretamente.
+      </div>
       <ul class="plan-features">
         <li><i class="fas fa-check"></i> Precificação completa (15+ variáveis)</li>
         <li><i class="fas fa-check"></i> 17 materiais suportados</li>
         <li><i class="fas fa-check"></i> Histórico (10 entradas)</li>
-        <li><i class="fas fa-check"></i> Dark Mode</li>
+        <li><i class="fas fa-check"></i> Dark Mode + PWA offline</li>
         <li><i class="fas fa-check"></i> Gráfico de composição</li>
         <li class="disabled"><i class="fas fa-times"></i> Exportação PDF</li>
         <li class="disabled"><i class="fas fa-times"></i> Simulador de lucro</li>
-        <li class="disabled"><i class="fas fa-times"></i> Relatórios mensais</li>
-        <li class="disabled"><i class="fas fa-times"></i> Orçamento para cliente</li>
+        <li class="disabled"><i class="fas fa-times"></i> Gestão de clientes</li>
+        <li class="disabled"><i class="fas fa-times"></i> Catálogo com fotos</li>
       </ul>
       <button class="btn-plan outline" onclick="window.location='index.html'">
         Começar Grátis
@@ -849,22 +1095,24 @@
     </div>
 
     <!-- Pro -->
-    <div class="plan-card featured">
+    <div class="plan-card featured fade-in fade-in-delay-1">
       <div class="plan-popular">⭐ Mais Popular</div>
       <div class="plan-name">Pro</div>
       <div class="plan-price"><sup>R$</sup>29<sup>,90</sup></div>
       <div class="plan-period">por mês · cancele quando quiser</div>
-      <div class="plan-desc">Para makers que levam o negócio a sério e querem maximizar o lucro.</div>
+      <div class="plan-desc">
+        Para makers que levam o negócio a sério e querem maximizar o lucro.
+      </div>
       <ul class="plan-features">
         <li><i class="fas fa-check"></i> Tudo do Free</li>
         <li><i class="fas fa-check"></i> Histórico ilimitado</li>
         <li><i class="fas fa-check"></i> Exportação PDF profissional</li>
         <li><i class="fas fa-check"></i> Simulador de lucro (3 cenários)</li>
-        <li><i class="fas fa-check"></i> Gráfico de projeção 12 meses</li>
-        <li><i class="fas fa-check"></i> Orçamento formal para cliente</li>
+        <li><i class="fas fa-check"></i> Catálogo com fotos das peças</li>
+        <li><i class="fas fa-check"></i> Gestão de clientes e orçamentos</li>
         <li><i class="fas fa-check"></i> Dashboard de métricas</li>
-        <li><i class="fas fa-check"></i> Backup & restauração</li>
-        <li><i class="fas fa-check"></i> Suporte prioritário</li>
+        <li><i class="fas fa-check"></i> Ferramentas extras (Spool, Plataformas)</li>
+        <li><i class="fas fa-check"></i> Relatório mensal em PDF</li>
       </ul>
       <button class="btn-plan primary" onclick="window.location='index.html'">
         Assinar Pro — R$ 29,90/mês
@@ -872,183 +1120,16 @@
     </div>
 
     <!-- Business -->
-    <div class="plan-card">
+    <div class="plan-card fade-in fade-in-delay-2">
       <div class="plan-name">Business</div>
       <div class="plan-price"><sup>R$</sup>79<sup>,90</sup></div>
       <div class="plan-period">por mês · até 5 impressoras</div>
-      <div class="plan-desc">Para pequenas fábricas e negócios com múltiplas máquinas e produtos.</div>
+      <div class="plan-desc">
+        Para pequenas fábricas com múltiplas máquinas e grande volume.
+      </div>
       <ul class="plan-features">
         <li><i class="fas fa-check"></i> Tudo do Pro</li>
         <li><i class="fas fa-check"></i> Múltiplas impressoras</li>
-        <li><i class="fas fa-check"></i> Catálogo de produtos</li>
         <li><i class="fas fa-check"></i> Relatório mensal automático</li>
-        <li><i class="fas fa-check"></i> Metas de faturamento</li>
-        <li><i class="fas fa-check"></i> API de integração</li>
-        <li><i class="fas fa-check"></i> Múltiplos usuários</li>
-        <li><i class="fas fa-check"></i> Marca personalizada no PDF</li>
-        <li><i class="fas fa-check"></i> Suporte via WhatsApp</li>
-      </ul>
-      <button class="btn-plan outline" onclick="window.location='index.html'">
-        Assinar Business
-      </button>
-    </div>
+        <li
 
-  </div>
-</section>
-
-<!-- ══════════════ DEPOIMENTOS ══════════════ -->
-<section class="testimonials" id="testimonials">
-  <div class="section-header">
-    <div class="section-tag">Depoimentos</div>
-    <h2 class="section-title">Makers que <span>lucraram mais</span></h2>
-    <p class="section-desc">Veja o que os makers estão dizendo depois de usar o 3D Pricer Pro.</p>
-  </div>
-
-  <div class="testimonials-grid">
-    <div class="testimonial-card fade-in">
-      <div class="testimonial-stars">
-        <i class="fas fa-star"></i><i class="fas fa-star"></i>
-        <i class="fas fa-star"></i><i class="fas fa-star"></i>
-        <i class="fas fa-star"></i>
-      </div>
-      <p class="testimonial-text">
-        Eu cobrava R$ 25 por uma peça que custava R$ 22 pra produzir. Depois do 3D Pricer Pro descobri que deveria cobrar R$ 58. Triplicou minha margem!
-      </p>
-      <div class="testimonial-author">
-        <div class="author-avatar">M</div>
-        <div>
-          <div class="author-name">Marcos Oliveira</div>
-          <div class="author-role">Maker · São Paulo, SP</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="testimonial-card fade-in fade-in-delay-1">
-      <div class="testimonial-stars">
-        <i class="fas fa-star"></i><i class="fas fa-star"></i>
-        <i class="fas fa-star"></i><i class="fas fa-star"></i>
-        <i class="fas fa-star"></i>
-      </div>
-      <p class="testimonial-text">
-        O simulador de lucro mensal me ajudou a entender que precisava de pelo menos 8 peças por dia para cobrir meus custos fixos. Mudou minha visão do negócio.
-      </p>
-      <div class="testimonial-author">
-        <div class="author-avatar">A</div>
-        <div>
-          <div class="author-name">Ana Costa</div>
-          <div class="author-role">Produção 3D · Curitiba, PR</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="testimonial-card fade-in fade-in-delay-2">
-      <div class="testimonial-stars">
-        <i class="fas fa-star"></i><i class="fas fa-star"></i>
-        <i class="fas fa-star"></i><i class="fas fa-star"></i>
-        <i class="fas fa-star-half-stroke"></i>
-      </div>
-      <p class="testimonial-text">
-        O PDF profissional que o app gera é incrível. Meus clientes ficaram impressionados com a transparência e profissionalismo do orçamento.
-      </p>
-      <div class="testimonial-author">
-        <div class="author-avatar">R</div>
-        <div>
-          <div class="author-name">Rafael Mendes</div>
-          <div class="author-role">Prototipagem · Belo Horizonte, MG</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════ CTA FINAL ══════════════ -->
-<section class="cta-section">
-  <div class="cta-inner">
-    <h2 class="cta-title">Pronto para <span>precificar certo</span> e lucrar mais?</h2>
-    <p class="cta-desc">Junte-se a centenas de makers que já usam o 3D Pricer Pro para transformar impressão 3D em negócio lucrativo.</p>
-    <a href="index.html" class="btn-primary" style="display:inline-flex; margin: 0 auto;">
-      <i class="fas fa-rocket"></i> Começar Grátis Agora
-    </a>
-  </div>
-</section>
-
-<!-- ══════════════ FOOTER ══════════════ -->
-<footer>
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <a href="#" class="nav-logo" style="text-decoration:none; display:inline-flex; margin-bottom:0.8rem;">
-        <i class="fas fa-cube"></i>
-        3D <strong>Pricer</strong> <em>Pro</em>
-      </a>
-      <p>Precificação inteligente para makers e produtores 3D. Calcule, simule e lucre mais em cada impressão.</p>
-    </div>
-    <div class="footer-col">
-      <h4>Produto</h4>
-      <ul>
-        <li><a href="#features">Funcionalidades</a></li>
-        <li><a href="#plans">Planos</a></li>
-        <li><a href="index.html">Abrir App</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Suporte</h4>
-      <ul>
-        <li><a href="#">Documentação</a></li>
-        <li><a href="#">FAQ</a></li>
-        <li><a href="#">Contato</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Legal</h4>
-      <ul>
-        <li><a href="#">Privacidade</a></li>
-        <li><a href="#">Termos de Uso</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>© 2026 3D Pricer Pro · Feito com ❤️ para makers</p>
-    <div class="footer-badges">
-      <div class="footer-badge"><i class="fas fa-shield-halved"></i> Seguro</div>
-      <div class="footer-badge"><i class="fas fa-lock"></i> Offline First</div>
-      <div class="footer-badge"><i class="fas fa-star"></i> Grátis para começar</div>
-    </div>
-  </div>
-</footer>
-
-<script>
-  // ── Navbar scroll ──
-  window.addEventListener('scroll', () => {
-    document.getElementById('navbar')
-      .classList.toggle('scrolled', window.scrollY > 50);
-  });
-
-  // ── Menu mobile ──
-  function toggleMenu() {
-    const links = document.querySelector('.nav-links');
-    const icon  = document.getElementById('menu-icon');
-    const open  = links.style.display === 'flex';
-    links.style.display    = open ? 'none' : 'flex';
-    links.style.flexDirection = 'column';
-    links.style.position   = 'absolute';
-    links.style.top        = '70px';
-    links.style.left       = '0'; links.style.right = '0';
-    links.style.background = 'rgba(10,22,40,0.98)';
-    links.style.padding    = '1.5rem 2rem';
-    links.style.gap        = '1.2rem';
-    icon.className = open ? 'fas fa-bars' : 'fas fa-times';
-  }
-
-  // ── Animações de entrada ──
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) e.target.classList.add('visible');
-    });
-  }, { threshold: 0.15 });
-
-  document.querySelectorAll('.fade-in')
-    .forEach(el => observer.observe(el));
-</script>
-
-</body>
-</html>
