@@ -51,8 +51,8 @@
     </div>
   </div>
   <div class="pwa-banner-actions">
-    <button class="pwa-btn-install" onclick="installPWA()">Instalar</button>
-    <button class="pwa-btn-close" onclick="closePWABanner()">
+    <button class="pwa-btn-install" onclick="window.installPWA()">Instalar</button>
+    <button class="pwa-btn-close" onclick="window.closePWABanner()">
       <i class="fas fa-xmark"></i>
     </button>
   </div>
@@ -67,10 +67,10 @@
     </div>
     <p class="subtitle">Precificação inteligente para impressão 3D</p>
     <div class="header-actions">
-      <button class="btn-icon" onclick="openComparator()">
+      <button class="btn-icon" onclick="window.openComparator()">
         <i class="fas fa-code-compare"></i><span>Comparar Materiais</span>
       </button>
-      <button class="btn-icon" onclick="exportDashboardCSV()">
+      <button class="btn-icon" onclick="window.exportDashboardCSV()">
         <i class="fas fa-file-csv"></i><span>Exportar CSV</span>
       </button>
       <a href="landing.html" class="btn-icon">
@@ -140,7 +140,7 @@
       </div>
       <div class="field">
         <label>Tipo de Impressora</label>
-        <select id="printerType" onchange="onPrinterTypeChange()">
+        <select id="printerType" onchange="window.onPrinterTypeChange()">
           <option value="">Selecione...</option>
           <option value="FDM">FDM (Filamento)</option>
           <option value="MSLA">MSLA/SLA (Resina)</option>
@@ -165,7 +165,7 @@
           <span class="tooltip-icon" data-tip="Verifique na etiqueta ou manual da impressora.">?</span>
         </label>
         <input type="number" id="printerWatts" placeholder="Ex: 350" min="0"
-               oninput="updateEnergyPreview()"/>
+               oninput="window.updateEnergyPreview()"/>
       </div>
       <div class="field">
         <label>Custo Mensal de Manutenção (R$)</label>
@@ -188,7 +188,7 @@
         <span>Item</span><span>Custo (R$)</span><span>Vida útil (h)</span><span></span>
       </div>
       <div id="consumables-list"></div>
-      <button class="btn-add" onclick="addConsumable()">
+      <button class="btn-add" onclick="window.addConsumable()">
         <i class="fas fa-plus"></i> Adicionar Consumível
       </button>
     </div>
@@ -200,7 +200,7 @@
     <div class="grid-2">
       <div class="field">
         <label>Tipo de Material</label>
-        <select id="materialType" onchange="onMaterialChange()">
+        <select id="materialType" onchange="window.onMaterialChange()">
           <option value="">Selecione...</option>
           <optgroup label="FDM — Básicos">
             <option value="PLA">PLA</option>
@@ -210,63 +210,65 @@
           </optgroup>
           <optgroup label="FDM — Especiais">
             <option value="TPU">TPU (Flexível)</option>
-            <option value="PLA-CF">PLA Carbon Fiber</option>
-            <option value="PETG-CF">PETG Carbon Fiber</option>
+            <option value="PLA-CF">PLA-CF (Fibra de Carbono)</option>
+            <option value="PETG-CF">PETG-CF (Fibra de Carbono)</option>
             <option value="PA">Nylon (PA)</option>
-            <option value="PA-CF">Nylon CF</option>
-            <option value="PC">Policarbonato</option>
-            <option value="PVA">PVA (Suporte)</option>
+            <option value="PA-CF">PA-CF (Nylon Fibra de Carbono)</option>
+            <option value="PC">Policarbonato (PC)</option>
           </optgroup>
-          <optgroup label="Resina">
+          <optgroup label="Resina — Básicas">
             <option value="RESIN-STD">Resina Padrão</option>
             <option value="RESIN-ABS">Resina ABS-Like</option>
             <option value="RESIN-8K">Resina 8K</option>
-            <option value="RESIN-ENG">Resina Engineering</option>
-            <option value="RESIN-CAST">Resina Fundição</option>
           </optgroup>
-          <optgroup label="Outro">
-            <option value="OUTRO">Outro</option>
+          <optgroup label="Resina — Especiais">
+            <option value="RESIN-FLEX">Resina Flexível</option>
+            <option value="RESIN-TOUGH">Resina Tough</option>
+            <option value="RESIN-CAST">Resina Castable</option>
+          </optgroup>
+          <optgroup label="Outros">
+            <option value="OTHER">Outro</option>
           </optgroup>
         </select>
       </div>
-      <div class="material-info-box hidden" id="material-info">
-        <i class="fas fa-circle-info"></i>
-        <span id="material-info-text"></span>
-      </div>
       <div class="field">
-        <label>Preço do Carretel/Frasco (R$)</label>
+        <label>Custo do Carretel/Litro (R$)
+          <span class="tooltip-icon" data-tip="Preço do carretel de filamento (geralmente 1kg) ou litro de resina.">?</span>
+        </label>
         <input type="number" id="spoolCost" placeholder="Ex: 120" min="0"/>
       </div>
       <div class="field">
-        <label>Peso/Volume do Carretel (g ou mL)</label>
+        <label>Peso do Carretel/Litro (g)
+          <span class="tooltip-icon" data-tip="Peso do carretel de filamento (geralmente 1000g) ou volume de resina (1L = ~1100g).">?</span>
+        </label>
         <input type="number" id="spoolWeight" placeholder="Ex: 1000" min="1"/>
       </div>
       <div class="field">
-        <label>Peso/Volume Usado na Peça (g ou mL)
-          <span class="tooltip-icon" data-tip="Exporte do Orca Flashforge. Inclua suporte se houver.">?</span>
+        <label>Peso da Peça (g)
+          <span class="tooltip-icon" data-tip="Peso da peça impressa. Obtenha do seu fatiador.">?</span>
         </label>
-        <input type="number" id="partWeight" placeholder="Ex: 85" min="0"/>
+        <input type="number" id="partWeight" placeholder="Ex: 35" min="0.1"/>
       </div>
       <div class="field">
-        <label>Material de Suporte Usado (g)</label>
-        <input type="number" id="supportWeight" placeholder="Ex: 10" min="0"/>
+        <label>Custo de Pós-processamento (R$)
+          <span class="tooltip-icon" data-tip="Lixar, pintar, curar, etc.">?</span>
+        </label>
+        <input type="number" id="postProcessCost" placeholder="Ex: 5" min="0"/>
       </div>
       <div class="field">
-        <label>Taxa de Falha Estimada (%)</label>
-        <input type="number" id="failureRate" placeholder="Ex: 5" min="0" max="100"/>
-      </div>
-      <div class="field">
-        <label>Custo de Pós-processamento (R$)</label>
-        <input type="number" id="postProcessCost" placeholder="Ex: 10" min="0"/>
+        <label>Custo de Embalagem/Envio (R$)
+          <span class="tooltip-icon" data-tip="Caixa, plástico bolha, etiqueta, etc.">?</span>
+        </label>
+        <input type="number" id="packagingCost" placeholder="Ex: 10" min="0"/>
       </div>
     </div>
     <div class="sub-section">
-      <h3><i class="fas fa-paint-roller"></i> Materiais de Acabamento</h3>
+      <h3><i class="fas fa-palette"></i> Acabamentos Especiais</h3>
       <div class="dynamic-row-header">
-        <span>Item</span><span>Custo (R$)</span><span></span>
+        <span>Acabamento</span><span>Custo (R$)</span><span></span>
       </div>
-      <div id="finishing-list"></div>
-      <button class="btn-add" onclick="addFinishing()">
+      <div id="finishings-list"></div>
+      <button class="btn-add" onclick="window.addFinishing()">
         <i class="fas fa-plus"></i> Adicionar Acabamento
       </button>
     </div>
@@ -274,187 +276,211 @@
 
   <!-- SEÇÃO 3: IMPRESSÃO -->
   <section class="card">
-    <h2><i class="fas fa-clock"></i> Impressão & Energia</h2>
+    <h2><i class="fas fa-clock"></i> Impressão</h2>
     <div class="grid-2">
       <div class="field">
         <label>Tempo de Impressão (horas)
-          <span class="tooltip-icon" data-tip="Tempo exibido no Orca Flashforge.">?</span>
+          <span class="tooltip-icon" data-tip="Tempo total de impressão da peça. Obtenha do seu fatiador.">?</span>
         </label>
-        <input type="number" id="printHours" placeholder="Ex: 4.5" min="0" step="0.1"
-               oninput="updateEnergyPreview()"/>
+        <input type="number" id="printHours" placeholder="Ex: 3.5" min="0.1" step="0.1"/>
       </div>
       <div class="field">
-        <label>Tarifa de Energia (R$/kWh)
-          <span class="tooltip-icon" data-tip="Média Brasil 2026: ~R$ 0,85.">?</span>
+        <label>Custo da Energia (R$/kWh)
+          <span class="tooltip-icon" data-tip="Valor do kWh na sua conta de luz.">?</span>
         </label>
         <input type="number" id="energyRate" placeholder="Ex: 0.85" min="0" step="0.01"
-               oninput="updateEnergyPreview()"/>
+               oninput="window.updateEnergyPreview()"/>
       </div>
       <div class="field">
-        <label>Mão de Obra por Hora (R$)</label>
-        <input type="number" id="laborCost" placeholder="Ex: 30" min="0"/>
+        <label>Mão de Obra (R$/hora)
+          <span class="tooltip-icon" data-tip="Seu valor/hora de trabalho manual.">?</span>
+        </label>
+        <input type="number" id="laborCost" placeholder="Ex: 25" min="0"/>
       </div>
       <div class="field">
-        <label>Horas de Trabalho Manual</label>
-        <input type="number" id="laborHours" placeholder="Ex: 0.5" min="0" step="0.25"/>
+        <label>Custo de Setup/Supervisão (R$)
+          <span class="tooltip-icon" data-tip="Tempo gasto preparando a impressora, retirando peça, etc.">?</span>
+        </label>
+        <input type="number" id="setupCost" placeholder="Ex: 10" min="0"/>
+      </div>
+      <div class="field" id="wash-cure-field" style="display:none;">
+        <label>Custo de Lavagem/Cura (R$)
+          <span class="tooltip-icon" data-tip="Custo de álcool isopropílico, resina de lavagem, energia da estação de cura.">?</span>
+        </label>
+        <input type="number" id="washCureCost" placeholder="Ex: 8" min="0"/>
       </div>
       <div class="field">
-        <label>Tempo de Setup/Supervisão (h)</label>
-        <input type="number" id="setupHours" placeholder="Ex: 0.25" min="0" step="0.25"/>
+        <label>Reserva de Falhas (%)
+          <span class="tooltip-icon" data-tip="Porcentagem para cobrir impressões que falham.">?</span>
+        </label>
+        <input type="number" id="failureReserve" placeholder="Ex: 10" min="0" max="100"/>
       </div>
       <div class="field">
-        <label>Custo de Lavagem/Cura (R$) <small>(Resina)</small></label>
-        <input type="number" id="washCureCost" placeholder="Ex: 5" min="0"/>
+        <label>Outros Custos (R$)
+          <span class="tooltip-icon" data-tip="Qualquer outro custo não listado.">?</span>
+        </label>
+        <input type="number" id="otherCosts" placeholder="Ex: 0" min="0"/>
       </div>
-    </div>
-    <div class="energy-preview hidden" id="energy-preview">
-      <i class="fas fa-bolt"></i>
-      Estimativa de energia: <strong id="energy-preview-val">—</strong>
+      <div class="field">
+        <label>Quantidade de Peças</label>
+        <input type="number" id="quantity" placeholder="Ex: 1" min="1"/>
+      </div>
     </div>
   </section>
 
   <!-- SEÇÃO 4: NEGÓCIO -->
   <section class="card">
-    <h2><i class="fas fa-briefcase"></i> Precificação & Negócio</h2>
+    <h2><i class="fas fa-handshake"></i> Negócio</h2>
     <div class="grid-2">
       <div class="field">
-        <label>Estratégia de Margem</label>
-        <select id="marginStrategy">
-          <option value="markup">Markup sobre custo</option>
-          <option value="margin">Margem sobre preço de venda</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Margem de Lucro (%)
-          <span class="tooltip-icon" data-tip="Markup: % sobre custo. Margem: % do preço de venda.">?</span>
+        <label>Margem de Lucro Desejada (%)
+          <span class="tooltip-icon" data-tip="Porcentagem de lucro sobre o custo total.">?</span>
         </label>
-        <input type="number" id="profitMargin" placeholder="Ex: 40" min="0"/>
+        <input type="number" id="profitMargin" placeholder="Ex: 50" min="0" max="500"/>
       </div>
       <div class="field">
-        <label>Impostos / Taxas (%)</label>
+        <label>Impostos / Taxas (%)
+          <span class="tooltip-icon" data-tip="Impostos sobre a venda, taxa de maquininha, etc.">?</span>
+        </label>
         <input type="number" id="taxRate" placeholder="Ex: 6" min="0" max="100"/>
       </div>
       <div class="field">
-        <label>Taxa de Plataforma (%) <small>(Shopee, ML...)</small></label>
+        <label>Taxa de Plataforma (%)
+          <span class="tooltip-icon" data-tip="Taxa de marketplaces como Shopee, Mercado Livre, Etsy.">?</span>
+        </label>
         <input type="number" id="platformFee" placeholder="Ex: 12" min="0" max="100"/>
       </div>
       <div class="field">
-        <label>Embalagem e Envio (R$)</label>
-        <input type="number" id="packagingCost" placeholder="Ex: 15" min="0"/>
-      </div>
-      <div class="field">
-        <label>Outros Custos (R$)</label>
-        <input type="number" id="otherCosts" placeholder="Ex: 5" min="0"/>
-      </div>
-      <div class="field">
-        <label>Desconto Máximo Aceitável (%)</label>
+        <label>Desconto Máximo (%)
+          <span class="tooltip-icon" data-tip="Desconto máximo que você pode dar sem ter prejuízo.">?</span>
+        </label>
         <input type="number" id="maxDiscount" placeholder="Ex: 10" min="0" max="100"/>
-      </div>
-      <div class="field">
-        <label>Quantidade de Peças</label>
-        <input type="number" id="quantity" placeholder="Ex: 1" min="1" value="1"/>
       </div>
     </div>
   </section>
 
-  <button class="btn-calculate" onclick="calculate()">
-    <i class="fas fa-calculator"></i> Calcular Precificação Completa
-  </button>
-
-  <!-- RESULTADO -->
-  <section class="card result-card hidden" id="result">
-    <div class="result-header">
-      <h2><i class="fas fa-receipt"></i> Relatório de Precificação</h2>
-      <div class="result-actions">
-        <button class="btn-small" onclick="exportPDF()">
-          <i class="fas fa-file-pdf"></i> PDF
-        </button>
-        <button class="btn-small" onclick="saveToHistory()">
-          <i class="fas fa-floppy-disk"></i> Salvar
-        </button>
-        <button class="btn-small" onclick="copyResult()">
-          <i class="fas fa-copy"></i> Copiar
-        </button>
-        <button class="btn-small" onclick="addToCatalogFromResult()">
-          <i class="fas fa-cubes"></i> Catálogo
-        </button>
-      </div>
-    </div>
-
-    <div class="result-breakdown">
-      <div class="breakdown-group">
-        <div class="breakdown-title">📦 Materiais</div>
-        <div class="result-item"><span><i class="fas fa-layer-group"></i> Material Principal</span><span id="r-material">R$ 0,00</span></div>
-        <div class="result-item"><span><i class="fas fa-shapes"></i> Material de Suporte</span><span id="r-support">R$ 0,00</span></div>
-        <div class="result-item"><span><i class="fas fa-paint-roller"></i> Acabamentos</span><span id="r-finishing">R$ 0,00</span></div>
-      </div>
-      <div class="breakdown-group">
-        <div class="breakdown-title">⚙️ Equipamento & Energia</div>
-        <div class="result-item"><span><i class="fas fa-bolt"></i> Energia Elétrica</span><span id="r-energy">R$ 0,00</span></div>
-        <div class="result-item"><span><i class="fas fa-print"></i> Depreciação Impressora</span><span id="r-depreciation">R$ 0,00</span></div>
-        <div class="result-item"><span><i class="fas fa-wrench"></i> Manutenção (rateada)</span><span id="r-maintenance">R$ 0,00</span></div>
-        <div class="result-item"><span><i class="fas fa-screwdriver"></i> Consumíveis</span><span id="r-consumables">R$ 0,00</span></div>
-        <div class="result-item"><span><i class="fas fa-building"></i> Espaço/Localização</span><span id="r-space">R$ 0,00</span></div>
-      </div>
-      <div class="breakdown-group">
-        <div class="breakdown-title">👷 Mão de Obra</div>
-        <div class="result-item"><span><i class="fas fa-person-digging"></i> Trabalho Manual</span><span id="r-labor">R$ 0,00</span></div>
-        <div class="result-item"><span><i class="fas fa-gear"></i> Setup / Supervisão</span><span id="r-setup">R$ 0,00</span></div>
-        <div class="result-item"><span><i class="fas fa-flask"></i> Lavagem/Cura</span><span id="r-washcure">R$ 0,00</span></div>
-      </div>
-      <div class="breakdown-group">
-        <div class="breakdown-title">⚠️ Riscos & Extras</div>
-        <div class="result-item"><span><i class="fas fa-triangle-exclamation"></i> Reserva de Falhas</span><span id="r-failure">R$ 0,00</span></div>
-        <div class="result-item"><span><i class="fas fa-paintbrush"></i> Pós-processamento</span><span id="r-postprocess">R$ 0,00</span></div>
-        <div class="result-item"><span><i class="fas fa-box"></i> Embalagem/Envio</span><span id="r-packaging">R$ 0,00</span></div>
-        <div class="result-item"><span><i class="fas fa-ellipsis"></i> Outros Custos</span><span id="r-other">R$ 0,00</span></div>
-      </div>
-
-      <div class="result-divider"></div>
-      <div class="result-item subtotal">
-        <span><i class="fas fa-sigma"></i> Custo Total (unit.)</span>
-        <span id="r-total-cost">R$ 0,00</span>
-      </div>
-      <div class="result-item"><span><i class="fas fa-percent"></i> Impostos</span><span id="r-tax">R$ 0,00</span></div>
-      <div class="result-item"><span><i class="fas fa-store"></i> Taxa de Plataforma</span><span id="r-platform">R$ 0,00</span></div>
-      <div class="result-item"><span><i class="fas fa-chart-line"></i> Margem de Lucro</span><span id="r-profit">R$ 0,00</span></div>
-      <div class="result-divider"></div>
-
-      <div class="result-item final-price">
-        <span><i class="fas fa-tag"></i> PREÇO FINAL UNITÁRIO</span>
-        <span id="r-final">R$ 0,00</span>
-      </div>
-      <div class="result-item batch-price">
-        <span><i class="fas fa-boxes-stacked"></i> Total do Lote (<span id="r-qty-label">1</span> un.)</span>
-        <span id="r-batch">R$ 0,00</span>
-      </div>
-    </div>
-
-    <div class="price-badges">
-      <div class="badge"><small>Preço Mínimo</small><strong id="r-min">R$ 0,00</strong></div>
-      <div class="badge highlight"><small>⭐ Preço Sugerido</small><strong id="r-sug">R$ 0,00</strong></div>
-      <div class="badge"><small>Com desconto máx.</small><strong id="r-discounted">R$ 0,00</strong></div>
-      <div class="badge premium"><small>Premium (+20%)</small><strong id="r-prem">R$ 0,00</strong></div>
-    </div>
-
-    <!-- COMPARADOR DE PLATAFORMAS -->
-    <div class="card" style="margin-top:1.4rem;border-top:3px solid var(--orange);">
-      <h3><i class="fas fa-store"></i> Comparador de Plataformas</h3>
-      <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;">
-        Veja o impacto real das taxas em cada canal de venda.
-      </p>
-      <div id="platform-comparator-grid" class="platform-grid"></div>
-    </div>
-
-    <div class="chart-wrapper">
-      <h3><i class="fas fa-chart-pie"></i> Composição do Custo</h3>
-      <canvas id="costChart" width="280" height="280"></canvas>
-      <div id="chart-legend" class="chart-legend"></div>
-    </div>
-
-    <button class="btn-reset" onclick="resetForm()">
-      <i class="fas fa-arrow-rotate-left"></i> Nova Precificação
+  <!-- BOTÕES DE AÇÃO -->
+  <div class="action-buttons">
+    <button class="btn-calculate" onclick="window.calculate()">
+      <i class="fas fa-calculator"></i> Calcular Preço
     </button>
+    <button class="btn-secondary" onclick="window.resetForm()">
+      <i class="fas fa-eraser"></i> Limpar
+    </button>
+    <button class="btn-secondary" onclick="window.saveToHistory()">
+      <i class="fas fa-save"></i> Salvar
+    </button>
+  </div>
+
+  <!-- RESULTADOS -->
+  <section class="card hidden" id="result-section">
+    <div class="result-header">
+      <h2><i class="fas fa-dollar-sign"></i> Resultado da Precificação</h2>
+      <div class="result-actions">
+        <button class="btn-small" onclick="window.exportPDF()">
+          <i class="fas fa-file-pdf"></i> Exportar PDF
+        </button>
+        <button class="btn-small" onclick="window.openComparator()">
+          <i class="fas fa-code-compare"></i> Comparar
+        </button>
+      </div>
+    </div>
+    <div class="result-grid">
+      <div class="kpi-card blue">
+        <small>Custo Direto</small>
+        <strong id="directCost">R$ 0,00</strong>
+        <span>Custo de produção</span>
+      </div>
+      <div class="kpi-card orange">
+        <small>Preço Sugerido</small>
+        <strong id="finalPrice">R$ 0,00</strong>
+        <span>Com lucro e taxas</span>
+      </div>
+      <div class="kpi-card green">
+        <small>Lucro Líquido</small>
+        <strong id="profitAmount">R$ 0,00</strong>
+        <span>Margem: <span id="profitMarginResult">0%</span></span>
+      </div>
+      <div class="kpi-card neutral">
+        <small>Preço Mínimo</small>
+        <strong id="minPrice">R$ 0,00</strong>
+        <span>Sem lucro</span>
+      </div>
+      <div class="kpi-card neutral">
+        <small>Preço Premium</small>
+        <strong id="premiumPrice">R$ 0,00</strong>
+        <span>+20% sobre sugerido</span>
+      </div>
+      <div class="kpi-card neutral">
+        <small>Desconto Máximo</small>
+        <strong id="discountedPrice">R$ 0,00</strong>
+        <span>Até <span id="maxDiscountResult">0%</span></span>
+      </div>
+    </div>
+
+    <div class="details-grid">
+      <h3>Composição do Preço</h3>
+      <div class="detail-item">
+        <span>Material</span>
+        <span id="materialCost">R$ 0,00</span>
+      </div>
+      <div class="detail-item">
+        <span>Energia</span>
+        <span id="energyCost">R$ 0,00</span>
+      </div>
+      <div class="detail-item">
+        <span>Depreciação</span>
+        <span id="depreciationCost">R$ 0,00</span>
+      </div>
+      <div class="detail-item">
+        <span>Consumíveis</span>
+        <span id="consumablesCost">R$ 0,00</span>
+      </div>
+      <div class="detail-item">
+        <span>Manutenção</span>
+        <span id="maintenanceCostResult">R$ 0,00</span>
+      </div>
+      <div class="detail-item">
+        <span>Espaço</span>
+        <span id="spaceCostResult">R$ 0,00</span>
+      </div>
+      <div class="detail-item">
+        <span>Mão de Obra</span>
+        <span id="laborCostResult">R$ 0,00</span>
+      </div>
+      <div class="detail-item">
+        <span>Setup/Supervisão</span>
+        <span id="setupCostResult">R$ 0,00</span>
+      </div>
+      <div class="detail-item" id="wash-cure-result-item" style="display:none;">
+        <span>Lavagem/Cura</span>
+        <span id="washCureCostResult">R$ 0,00</span>
+      </div>
+      <div class="detail-item">
+        <span>Pós-processamento</span>
+        <span id="postProcessCostResult">R$ 0,00</span>
+      </div>
+      <div class="detail-item">
+        <span>Embalagem/Envio</span>
+        <span id="packagingCostResult">R$ 0,00</span>
+      </div>
+      <div class="detail-item">
+        <span>Reserva de Falhas</span>
+        <span id="failureReserveResult">R$ 0,00</span>
+      </div>
+      <div class="detail-item">
+        <span>Outros Custos</span>
+        <span id="otherCostsResult">R$ 0,00</span>
+      </div>
+      <div class="detail-item total">
+        <span>Impostos/Taxas</span>
+        <span id="taxAmount">R$ 0,00</span>
+      </div>
+      <div class="detail-item total">
+        <span>Taxa Plataforma</span>
+        <span id="platformFeeAmount">R$ 0,00</span>
+      </div>
+    </div>
   </section>
 </div>
 
@@ -462,65 +488,54 @@
      ABA: DASHBOARD
 ═══════════════════════════════════════════ -->
 <div id="tab-dashboard" class="tab-content hidden">
-  <div class="card">
-    <div class="result-header">
-      <h2><i class="fas fa-chart-pie"></i> Dashboard do Negócio</h2>
-      <button class="btn-small" onclick="exportDashboardCSV()">
-        <i class="fas fa-file-csv"></i> Exportar CSV
-      </button>
-    </div>
-  </div>
+  <!-- Conteúdo do dashboard será renderizado via JS -->
 </div>
 
 <!-- ═══════════════════════════════════════════
      ABA: CLIENTES
 ═══════════════════════════════════════════ -->
 <div id="tab-clients" class="tab-content hidden">
-  <div class="card">
-    <h2><i class="fas fa-users"></i> Clientes & Orçamentos</h2>
-  </div>
+  <!-- Conteúdo dos clientes será renderizado via JS -->
 </div>
 
 <!-- ═══════════════════════════════════════════
      ABA: CATÁLOGO
 ═══════════════════════════════════════════ -->
 <div id="tab-catalog" class="tab-content hidden">
-  <div class="card">
-    <h2><i class="fas fa-cubes"></i> Catálogo de Peças</h2>
-  </div>
+  <!-- Conteúdo do catálogo será renderizado via JS -->
 </div>
 
 <!-- ═══════════════════════════════════════════
-     ABA: FERRAMENTAS (NOVA!)
+     ABA: FERRAMENTAS
 ═══════════════════════════════════════════ -->
 <div id="tab-tools" class="tab-content hidden">
 
-  <!-- 1. CALCULADORA DE SPOOL -->
+  <!-- 1. CALCULADORA DE SPOOL RESTANTE -->
   <div class="card">
     <div class="result-header">
       <h2><i class="fas fa-weight-hanging"></i> Calculadora de Spool Restante</h2>
-      <span style="font-size:0.78rem;color:var(--text-muted)">Evite falhas por falta de material!</span>
+      <span style="font-size:0.78rem;color:var(--text-muted)">Saiba quanto material ainda tem e quantas peças cabem.</span>
     </div>
     <div class="grid-2" style="margin-top:1rem;">
       <div class="field">
-        <label>Peso Total do Carretel (g)</label>
+        <label>Peso Total do Spool (g)</label>
         <input type="number" id="spool-total" placeholder="Ex: 1000" min="1"
-               oninput="calcSpoolRemaining()"/>
+               oninput="window.calcSpoolRemaining()"/>
       </div>
       <div class="field">
-        <label>Material já Usado (g)</label>
-        <input type="number" id="spool-used" placeholder="Ex: 350" min="0"
-               oninput="calcSpoolRemaining()"/>
+        <label>Peso Já Usado (g)</label>
+        <input type="number" id="spool-used" placeholder="Ex: 250" min="0"
+               oninput="window.calcSpoolRemaining()"/>
       </div>
       <div class="field">
-        <label>Peso Médio por Peça (g)</label>
+        <label>Peso por Peça (g)</label>
         <input type="number" id="spool-per-piece" placeholder="Ex: 85" min="1"
-               oninput="calcSpoolRemaining()"/>
+               oninput="window.calcSpoolRemaining()"/>
       </div>
       <div class="field">
         <label>Custo do Carretel (R$)</label>
         <input type="number" id="spool-price" placeholder="Ex: 120" min="0"
-               oninput="calcSpoolRemaining()"/>
+               oninput="window.calcSpoolRemaining()"/>
       </div>
     </div>
 
@@ -587,22 +602,22 @@
       <div class="field">
         <label>Custo de Produção (R$)</label>
         <input type="number" id="plat-cost" placeholder="Ex: 18.00" min="0" step="0.01"
-               oninput="calcPlatformComparator()"/>
+               oninput="window.calcPlatformComparator()"/>
       </div>
       <div class="field">
         <label>Margem de Lucro Desejada (%)</label>
         <input type="number" id="plat-margin" placeholder="Ex: 40" min="0" max="100"
-               oninput="calcPlatformComparator()"/>
+               oninput="window.calcPlatformComparator()"/>
       </div>
       <div class="field">
         <label>Impostos (%)</label>
         <input type="number" id="plat-tax" placeholder="Ex: 6" min="0" max="100"
-               oninput="calcPlatformComparator()"/>
+               oninput="window.calcPlatformComparator()"/>
       </div>
       <div class="field">
         <label>Embalagem/Envio (R$)</label>
         <input type="number" id="plat-shipping" placeholder="Ex: 15" min="0"
-               oninput="calcPlatformComparator()"/>
+               oninput="window.calcPlatformComparator()"/>
       </div>
     </div>
     <div id="platform-result" class="hidden" style="margin-top:1rem;">
@@ -614,7 +629,7 @@
   <div class="card">
     <div class="result-header">
       <h2><i class="fas fa-bell"></i> Alertas de Orçamentos Pendentes</h2>
-      <button class="btn-small" onclick="renderPendingAlerts()">
+      <button class="btn-small" onclick="window.renderPendingAlerts()">
         <i class="fas fa-arrows-rotate"></i> Atualizar
       </button>
     </div>
@@ -630,7 +645,7 @@
   <div class="card">
     <div class="result-header">
       <h2><i class="fas fa-file-chart-column"></i> Relatório Mensal</h2>
-      <button class="btn-small" onclick="exportMonthlyReportPDF()">
+      <button class="btn-small" onclick="window.exportMonthlyReportPDF()">
         <i class="fas fa-file-pdf"></i> Gerar PDF
       </button>
     </div>
@@ -670,11 +685,11 @@
     <h2><i class="fas fa-star"></i> Produtos em Destaque & Similares</h2>
     <p class="section-desc">Filamentos, resinas e equipamentos em evidência no mercado em 2026.</p>
     <div class="product-filters">
-      <button class="filter-btn active" data-filter="all">Todos</button>
-      <button class="filter-btn" data-filter="filament">Filamentos</button>
-      <button class="filter-btn" data-filter="resin">Resinas</button>
-      <button class="filter-btn" data-filter="printer">Impressoras</button>
-      <button class="filter-btn" data-filter="tool">Ferramentas</button>
+      <button class="filter-btn active" data-filter="all" onclick="window.renderProducts('all', this)">Todos</button>
+      <button class="filter-btn" data-filter="filament" onclick="window.renderProducts('filament', this)">Filamentos</button>
+      <button class="filter-btn" data-filter="resin" onclick="window.renderProducts('resin', this)">Resinas</button>
+      <button class="filter-btn" data-filter="printer" onclick="window.renderProducts('printer', this)">Impressoras</button>
+      <button class="filter-btn" data-filter="tool" onclick="window.renderProducts('tool', this)">Ferramentas</button>
     </div>
     <div class="products-grid" id="products-grid"></div>
   </div>
@@ -687,48 +702,48 @@
   <div class="card">
     <div class="result-header">
       <h2><i class="fas fa-chart-line"></i> Simulador de Lucro Mensal</h2>
-      <button class="btn-small" onclick="importFromPricing()">
+      <button class="btn-small" onclick="window.importFromPricing()">
         <i class="fas fa-file-import"></i> Importar da Precificação
       </button>
     </div>
     <p class="section-desc">Projete receita, lucro, breakeven e retorno do investimento.</p>
     <div class="scenario-tabs">
-      <button class="scenario-tab active" data-scenario="conservative">🐢 Conservador</button>
-      <button class="scenario-tab" data-scenario="realistic">📊 Realista</button>
-      <button class="scenario-tab" data-scenario="optimistic">🚀 Otimista</button>
+      <button class="scenario-tab active" data-scenario="conservative" onclick="window.runSimulator('conservative')">🐢 Conservador</button>
+      <button class="scenario-tab" data-scenario="realistic" onclick="window.runSimulator('realistic')">📊 Realista</button>
+      <button class="scenario-tab" data-scenario="optimistic" onclick="window.runSimulator('optimistic')">🚀 Otimista</button>
     </div>
     <div class="simulator-grid">
       <div class="field">
         <label>Preço de Venda por Peça (R$)</label>
-        <input type="number" id="sim-price" placeholder="Ex: 45.00" min="0" step="0.01" oninput="runSimulator()"/>
+        <input type="number" id="sim-price" placeholder="Ex: 45.00" min="0" step="0.01" oninput="window.runSimulator()"/>
       </div>
       <div class="field">
         <label>Custo por Peça (R$)</label>
-        <input type="number" id="sim-cost" placeholder="Ex: 18.00" min="0" step="0.01" oninput="runSimulator()"/>
+        <input type="number" id="sim-cost" placeholder="Ex: 18.00" min="0" step="0.01" oninput="window.runSimulator()"/>
       </div>
       <div class="field">
         <label>Peças Produzidas por Dia</label>
-        <input type="number" id="sim-units-day" placeholder="Ex: 8" min="1" oninput="runSimulator()"/>
+        <input type="number" id="sim-units-day" placeholder="Ex: 8" min="1" oninput="window.runSimulator()"/>
       </div>
       <div class="field">
         <label>Dias Trabalhados por Mês</label>
-        <input type="number" id="sim-work-days" placeholder="Ex: 22" min="1" max="31" oninput="runSimulator()"/>
+        <input type="number" id="sim-work-days" placeholder="Ex: 22" min="1" max="31" oninput="window.runSimulator()"/>
       </div>
       <div class="field">
         <label>Custos Fixos Mensais (R$)</label>
-        <input type="number" id="sim-fixed" placeholder="Ex: 800" min="0" oninput="runSimulator()"/>
+        <input type="number" id="sim-fixed" placeholder="Ex: 800" min="0" oninput="window.runSimulator()"/>
       </div>
       <div class="field">
         <label>Investimento Total (R$)</label>
-        <input type="number" id="sim-investment" placeholder="Ex: 12000" min="0" oninput="runSimulator()"/>
+        <input type="number" id="sim-investment" placeholder="Ex: 12000" min="0" oninput="window.runSimulator()"/>
       </div>
       <div class="field">
         <label>Taxa de Plataforma (%)</label>
-        <input type="number" id="sim-platform" placeholder="Ex: 12" min="0" max="100" step="0.1" oninput="runSimulator()"/>
+        <input type="number" id="sim-platform" placeholder="Ex: 12" min="0" max="100" step="0.1" oninput="window.runSimulator()"/>
       </div>
       <div class="field">
         <label>Impostos / Taxas (%)</label>
-        <input type="number" id="sim-tax" placeholder="Ex: 6" min="0" max="100" step="0.1" oninput="runSimulator()"/>
+        <input type="number" id="sim-tax" placeholder="Ex: 6" min="0" max="100" step="0.1" oninput="window.runSimulator()"/>
       </div>
     </div>
 
@@ -743,10 +758,10 @@
       </div>
       <div class="projection-bar-wrapper">
         <h4><i class="fas fa-bars-progress"></i> Composição Mensal</h4>
-        <div class="proj-row"><span class="proj-label">Receita</span><div class="proj-bar-bg"><div class="proj-bar-fill" id="bar-revenue"></div></div><span class="proj-value" id="bar-revenue-val">—</span></div>
-        <div class="proj-row"><span class="proj-label">R. Líquida</span><div class="proj-bar-bg"><div class="proj-bar-fill" id="bar-netrev"></div></div><span class="proj-value" id="bar-netrev-val">—</span></div>
-        <div class="proj-row"><span class="proj-label">Custos</span><div class="proj-bar-bg"><div class="proj-bar-fill" id="bar-costs"></div></div><span class="proj-value" id="bar-costs-val">—</span></div>
-        <div class="proj-row"><span class="proj-label">Lucro</span><div class="proj-bar-bg"><div class="proj-bar-fill" id="bar-profit"></div></div><span class="proj-value" id="bar-profit-val">—</span></div>
+        <div class="proj-row"><span>Receita</span><div class="proj-bar-bg"><div class="proj-bar-fill" id="bar-revenue"></div></div><span id="bar-revenue-val">—</span></div>
+        <div class="proj-row"><span>R. Líquida</span><div class="proj-bar-bg"><div class="proj-bar-fill" id="bar-netrev"></div></div><span id="bar-netrev-val">—</span></div>
+        <div class="proj-row"><span>Custos</span><div class="proj-bar-bg"><div class="proj-bar-fill" id="bar-costs"></div></div><span id="bar-costs-val">—</span></div>
+        <div class="proj-row"><span>Lucro</span><div class="proj-bar-bg"><div class="proj-bar-fill" id="bar-profit"></div></div><span id="bar-profit-val">—</span></div>
       </div>
       <div class="breakeven-card">
         <div class="breakeven-icon">⚖️</div>
@@ -775,7 +790,7 @@
   <div class="card">
     <div class="history-header">
       <h2><i class="fas fa-clock-rotate-left"></i> Histórico de Precificações</h2>
-      <button class="btn-small danger" onclick="clearHistory()">
+      <button class="btn-small danger" onclick="window.clearHistory()">
         <i class="fas fa-trash"></i> Limpar Tudo
       </button>
     </div>
@@ -795,7 +810,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3><i class="fas fa-code-compare"></i> Comparador de Materiais</h3>
-      <button onclick="closeComparator()"><i class="fas fa-xmark"></i></button>
+      <button onclick="window.closeComparator()"><i class="fas fa-xmark"></i></button>
     </div>
     <div class="modal-body">
       <div id="comparator-content"></div>
@@ -804,7 +819,7 @@
 </div>
 
 <!-- DARK MODE -->
-<button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+<button class="theme-toggle" onclick="window.toggleTheme()" title="Alternar tema">
   <i class="fas fa-moon" id="theme-icon"></i>
 </button>
 
