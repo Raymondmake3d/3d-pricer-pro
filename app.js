@@ -81,6 +81,9 @@ window.initTabs = function() {
 
       // Funções de renderização das abas
       switch (target) {
+        case 'calc':
+          // Não faz nada, a aba de cálculo é a padrão e não precisa de renderização inicial complexa
+          break;
         case 'dashboard': window.renderDashboard();      break;
         case 'clients':   window.renderClients();        break;
         case 'catalog':
@@ -92,10 +95,17 @@ window.initTabs = function() {
           window.renderPendingAlerts(); // Assumindo renderPendingAlerts existe
           window.renderMonthlyReportPreview(); // Assumindo renderMonthlyReportPreview existe
           break;
+        case 'tips':
+          window.renderQualityTips(); // Assumindo renderQualityTips existe
+          break;
+        case 'products':
+          window.renderProducts('all'); // Assumindo renderProducts existe
+          window.initProductFilters(); // Inicializa os filtros de produtos
+          break;
+        case 'simulator':
+          window.runSimulator(); // Inicia o simulador ao abrir a aba
+          break;
         case 'history':   window.renderHistory();        break;
-        case 'products':  window.renderProducts('all');  break;
-        case 'tips':      window.renderQualityTips();    break;
-        case 'simulator': window.runSimulator();         break; // Adicionado para iniciar o simulador ao abrir a aba
       }
     });
   });
@@ -144,199 +154,67 @@ window.addConsumable = function() {
            oninput="window.updateConsumable('${id}','cost',this.value)"/>
     <input type="number" placeholder="Horas" min="0"
            oninput="window.updateConsumable('${id}','lifeHours',this.value)"/>
-    <button class="btn-del" onclick="window.removeConsumable('${id}')">
-      <i class="fas fa-xmark"></i>
-    </button>`;
-  list?.appendChild(row);
+    <button class="btn-remove" onclick="window.removeConsumable('${id}')">
+      <i class="fas fa-trash"></i>
+    </button>
+  `;
+  list.appendChild(row);
+  window.calculate();
 };
 
 window.updateConsumable = function(id, field, value) {
-  const item = State.consumables.find(c => c.id === id);
-  if (item) item[field] = field === 'name' ? value : parseFloat(value) || 0;
-  window.updateProgress(); // Atualiza o progresso ao mudar consumíveis
+  const consumable = State.consumables.find(c => c.id === id);
+  if (consumable) {
+    consumable[field] = field === 'name' ? value : parseFloat(value) || 0;
+    window.calculate();
+  }
 };
 
 window.removeConsumable = function(id) {
   State.consumables = State.consumables.filter(c => c.id !== id);
   document.getElementById(`crow-${id}`)?.remove();
-  window.updateProgress(); // Atualiza o progresso ao remover consumíveis
-};
-
-window.calcConsumablesCost = function(printHours) {
-  return State.consumables.reduce((sum, c) => {
-    if (!c.cost || !c.lifeHours) return sum;
-    return sum + (c.cost / c.lifeHours) * printHours;
-  }, 0);
+  window.calculate();
 };
 
 // ═══════════════════════════════════════════════════════
-// ACABAMENTOS DINÂMICOS
+// PÓS-PROCESSAMENTO DINÂMICO
 // ═══════════════════════════════════════════════════════
 
 window.addFinishing = function() {
   const id   = window.uid();
-  State.finishings.push({ id, name:'', cost:0 });
+  State.finishings.push({ id, name:'', cost:0, time:0 });
 
   const list = document.getElementById('finishing-list');
   const row  = document.createElement('div');
-  row.className = 'dynamic-row finishing-row';
+  row.className = 'dynamic-row';
   row.id        = `frow-${id}`;
   row.innerHTML = `
-    <input type="text"   placeholder="Ex: Primer em spray"
+    <input type="text"   placeholder="Ex: Lixar e Pintar"
            oninput="window.updateFinishing('${id}','name',this.value)"/>
-    <input type="number" placeholder="R$" min="0"
+    <input type="number" placeholder="Custo R$" min="0"
            oninput="window.updateFinishing('${id}','cost',this.value)"/>
-    <button class="btn-del" onclick="window.removeFinishing('${id}')">
-      <i class="fas fa-xmark"></i>
-    </button>`;
-  list?.appendChild(row);
+    <input type="number" placeholder="Tempo (min)" min="0"
+           oninput="window.updateFinishing('${id}','time',this.value)"/>
+    <button class="btn-remove" onclick="window.removeFinishing('${id}')">
+      <i class="fas fa-trash"></i>
+    </button>
+  `;
+  list.appendChild(row);
+  window.calculate();
 };
 
 window.updateFinishing = function(id, field, value) {
-  const item = State.finishings.find(f => f.id === id);
-  if (item) item[field] = field === 'name' ? value : parseFloat(value) || 0;
+  const finishing = State.finishings.find(f => f.id === id);
+  if (finishing) {
+    finishing[field] = field === 'name' ? value : parseFloat(value) || 0;
+    window.calculate();
+  }
 };
 
 window.removeFinishing = function(id) {
   State.finishings = State.finishings.filter(f => f.id !== id);
   document.getElementById(`frow-${id}`)?.remove();
-};
-
-window.calcFinishingCost = function() {
-  return State.finishings.reduce((sum, f) => sum + (f.cost || 0), 0);
-};
-
-// ═══════════════════════════════════════════════════════
-// PREVIEW DE ENERGIA
-// ═══════════════════════════════════════════════════════
-
-window.updateEnergyPreview = function() {
-  const hours = window.getVal('printHours');
-  const watts = window.getVal('printerWatts');
-  const rate  = window.getVal('energyRate');
-  const box   = document.getElementById('energy-preview');
-  const valEl = document.getElementById('energy-preview-val');
-
-  if (hours > 0 && watts > 0 && rate > 0) {
-    const cost = (watts / 1000) * hours * rate;
-    if (valEl) valEl.textContent = `${window.formatBRL(cost)} para ${hours}h de impressão`;
-    box?.classList.remove('hidden');
-  } else {
-    box?.classList.add('hidden');
-  }
-};
-
-// ═══════════════════════════════════════════════════════
-// MUDANÇA DE MATERIAL
-// ═══════════════════════════════════════════════════════
-
-// Assumindo que MATERIAL_INFO está definido em outro script (ex: suggestions.js)
-const MATERIAL_INFO = {
-  "PLA": { "desc": "Filamento versátil e fácil de usar, ideal para iniciantes.", "tempNozzle": "190-220°C", "tempBed": "50-60°C", "avgPrice": 120, "alternatives": ["PETG"] },
-  "PETG": { "desc": "Mais resistente e flexível que o PLA, boa adesão de camada.", "tempNozzle": "220-250°C", "tempBed": "70-80°C", "avgPrice": 150, "alternatives": ["ABS", "ASA"] },
-  "ABS": { "desc": "Alta resistência e durabilidade, mas requer mesa aquecida e ambiente controlado.", "tempNozzle": "230-260°C", "tempBed": "90-110°C", "avgPrice": 140, "alternatives": ["ASA"] },
-  "ASA": { "desc": "Similar ao ABS, mas com maior resistência UV e menos warping.", "tempNozzle": "240-260°C", "tempBed": "90-110°C", "avgPrice": 180, "alternatives": ["PETG"] },
-  "TPU": { "desc": "Filamento flexível e resistente a impactos, ideal para peças funcionais.", "tempNozzle": "210-230°C", "tempBed": "30-50°C", "avgPrice": 160, "alternatives": [] },
-  "PLA-CF": { "desc": "PLA com fibra de carbono, mais rígido e com acabamento fosco.", "tempNozzle": "200-230°C", "tempBed": "50-60°C", "avgPrice": 250, "alternatives": [] },
-  "PETG-CF": { "desc": "PETG com fibra de carbono, alta resistência e leveza.", "tempNozzle": "230-260°C", "tempBed": "70-80°C", "avgPrice": 280, "alternatives": [] },
-  "PA": { "desc": "Nylon, alta resistência mecânica e química, mas absorve umidade.", "tempNozzle": "240-270°C", "tempBed": "80-100°C", "avgPrice": 300, "alternatives": ["PA-CF"] },
-  "PA-CF": { "desc": "Nylon com fibra de carbono, extremamente forte e rígido.", "tempNozzle": "250-280°C", "tempBed": "80-100°C", "avgPrice": 400, "alternatives": [] },
-  "PC": { "desc": "Policarbonato, alta resistência ao calor e impacto, difícil de imprimir.", "tempNozzle": "260-300°C", "tempBed": "100-120°C", "avgPrice": 350, "alternatives": [] },
-  "PVA": { "desc": "Material de suporte solúvel em água, ideal para geometrias complexas.", "tempNozzle": "190-220°C", "tempBed": "50-60°C", "avgPrice": 200, "alternatives": [] },
-  "RESIN-STD": { "desc": "Resina padrão, boa para detalhes e protótipos.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 100, "alternatives": ["RESIN-ABS"] },
-  "RESIN-ABS": { "desc": "Resina ABS-Like, mais resistente e menos quebradiça que a padrão.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 130, "alternatives": ["RESIN-8K"] },
-  "RESIN-8K": { "desc": "Resina de alta resolução, para impressoras 8K e detalhes finos.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 150, "alternatives": [] },
-  "RESIN-ENG": { "desc": "Resina de engenharia, para aplicações funcionais e maior durabilidade.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 200, "alternatives": [] },
-  "RESIN-CAST": { "desc": "Resina para fundição, queima sem deixar resíduos.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 250, "alternatives": [] },
-  "OUTRO": { "desc": "Material personalizado. Preencha os detalhes manualmente.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 0, "alternatives": [] }
-};
-
-
-window.onMaterialChange = function() {
-  const type    = window.getStr('materialType');
-  const infoBox = document.getElementById('material-info');
-  const infoTxt = document.getElementById('material-info-text');
-  const info    = MATERIAL_INFO[type];
-
-  if (!info || !type) {
-    infoBox?.classList.add('hidden');
-    return;
-  }
-
-  if (infoTxt) {
-    infoTxt.innerHTML = `
-      <strong>${type}</strong> — ${info.desc}
-      <br><small>
-        🌡️ Bico: <b>${info.tempNozzle}</b> &nbsp;|&nbsp;
-        Mesa: <b>${info.tempBed}</b> &nbsp;|&nbsp;
-        Preço médio/kg: <b>~R$ ${info.avgPrice}</b>
-      </small>
-      ${info.alternatives?.length
-        ? `<br><small>↪ Alternativas: <b>${info.alternatives.join(', ')}</b></small>`
-        : ''}`;
-  }
-
-  infoBox?.classList.remove('hidden');
-
-  const spoolEl = document.getElementById('spoolCost');
-  if (spoolEl && !spoolEl.value && info.avgPrice) {
-    spoolEl.value             = info.avgPrice;
-    spoolEl.style.borderColor = 'var(--orange)';
-    setTimeout(() => spoolEl.style.borderColor = '', 2000);
-  }
-  window.updateProgress(); // Atualiza o progresso ao mudar material
-};
-
-// ═══════════════════════════════════════════════════════
-// TIPO DE IMPRESSORA
-// ═══════════════════════════════════════════════════════
-
-window.onPrinterTypeChange = function() {
-  const type     = window.getStr('printerType');
-  const watts    = document.getElementById('printerWatts');
-  const defaults = { FDM:350, MSLA:100, SLS:1200, MJF:2000 };
-
-  if (defaults[type] && !watts?.value) {
-    if (watts) watts.value = defaults[type];
-    window.showToast(`Consumo padrão ${type}: ${defaults[type]}W sugerido`, 'fa-bolt');
-  }
-  window.updateProgress(); // Atualiza o progresso ao mudar tipo de impressora
-};
-
-// ═══════════════════════════════════════════════════════
-// VALIDAÇÃO
-// ═══════════════════════════════════════════════════════
-
-window.validate = function() {
-  const required = [
-    { id:'printerCost',     label:'Custo de Aquisição da Impressora' },
-    { id:'printerLifespan', label:'Vida Útil da Impressora (horas)'  },
-    { id:'printerWatts',    label:'Consumo da Impressora (W)'        },
-    { id:'monthlyHours',    label:'Horas Trabalhadas por Mês'        },
-    { id:'spoolCost',       label:'Preço do Carretel/Frasco'         },
-    { id:'spoolWeight',     label:'Peso do Carretel/Frasco'          },
-    { id:'partWeight',      label:'Peso Usado na Peça'               },
-    { id:'printHours',      label:'Tempo de Impressão'               },
-    { id:'energyRate',      label:'Tarifa de Energia (R$/kWh)'       },
-    { id:'profitMargin',    label:'Margem de Lucro'                  },
-  ];
-
-  for (const f of required) {
-    if (window.getVal(f.id) <= 0) {
-      return { valid:false, message:`Preencha: ${f.label}`, fieldId:f.id };
-    }
-  }
-  return { valid:true, message:'', fieldId:'' };
-};
-
-window.highlightInvalid = function(fieldId) {
-  const el = document.getElementById(fieldId);
-  if (!el) return;
-  el.style.borderColor = '#e74c3c';
-  el.style.boxShadow   = '0 0 0 3px rgba(231,76,60,0.2)';
-  el.focus();
-  el.scrollIntoView({ behavior:'smooth', block:'center' });
-  setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 3000);
+  window.calculate();
 };
 
 // ═══════════════════════════════════════════════════════
@@ -344,483 +222,252 @@ window.highlightInvalid = function(fieldId) {
 // ═══════════════════════════════════════════════════════
 
 window.calculate = function() {
-  const check = window.validate();
-  if (!check.valid) {
-    window.showToast(check.message, 'fa-triangle-exclamation');
-    window.highlightInvalid(check.fieldId);
+  // 1. Dados da Impressora
+  const printerCost       = window.getVal('printerCost');
+  const printerLifespan   = window.getVal('printerLifespan');
+  const printerWatts      = window.getVal('printerWatts');
+  const maintenanceCost   = window.getVal('maintenanceCost');
+  const spaceCost         = window.getVal('spaceCost');
+  const monthlyHours      = window.getVal('monthlyHours');
+  const printerName       = window.getStr('printerName') || 'Impressora Padrão';
+  const printerType       = window.getStr('printerType');
+
+  // 2. Dados do Material
+  const spoolCost         = window.getVal('spoolCost');
+  const spoolWeight       = window.getVal('spoolWeight');
+  const partWeight        = window.getVal('partWeight');
+  const materialType      = window.getStr('materialType') || 'Filamento';
+  const failureRate       = window.getVal('failureRate');
+
+  // 3. Dados da Impressão
+  const printHours        = window.getVal('printHours');
+  const energyRate        = window.getVal('energyRate');
+  const setupHours        = window.getVal('setupHours');
+
+  // 4. Dados do Negócio
+  const profitMargin      = window.getVal('profitMargin');
+  const taxRate           = window.getVal('taxRate');
+  const platformFee       = window.getVal('platformFee');
+  const packagingCost     = window.getVal('packagingCost');
+  const quantity          = window.getVal('quantity') || 1;
+
+  // Validações básicas
+  if (printerLifespan <= 0 || monthlyHours <= 0 || spoolWeight <= 0 || energyRate <= 0) {
+    document.getElementById('result')?.classList.add('hidden');
     return;
   }
 
-  const printerName        = window.getStr('printerName');
-  const printerType        = window.getStr('printerType');
-  const printerCostRaw     = window.getVal('printerCost');
-  const printerLifespan    = window.getVal('printerLifespan');
-  const printerWatts       = window.getVal('printerWatts');
-  const maintenanceCostRaw = window.getVal('maintenanceCost');
-  const spaceCostMonthly   = window.getVal('spaceCost');
-  const monthlyHours       = window.getVal('monthlyHours');
+  // Custo de Depreciação da Impressora (por hora)
+  const depreciationPerHour = printerCost / printerLifespan;
 
-  const materialType    = window.getStr('materialType');
-  const spoolCost       = window.getVal('spoolCost');
-  const spoolWeight     = window.getVal('spoolWeight');
-  const partWeight      = window.getVal('partWeight');
-  const supportWeight   = window.getVal('supportWeight');
-  const failureRate     = window.getVal('failureRate');
-  const postProcessCost = window.getVal('postProcessCost');
+  // Custo Fixo Mensal (manutenção + espaço)
+  const totalFixedMonthlyCost = maintenanceCost + spaceCost;
+  // Custo Fixo por Hora de Impressão
+  const fixedCostPerHour = totalFixedMonthlyCost / monthlyHours;
 
-  const printHours    = window.getVal('printHours');
-  const energyRate    = window.getVal('energyRate');
-  const laborCostPerH = window.getVal('laborCost');
-  const laborHours    = window.getVal('laborHours');
-  const setupHours    = window.getVal('setupHours');
-  const washCureCost  = window.getVal('washCureCost');
+  // Custo de Consumíveis Periódicos (por hora)
+  const consumablesPerHour = State.consumables.reduce((sum, c) => {
+    return sum + (c.cost / (c.lifeHours || 1));
+  }, 0);
 
-  const marginStrategy = window.getStr('marginStrategy');
-  const profitMargin   = window.getVal('profitMargin');
-  const taxRate        = window.getVal('taxRate');
-  const platformFee    = window.getVal('platformFee');
-  const packagingCost  = window.getVal('packagingCost');
-  const otherCosts     = window.getVal('otherCosts');
-  const maxDiscount    = window.getVal('maxDiscount');
-  const quantity       = Math.max(1, window.getVal('quantity'));
-
-  // ── Custos ──
+  // Custo do Material (por grama)
   const materialCostPerGram = spoolCost / spoolWeight;
-  const materialCost        = materialCostPerGram * partWeight;
-  const supportCost         = materialCostPerGram * supportWeight;
-  const finishingCost       = window.calcFinishingCost();
-  const energyCost          = (printerWatts / 1000) * printHours * energyRate;
-  const depreciationCost    = (printerCostRaw / printerLifespan) * printHours;
-  const maintenanceCost     = (maintenanceCostRaw / monthlyHours) * printHours;
-  const spaceCost           = (spaceCostMonthly / monthlyHours) * printHours;
-  const consumablesCost     = window.calcConsumablesCost(printHours);
-  const laborCost           = laborCostPerH * laborHours;
-  const setupCost           = laborCostPerH * setupHours;
-  const failureReserve      = (materialCost + supportCost) * (failureRate / 100);
+  // Custo do Material por Peça (com taxa de falha)
+  const rawMaterialCost = partWeight * materialCostPerGram;
+  const materialCost = rawMaterialCost * (1 + failureRate / 100);
 
+  // Custo de Energia por Hora
+  const energyCostPerHour = (printerWatts / 1000) * energyRate;
+  // Custo de Energia por Peça
+  const energyCost = energyCostPerHour * printHours;
+
+  // Custo de Mão de Obra (por hora, considerando setup)
+  const laborCostPerHour = window.getVal('laborCostPerHour'); // Assumindo que existe um input para isso
+  const laborCost = laborCostPerHour * printHours;
+  const setupCost = laborCostPerHour * setupHours;
+
+  // Custo de Pós-processamento
+  const postProcessCost = State.finishings.reduce((sum, f) => sum + f.cost, 0);
+  const postProcessTime = State.finishings.reduce((sum, f) => sum + f.time, 0); // em minutos
+  const postProcessLaborCost = (laborCostPerHour / 60) * postProcessTime; // Custo da mão de obra do pós-processamento
+
+  // Custo Direto Total por Peça
   const directCost =
-    materialCost + supportCost + finishingCost +
-    energyCost + depreciationCost + maintenanceCost +
-    spaceCost + consumablesCost +
-    laborCost + setupCost + washCureCost +
-    failureReserve + postProcessCost +
-    packagingCost + otherCosts;
+    materialCost +
+    energyCost +
+    (depreciationPerHour * printHours) +
+    (fixedCostPerHour * printHours) +
+    consumablesPerHour * printHours +
+    laborCost +
+    setupCost +
+    postProcessCost +
+    postProcessLaborCost;
 
-  // ── Preço ──
-  const taxAmount          = directCost * (taxRate / 100);
-  const baseBeforePlatform = directCost + taxAmount;
-  const withPlatform       = platformFee > 0
-    ? baseBeforePlatform / (1 - platformFee / 100)
-    : baseBeforePlatform;
-  const platformFeeAmount  = withPlatform - baseBeforePlatform;
+  // Preço de Venda Base (antes de impostos/taxas)
+  const basePrice = directCost / (1 - profitMargin / 100);
 
-  let finalPrice, profitAmount;
-  if (marginStrategy === 'margin') {
-    finalPrice   = withPlatform / (1 - profitMargin / 100);
-    profitAmount = finalPrice - withPlatform;
-  } else {
-    profitAmount = withPlatform * (profitMargin / 100);
-    finalPrice   = withPlatform + profitAmount;
-  }
+  // Impostos e Taxas
+  const taxAmount = basePrice * (taxRate / 100);
+  const platformFeeAmount = basePrice * (platformFee / 100);
 
-  const minPrice        = directCost * 1.05;
-  const discountedPrice = finalPrice * (1 - maxDiscount / 100);
-  const premiumPrice    = finalPrice * 1.20;
-  const batchPrice      = finalPrice * quantity;
+  // Preço Final Unitário
+  const finalPrice = basePrice + taxAmount + platformFeeAmount + packagingCost;
 
-  // ── Salva resultado global ──
+  // Preço para Lote
+  const batchPrice = finalPrice * quantity;
+
+  // Margem de Lucro Real (sobre o preço final)
+  const profitAmount = finalPrice - directCost - taxAmount - platformFeeAmount - packagingCost;
+  const realProfitMargin = (profitAmount / finalPrice) * 100;
+
+  // Preços Sugeridos
+  const minPrice = directCost * 1.1; // 10% acima do custo direto
+  const premiumPrice = finalPrice * 1.2; // 20% acima do preço sugerido
+
+  // Desconto Máximo
+  const maxDiscount = ((finalPrice - directCost) / finalPrice) * 100;
+  const discountedPrice = finalPrice - (finalPrice * (maxDiscount / 100));
+
+  // Atualiza os resultados na UI
+  window.setResult('result-material-cost', materialCost);
+  window.setResult('result-energy-cost', energyCost);
+  window.setResult('result-depreciation-cost', depreciationPerHour * printHours);
+  window.setResult('result-fixed-cost', fixedCostPerHour * printHours);
+  window.setResult('result-consumables-cost', consumablesPerHour * printHours);
+  window.setResult('result-labor-cost', laborCost + setupCost + postProcessLaborCost);
+  window.setResult('result-post-process-cost', postProcessCost + postProcessLaborCost);
+  window.setResult('result-other-costs', packagingCost);
+
+  window.setResult('result-direct-cost', directCost);
+  window.setResult('result-tax-amount', taxAmount);
+  window.setResult('result-platform-fee', platformFeeAmount);
+  window.setResult('result-profit-amount', profitAmount);
+
+  window.setResult('result-final-price', finalPrice);
+  window.setResult('result-batch-price', batchPrice);
+  window.setResult('result-profit-margin', realProfitMargin);
+
+  window.setResult('result-min-price', minPrice);
+  window.setResult('result-suggested-price', finalPrice);
+  window.setResult('result-premium-price', premiumPrice);
+  window.setResult('result-max-discount', maxDiscount);
+  window.setResult('result-discounted-price', discountedPrice);
+
+  document.getElementById('result')?.classList.remove('hidden');
+
+  // Armazena o último resultado para uso em outras abas/funções
   window._lastResult = {
-    printerName, printerType, materialType,
-    printerWatts, printerCostRaw, printerLifespan,
-    maintenanceCostRaw, monthlyHours,
-    partWeight, supportWeight, printHours,
-    spoolCost, spoolWeight,
-    energyRate, laborCostPerH, laborHours,
-    setupHours, taxRate, platformFee,
-    packagingCost, otherCosts, maxDiscount,
-    profitMargin, quantity, failureRate,
-    postProcessCost, materialCostPerGram,
-    materialCost, supportCost, finishingCost,
-    energyCost, depreciationCost, maintenanceCost,
-    spaceCost, consumablesCost,
-    laborCost, setupCost, washCureCost,
-    failureReserve, directCost, taxAmount,
-    platformFeeAmount, profitAmount, finalPrice,
-    minPrice, discountedPrice, premiumPrice, batchPrice,
-    marginStrategy,
+    printerName, printerType,
+    materialType, partWeight, printHours,
+    finalPrice, directCost, profitMargin: realProfitMargin,
+    taxRate, platformFee, packagingCost, quantity,
+    materialCost, energyCost, depreciationCost: depreciationPerHour * printHours,
+    fixedCost: fixedCostPerHour * printHours, consumablesCost: consumablesPerHour * printHours,
+    laborCost: laborCost, setupCost: setupCost, postProcessCost: postProcessCost + postProcessLaborCost,
+    otherCosts: packagingCost,
+    taxAmount, platformFeeAmount, profitAmount,
+    minPrice, premiumPrice, maxDiscount, discountedPrice,
+    batchPrice,
   };
 
-  window.renderResult(window._lastResult); // Assumindo renderResult existe
-  window.renderChart(window._lastResult); // Assumindo renderChart existe
+  // Atualiza as sugestões
+  window.generateDynamicTips(window._lastResult);
   window.updateProgress();
-  window.renderDynamicTips(window.generateDynamicTips(window._lastResult)); // Assumindo generateDynamicTips existe
-  window.renderPlatformComparatorInResult(window._lastResult); // Assumindo renderPlatformComparatorInResult existe
-
-  const resultEl = document.getElementById('result');
-  resultEl?.classList.remove('hidden');
-  setTimeout(() => resultEl?.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
-
-  window.showToast('Precificação concluída! 🎉', 'fa-circle-check');
 };
 
 // ═══════════════════════════════════════════════════════
-// RENDERIZAÇÃO DO RESULTADO
+// FUNÇÕES ESPECÍFICAS DA ABA DE PRECIFICAÇÃO
 // ═══════════════════════════════════════════════════════
 
-window.renderResult = function(r) {
-  const fields = {
-    'r-material':     r.materialCost,
-    'r-support':      r.supportCost,
-    'r-finishing':    r.finishingCost,
-    'r-energy':       r.energyCost,
-    'r-depreciation': r.depreciationCost,
-    'r-maintenance':  r.maintenanceCost,
-    'r-consumables':  r.consumablesCost,
-    'r-space':        r.spaceCost,
-    'r-labor':        r.laborCost,
-    'r-setup':        r.setupCost,
-    'r-washcure':     r.washCureCost,
-    'r-failure':      r.failureReserve,
-    'r-postprocess':  r.postProcessCost,
-    'r-packaging':    r.packagingCost,
-    'r-other':        r.otherCosts,
-    'r-total-cost':   r.directCost,
-    'r-tax':          r.taxAmount,
-    'r-platform':     r.platformFeeAmount,
-    'r-profit':       r.profitAmount,
-    'r-final':        r.finalPrice,
-    'r-min':          r.minPrice,
-    'r-sug':          r.finalPrice,
-    'r-discounted':   r.discountedPrice,
-    'r-prem':         r.premiumPrice,
-    'r-batch':        r.batchPrice,
-  };
+window.onPrinterTypeChange = function() {
+  const printerType = window.getStr('printerType');
+  const materialTypeSelect = document.getElementById('materialType');
 
-  Object.entries(fields).forEach(([id, val]) => window.setResult(id, val));
+  // Limpa as opções existentes
+  materialTypeSelect.innerHTML = '<option value="">Selecione...</option>';
 
-  const qLabel = document.getElementById('r-qty-label');
-  if (qLabel) qLabel.textContent = r.quantity;
+  // Adiciona opções baseadas no tipo de impressora
+  if (printerType === 'FDM') {
+    materialTypeSelect.innerHTML += `
+      <option value="PLA">PLA</option>
+      <option value="PETG">PETG</option>
+      <option value="ABS">ABS</option>
+      <option value="ASA">ASA</option>
+      <option value="TPU">TPU (Flexível)</option>
+      <option value="Nylon">Nylon</option>
+      <option value="PC">Policarbonato (PC)</option>
+      <option value="HIPS">HIPS</option>
+      <option value="Outro">Outro Filamento</option>
+    `;
+  } else if (printerType === 'MSLA') {
+    materialTypeSelect.innerHTML += `
+      <option value="Resina Padrão">Resina Padrão</option>
+      <option value="Resina Lavável em Água">Resina Lavável em Água</option>
+      <option value="Resina ABS-Like">Resina ABS-Like</option>
+      <option value="Resina Flexível">Resina Flexível</option>
+      <option value="Resina Transparente">Resina Transparente</option>
+      <option value="Resina de Engenharia">Resina de Engenharia</option>
+      <option value="Outra Resina">Outra Resina</option>
+    `;
+  } else if (printerType === 'SLS') {
+    materialTypeSelect.innerHTML += `
+      <option value="Nylon PA12">Nylon PA12</option>
+      <option value="TPU SLS">TPU (SLS)</option>
+      <option value="PP SLS">Polipropileno (SLS)</option>
+      <option value="Outro Pó">Outro Pó</option>
+    `;
+  } else if (printerType === 'MJF') {
+    materialTypeSelect.innerHTML += `
+      <option value="Nylon PA12 MJF">Nylon PA12 (MJF)</option>
+      <option value="Nylon PA11 MJF">Nylon PA11 (MJF)</option>
+      <option value="TPU MJF">TPU (MJF)</option>
+      <option value="Outro MJF">Outro (MJF)</option>
+    `;
+  }
+  // Dispara a mudança no material para atualizar as informações
+  window.onMaterialChange();
+  window.calculate();
 };
 
-// ═══════════════════════════════════════════════════════
-// GRÁFICO DE PIZZA
-// ═══════════════════════════════════════════════════════
+window.onMaterialChange = function() {
+  const materialType = window.getStr('materialType');
+  const materialInfoDiv = document.getElementById('material-info');
+  const spoolCostInput = document.getElementById('spoolCost');
+  const materialData = window.MATERIAL_INFO[materialType]; // Acessando MATERIAL_INFO globalmente
 
-window.renderChart = function(r) {
-  const canvas = document.getElementById('costChart');
-  if (!canvas) return;
-
-  const ctx    = canvas.getContext('2d');
-  const W      = canvas.width;
-  const H      = canvas.height;
-  const cx     = W / 2;
-  const cy     = H / 2;
-  const radius = Math.min(W, H) / 2 - 10;
-  const dark   = document.documentElement.getAttribute('data-theme') === 'dark';
-
-  const slices = [
-    { label:'Material',      value: r.materialCost + r.supportCost,                                     color:'#2c4a7c' },
-    { label:'Energia',       value: r.energyCost,                                                       color:'#f07b30' },
-    { label:'Depreciação',   value: r.depreciationCost,                                                 color:'#f5c842' },
-    { label:'Manutenção',    value: r.maintenanceCost + r.spaceCost + r.consumablesCost,                color:'#3d6199' },
-    { label:'Mão de Obra',   value: r.laborCost + r.setupCost,                                         color:'#27ae60' },
-    { label:'Falhas/Extras', value: r.failureReserve + r.postProcessCost,                              color:'#e74c3c' },
-    { label:'Embal./Outros', value: r.packagingCost + r.otherCosts + r.finishingCost + r.washCureCost,  color:'#9b59b6' },
-  ].filter(d => d.value > 0);
-
-  const total = slices.reduce((s, d) => s + d.value, 0);
-  if (total <= 0) return;
-
-  ctx.clearRect(0, 0, W, H);
-
-  let startAngle = -Math.PI / 2;
-
-  slices.forEach(slice => {
-    const sliceAngle = (slice.value / total) * 2 * Math.PI;
-    const endAngle   = startAngle + sliceAngle;
-
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, radius, startAngle, endAngle);
-    ctx.closePath();
-    ctx.fillStyle   = slice.color;
-    ctx.strokeStyle = dark ? '#1a2a3e' : '#ffffff';
-    ctx.lineWidth   = 3;
-    ctx.fill();
-    ctx.stroke();
-
-    const pct = (slice.value / total) * 100;
-    if (pct > 5) {
-      const mid = startAngle + sliceAngle / 2;
-      ctx.fillStyle    = '#ffffff';
-      ctx.font         = 'bold 11px Poppins,sans-serif';
-      ctx.textAlign    = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`${pct.toFixed(0)}%`,
-        cx + radius * 0.65 * Math.cos(mid),
-        cy + radius * 0.65 * Math.sin(mid));
+  if (materialData) {
+    materialInfoDiv.innerHTML = `
+      <p><strong>Preço médio do carretel:</strong> ${window.formatBRL(materialData.avgPrice)}</p>
+      <p><strong>Temperatura de impressão:</strong> ${materialData.temp}</p>
+      <p><strong>Características:</strong> ${materialData.characteristics}</p>
+      ${materialData.alternatives ? `<p><strong>Alternativas:</strong> ${materialData.alternatives}</p>` : ''}
+    `;
+    materialInfoDiv.classList.remove('hidden');
+    // Preenche o custo do carretel se estiver vazio
+    if (spoolCostInput && !spoolCostInput.value) {
+      spoolCostInput.value = materialData.avgPrice;
     }
-
-    startAngle = endAngle;
-  });
-
-  // Donut central
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius * 0.42, 0, 2 * Math.PI);
-  ctx.fillStyle = dark ? '#1a2a3e' : '#ffffff';
-  ctx.fill();
-  ctx.fillStyle    = '#1a2a4a';
-  ctx.font         = 'bold 11px Poppins,sans-serif';
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('CUSTO', cx, cy - 8);
-  ctx.fillStyle = '#f07b30';
-  ctx.font      = 'bold 10px Poppins,sans-serif';
-  ctx.fillText(window.formatBRL(total), cx, cy + 8);
-
-  // Legenda
-  const legend = document.getElementById('chart-legend');
-  if (legend) {
-    legend.innerHTML = slices.map(d => `
-      <div class="legend-item">
-        <span class="legend-dot" style="background:${d.color}"></span>
-        ${d.label} (${((d.value/total)*100).toFixed(1)}%)
-      </div>`).join('');
+  } else {
+    materialInfoDiv.classList.add('hidden');
   }
+  window.calculate();
 };
 
-// ═══════════════════════════════════════════════════════
-// ADICIONAR AO CATÁLOGO DO RESULTADO
-// ═══════════════════════════════════════════════════════
+window.updateEnergyPreview = function() {
+  const printerWatts = window.getVal('printerWatts');
+  const energyRate = window.getVal('energyRate');
+  const energyPreviewDiv = document.getElementById('energy-preview');
 
-window.addToCatalogFromResult = function() {
-  if (!window._lastResult) {
-    window.showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
-    return;
+  if (printerWatts > 0 && energyRate > 0) {
+    const costPerHour = (printerWatts / 1000) * energyRate;
+    energyPreviewDiv.innerHTML = `
+      <p>Custo estimado de energia por hora: <strong>${window.formatBRL(costPerHour)}</strong></p>
+    `;
+    energyPreviewDiv.classList.remove('hidden');
+  } else {
+    energyPreviewDiv.classList.add('hidden');
   }
-
-  // Muda para aba catálogo
-  document.querySelectorAll('.tab').forEach(b =>
-    b.classList.toggle('active', b.dataset.tab === 'catalog'));
-  document.querySelectorAll('.tab-content').forEach(c => {
-    const isCat = c.id === 'tab-catalog';
-    c.classList.toggle('hidden', !isCat);
-    c.classList.toggle('active',  isCat);
-  });
-
-  window.renderCatalog(); // Assumindo renderCatalog existe
-
-  setTimeout(() => {
-    const r = window._lastResult;
-    const fields = {
-      'cat-price':  r.finalPrice?.toFixed(2),
-      'cat-cost':   r.directCost?.toFixed(2),
-      'cat-weight': r.partWeight,
-      'cat-hours':  r.printHours,
-    };
-    Object.entries(fields).forEach(([id, val]) => {
-      const el = document.getElementById(id);
-      if (el && val !== undefined) {
-        el.value = val;
-        el.style.borderColor = 'var(--orange)';
-        setTimeout(() => el.style.borderColor = '', 2000);
-      }
-    });
-
-    const matEl  = document.getElementById('cat-material');
-    if (matEl && r.materialType) matEl.value = r.materialType;
-
-    const nameEl = document.getElementById('cat-name');
-    if (nameEl && r.printerName) nameEl.value = r.printerName;
-
-    window.calcCatalogMargin(); // Assumindo calcCatalogMargin existe
-
-    const body = document.getElementById('catalog-form-body');
-    if (body) body.style.display = '';
-    document.getElementById('catalog-form-card')
-      ?.scrollIntoView({ behavior:'smooth', block:'start' });
-
-    window.showToast('Dados importados para o catálogo! 🎯', 'fa-cubes');
-  }, 200);
-};
-
-// ═══════════════════════════════════════════════════════
-// DICAS DINÂMICAS
-// ═══════════════════════════════════════════════════════
-
-// Assumindo QUALITY_TIPS e generateDynamicTips estão em suggestions.js
-const QUALITY_TIPS = [
-  { icon: '⚙️', title: 'Altura da Camada', value: '0.2mm', desc: 'Equilíbrio entre velocidade e detalhe.' },
-  { icon: '💨', title: 'Velocidade de Impressão', value: '50-80mm/s', desc: 'Evita falhas e mantém qualidade.' },
-  { icon: '🌡️', title: 'Temperatura do Bico', value: '200-220°C', desc: 'Ideal para PLA, boa fusão.' },
-  { icon: '🛏️', title: 'Temperatura da Mesa', value: '50-60°C', desc: 'Melhora adesão da primeira camada.' },
-  { icon: '🌬️', title: 'Ventilação da Peça', value: '100%', desc: 'Resfriamento rápido para detalhes finos.' },
-  { icon: '📏', title: 'Retração', value: '1-5mm', desc: 'Evita stringing e blobs.' },
-  { icon: '💧', title: 'Umidade do Filamento', value: '<20%', desc: 'Filamento seco evita bolhas e falhas.' },
-  { icon: '🛠️', title: 'Manutenção Preventiva', value: 'Regular', desc: 'Limpeza e lubrificação prolongam a vida útil.' }
-];
-
-window.renderDynamicTips = function(tips) {
-  const container = document.getElementById('tips-container');
-  if (!container) return;
-
-  if (!tips.length) {
-    container.innerHTML = `
-      <div class="tip-card info">
-        <div class="tip-icon">✅</div>
-        <div>
-          <div class="tip-title">Tudo dentro do esperado!</div>
-          <div class="tip-desc">Seus parâmetros estão em boas faixas.
-          Continue monitorando custos e ajuste margens conforme o mercado.</div>
-        </div>
-      </div>`;
-    return;
-  }
-
-  container.innerHTML = tips.map(t => `
-    <div class="tip-card ${t.type}">
-      <div class="tip-icon">${t.icon}</div>
-      <div>
-        <div class="tip-title">${t.title}</div>
-        <div class="tip-desc">${t.desc}</div>
-        <span class="tip-badge">${t.badge}</span>
-      </div>
-    </div>`).join('');
-};
-
-window.renderQualityTips = function() {
-  const container = document.getElementById('quality-tips');
-  if (!container || container.children.length > 0) return;
-
-  container.innerHTML = QUALITY_TIPS.map(q => `
-    <div class="quality-card">
-      <div class="q-icon">${q.icon}</div>
-      <div class="q-title">${q.title}</div>
-      <div class="q-value">${q.value}</div>
-      <div class="q-desc">${q.desc}</div>
-    </div>`).join('');
-};
-
-// Assumindo que generateDynamicTips está em suggestions.js
-window.generateDynamicTips = function(result) {
-  const tips = [];
-
-  if (result.profitMargin < 20) {
-    tips.push({
-      type: 'warning', icon: '⚠️', title: 'Margem de Lucro Baixa',
-      desc: `Sua margem de ${result.profitMargin}% é muito baixa. Considere aumentar para garantir a sustentabilidade do negócio.`,
-      badge: 'Negócio'
-    });
-  }
-
-  if (result.failureRate > 10) {
-    tips.push({
-      type: 'danger', icon: '❌', title: 'Alta Taxa de Falha',
-      desc: `Sua taxa de falha de ${result.failureRate}% impacta muito o custo. Revise configurações ou manutenção.`,
-      badge: 'Produção'
-    });
-  }
-
-  if (result.materialCostPerGram > 0.15 && result.materialType === 'PLA') {
-    tips.push({
-      type: 'economy', icon: '💰', title: 'PLA Caro',
-      desc: `O custo do seu PLA (${window.formatBRL(result.materialCostPerGram)}/g) está acima da média. Pesquise fornecedores ou outras marcas.`,
-      badge: 'Economia'
-    });
-  }
-
-  if (result.printHours > 10 && result.energyCost > 5) {
-    tips.push({
-      type: 'warning', icon: '⚡', title: 'Alto Custo de Energia',
-      desc: `Impressões longas (${result.printHours}h) com alto consumo de energia (${window.formatBRL(result.energyCost)}) podem ser otimizadas.`,
-      badge: 'Energia'
-    });
-  }
-
-  if (result.platformFee > 15) {
-    tips.push({
-      type: 'info', icon: '🛍️', title: 'Taxa de Plataforma Alta',
-      desc: `A taxa de ${result.platformFee}% da plataforma reduz seu lucro. Explore vendas diretas ou outras plataformas.`,
-      badge: 'Vendas'
-    });
-  }
-
-  return tips;
-};
-
-
-// ═══════════════════════════════════════════════════════
-// PRODUTOS
-// ═══════════════════════════════════════════════════════
-
-// Assumindo PRODUCTS está em suggestions.js
-const PRODUCTS = [
-  { id: 'p1', emoji: '🌱', name: 'Filamento PLA Premium', brand: 'Creality', price: 'R$ 119,90', specs: ['1kg', '1.75mm'], desc: 'Alta qualidade, cores vibrantes.', rating: 4.8, category: 'filament', tag: 'best' },
-  { id: 'p2', emoji: '💪', name: 'Filamento PETG Resistente', brand: 'Esun', price: 'R$ 149,90', specs: ['1kg', '1.75mm'], desc: 'Ideal para peças funcionais.', rating: 4.5, category: 'filament', tag: 'hot' },
-  { id: 'p3', emoji: '💎', name: 'Resina 8K de Alta Detalhe', brand: 'Anycubic', price: 'R$ 199,90', specs: ['1L', '405nm'], desc: 'Para impressões ultra-detalhadas.', rating: 4.9, category: 'resin', tag: 'premium' },
-  { id: 'p4', emoji: '🚀', name: 'Impressora 3D Bambu Lab P1S', brand: 'Bambu Lab', price: 'R$ 5.999,00', specs: ['CoreXY', 'AMS'], desc: 'Velocidade e precisão incríveis.', rating: 5.0, category: 'printer', tag: 'best', highlight: true },
-  { id: 'p5', emoji: '🛠️', name: 'Kit de Ferramentas Essencial', brand: 'Generic', price: 'R$ 79,90', specs: ['12 peças', 'Pós-processamento'], desc: 'Tudo que você precisa para acabamento.', rating: 4.2, category: 'tool', tag: 'new' },
-  { id: 'p6', emoji: '🌈', name: 'Filamento PLA Multicolor', brand: '3D Fila', price: 'R$ 139,90', specs: ['1kg', '1.75mm'], desc: 'Cores gradientes para projetos criativos.', rating: 4.7, category: 'filament', tag: 'new' },
-  { id: 'p7', emoji: '🧪', name: 'Resina Standard Rápida', brand: 'Elegoo', price: 'R$ 99,90', specs: ['1L', '405nm'], desc: 'Cura rápida, baixo odor.', rating: 4.3, category: 'resin', tag: 'hot' },
-  { id: 'p8', emoji: '🧽', name: 'Estação de Lavagem e Cura', brand: 'Creality', price: 'R$ 899,00', specs: ['UV', 'Rotação'], desc: 'Otimiza o pós-processamento de resina.', rating: 4.6, category: 'tool', tag: 'best' },
-  { id: 'p9', emoji: '🤖', name: 'Impressora 3D Ender 3 V3 SE', brand: 'Creality', price: 'R$ 1.799,00', specs: ['FDM', 'Auto-level'], desc: 'Excelente custo-benefício para iniciantes.', rating: 4.4, category: 'printer', tag: 'hot' },
-  { id: 'p10', emoji: '🔥', name: 'Filamento ABS de Alta Temperatura', brand: 'Polimaker', price: 'R$ 159,90', specs: ['1kg', '1.75mm'], desc: 'Para peças que exigem resistência ao calor.', rating: 4.1, category: 'filament', tag: 'hot' }
-];
-
-
-window.renderProducts = function(filter = 'all') {
-  const grid = document.getElementById('products-grid');
-  if (!grid) return;
-
-  const seen = new Set();
-  const list = (filter === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.category === filter))
-    .filter(p => {
-      if (seen.has(p.id)) return false;
-      seen.add(p.id);
-      return true;
-    });
-
-  grid.innerHTML = list.map(p => `
-    <div class="product-card${p.highlight ? ' product-highlight' : ''}">
-      <span class="product-badge-tag tag-${p.tag}">${window.tagLabel(p.tag)}</span>
-      <div class="product-emoji">${p.emoji}</div>
-      <div class="product-name">${p.name}</div>
-      <div class="product-brand">${p.brand}</div>
-      <div class="product-price">${p.price}</div>
-      <div class="product-specs">
-        ${p.specs.map(s => `<span class="spec-tag">${s}</span>`).join('')}
-      </div>
-      <div class="product-desc">${p.desc}</div>
-      <div class="product-rating">
-        ${window.renderStars(p.rating)}
-        <small>${p.rating}</small>
-      </div>
-    </div>`).join('');
-};
-
-window.tagLabel = function(tag) {
-  return { hot:'🔥 Popular', new:'✨ Novo', best:'⭐ Melhor', premium:'💎 Premium' }[tag] || tag;
-};
-
-window.renderStars = function(rating) {
-  const full  = Math.floor(rating);
-  const half  = rating % 1 >= 0.5 ? 1 : 0;
-  const empty = 5 - full - half;
-  return [
-    ...Array(full).fill('<i class="fas fa-star"></i>'),
-    ...Array(half).fill('<i class="fas fa-star-half-stroke"></i>'),
-    ...Array(empty).fill('<i class="far fa-star"></i>'),
-  ].join('');
-};
-
-window.initProductFilters = function() {
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      window.renderProducts(btn.dataset.filter);
-    });
-  });
+  window.calculate();
 };
 
 // ═══════════════════════════════════════════════════════
@@ -830,21 +477,16 @@ window.initProductFilters = function() {
 window.openComparator = function() {
   const modal = document.getElementById('comparator-modal');
   if (modal) {
-    modal.classList.add('show');
-    // Adiciona um listener para fechar o modal ao clicar fora dele
-    modal.addEventListener('click', function handler(event) {
-      if (event.target === modal) { // Verifica se o clique foi no overlay, não no modal em si
-        window.closeComparator();
-        modal.removeEventListener('click', handler); // Remove o listener para evitar múltiplos
-      }
-    });
+    modal.classList.remove('hidden'); // Mostra o modal
+    // Renderiza o conteúdo do comparador
+    window.renderPlatformComparatorInResult(); // Assumindo que esta função existe em tools.js
   }
 };
 
 window.closeComparator = function() {
   const modal = document.getElementById('comparator-modal');
   if (modal) {
-    modal.classList.remove('show');
+    modal.classList.add('hidden'); // Esconde o modal
   }
 };
 
@@ -869,7 +511,8 @@ window.toggleTheme = function() {
     localStorage.setItem(THEME_KEY, 'dark');
   }
 
-  if (window._lastResult)  window.renderChart(window._lastResult);
+  // Redesenha gráficos se existirem e estiverem visíveis
+  if (window._lastResult)  window.renderChart(window._lastResult); // Assumindo renderChart existe
   if (window._lastSimData) window.renderMonthlyChart(window._lastSimData); // Assumindo renderMonthlyChart existe
 };
 
@@ -939,6 +582,7 @@ window.setDefaults = function() {
     taxRate:         6,
     quantity:        1,
     setupHours:      0.25,
+    laborCostPerHour: 25, // Adicionado valor padrão para custo de mão de obra
   };
 
   Object.entries(defaults).forEach(([id, val]) => {
@@ -1071,8 +715,8 @@ document.addEventListener('DOMContentLoaded', () => {
   ), 500);
 
   window.renderHistory(); // Assumindo renderHistory existe
-  window.renderQualityTips();
-  window.renderProducts('all');
+  window.renderQualityTips(); // Assumindo renderQualityTips existe
+  window.renderProducts('all'); // Assumindo renderProducts existe
 
   // Listener para fechar o modal do comparador ao clicar no overlay
   document.getElementById('comparator-modal')
