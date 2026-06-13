@@ -7,7 +7,6 @@
 const CLIENTS_KEY = '3dpricer_clients';
 const QUOTES_KEY  = '3dpricer_quotes';
 
-// ── CRUD de Clientes ──
 function loadClients() {
   try { return JSON.parse(localStorage.getItem(CLIENTS_KEY)) || []; }
   catch { return []; }
@@ -46,7 +45,7 @@ function renderClients() {
 }
 
 // ═══════════════════════════════════════════════════════
-// ESTATÍSTICAS DE CLIENTES
+// ESTATÍSTICAS
 // ═══════════════════════════════════════════════════════
 
 function renderClientStats(clients, quotes) {
@@ -162,15 +161,12 @@ function toggleClientForm() {
   if (!body) return;
   const hidden = body.style.display === 'none';
   body.style.display = hidden ? '' : 'none';
-  icon.className = hidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+  if (icon) icon.className = hidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
 }
 
 function clearClientForm() {
   ['cl-name','cl-email','cl-phone','cl-doc','cl-city','cl-notes']
-    .forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const cat = document.getElementById('cl-category');
   if (cat) cat.selectedIndex = 0;
 }
@@ -187,27 +183,26 @@ function addClient() {
     return;
   }
 
-  const clients = loadClients();
-
   const client = {
-    id:       Date.now(),
+    id:          Date.now(),
     name,
-    email:    document.getElementById('cl-email')?.value?.trim()    || '',
-    phone:    document.getElementById('cl-phone')?.value?.trim()    || '',
-    doc:      document.getElementById('cl-doc')?.value?.trim()      || '',
-    city:     document.getElementById('cl-city')?.value?.trim()     || '',
-    category: document.getElementById('cl-category')?.value        || 'individual',
-    notes:    document.getElementById('cl-notes')?.value?.trim()    || '',
-    createdAt: new Date().toLocaleDateString('pt-BR'),
-    totalSpent: 0,
+    email:       document.getElementById('cl-email')?.value?.trim()  || '',
+    phone:       document.getElementById('cl-phone')?.value?.trim()  || '',
+    doc:         document.getElementById('cl-doc')?.value?.trim()    || '',
+    city:        document.getElementById('cl-city')?.value?.trim()   || '',
+    category:    document.getElementById('cl-category')?.value       || 'individual',
+    notes:       document.getElementById('cl-notes')?.value?.trim()  || '',
+    createdAt:   new Date().toLocaleDateString('pt-BR'),
+    totalSpent:  0,
     quotesCount: 0,
   };
 
+  const clients = loadClients();
   clients.unshift(client);
   saveClients(clients);
   clearClientForm();
   renderClients();
-  showToast(`Cliente "${name}" cadastrado!`, 'fa-user-plus');
+  showToast(`Cliente "${name}" cadastrado! ✅`, 'fa-user-plus');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -227,45 +222,33 @@ function renderClientList(clients, quotes) {
     </div>`;
   }
 
-  // Calcula totais por cliente
   const clientQuotes = {};
   quotes.forEach(q => {
-    if (!clientQuotes[q.clientId])
-      clientQuotes[q.clientId] = { count:0, total:0 };
-    clientQuotes[q.clientId].count ++;
+    if (!clientQuotes[q.clientId]) clientQuotes[q.clientId] = { count:0, total:0 };
+    clientQuotes[q.clientId].count++;
     clientQuotes[q.clientId].total += q.finalPrice * (q.quantity||1);
   });
 
-  const categoryIcons = {
-    individual:  '👤',
-    empresa:     '🏢',
-    maker:       '🖨️',
-    recorrente:  '⭐',
-  };
-  const categoryLabels = {
-    individual:  'Pessoa Física',
-    empresa:     'Empresa',
-    maker:       'Maker',
-    recorrente:  'Recorrente',
-  };
+  const catIcons  = { individual:'👤', empresa:'🏢', maker:'🖨️', recorrente:'⭐' };
+  const catLabels = { individual:'Pessoa Física', empresa:'Empresa', maker:'Maker', recorrente:'Recorrente' };
 
   const cards = clients.map(c => {
-    const cq      = clientQuotes[c.id] || { count:0, total:0 };
-    const initials = c.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const cq       = clientQuotes[c.id] || { count:0, total:0 };
+    const initials = c.name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
 
     return `
     <div class="client-card" id="client-${c.id}">
       <div class="client-avatar">${initials}</div>
       <div class="client-info">
         <div class="client-name">
-          ${categoryIcons[c.category] || '👤'}
+          ${catIcons[c.category] || '👤'}
           <strong>${c.name}</strong>
-          <span class="client-cat-badge">${categoryLabels[c.category]||''}</span>
+          <span class="client-cat-badge">${catLabels[c.category] || ''}</span>
         </div>
         <div class="client-meta">
-          ${c.email  ? `<span><i class="fas fa-envelope"></i> ${c.email}</span>` : ''}
-          ${c.phone  ? `<span><i class="fas fa-phone"></i> ${c.phone}</span>`   : ''}
-          ${c.city   ? `<span><i class="fas fa-location-dot"></i> ${c.city}</span>` : ''}
+          ${c.email ? `<span><i class="fas fa-envelope"></i> ${c.email}</span>` : ''}
+          ${c.phone ? `<span><i class="fas fa-phone"></i> ${c.phone}</span>`    : ''}
+          ${c.city  ? `<span><i class="fas fa-location-dot"></i> ${c.city}</span>` : ''}
           <span><i class="fas fa-calendar"></i> desde ${c.createdAt}</span>
         </div>
         ${c.notes ? `<div class="client-notes"><i class="fas fa-note-sticky"></i> ${c.notes}</div>` : ''}
@@ -281,16 +264,13 @@ function renderClientList(clients, quotes) {
         </div>
       </div>
       <div class="client-actions">
-        <button class="btn-small" onclick="generateQuoteForClient(${c.id})"
-                title="Gerar Orçamento">
+        <button class="btn-small" onclick="generateQuoteForClient(${c.id})" title="Gerar Orçamento">
           <i class="fas fa-file-invoice"></i> Orçamento
         </button>
-        <button class="btn-small" onclick="editClient(${c.id})"
-                title="Editar">
+        <button class="btn-small" onclick="editClient(${c.id})" title="Editar">
           <i class="fas fa-pen"></i>
         </button>
-        <button class="btn-small danger" onclick="deleteClient(${c.id})"
-                title="Excluir">
+        <button class="btn-small danger" onclick="deleteClient(${c.id})" title="Excluir">
           <i class="fas fa-trash"></i>
         </button>
       </div>
@@ -301,21 +281,19 @@ function renderClientList(clients, quotes) {
   <div class="card">
     <div class="result-header">
       <h2><i class="fas fa-users"></i> Clientes Cadastrados (${clients.length})</h2>
-      <div style="display:flex;gap:0.6rem;">
-        <input type="text" id="client-search"
-               placeholder="🔍 Buscar cliente..."
-               oninput="searchClients(this.value)"
-               style="padding:0.4rem 0.8rem;border:2px solid var(--border);
-                      border-radius:8px;font-family:Poppins,sans-serif;
-                      font-size:0.85rem;background:var(--light-gray);color:var(--text)"/>
-      </div>
+      <input type="text" id="client-search"
+             placeholder="🔍 Buscar cliente..."
+             oninput="searchClients(this.value)"
+             style="padding:0.4rem 0.8rem;border:2px solid var(--border);
+                    border-radius:8px;font-family:Poppins,sans-serif;
+                    font-size:0.85rem;background:var(--light-gray);color:var(--text)"/>
     </div>
     <div id="client-list">${cards}</div>
   </div>`;
 }
 
 // ═══════════════════════════════════════════════════════
-// BUSCA DE CLIENTES
+// BUSCA
 // ═══════════════════════════════════════════════════════
 
 function searchClients(query) {
@@ -325,9 +303,9 @@ function searchClients(query) {
 
   const filtered = clients.filter(c =>
     c.name.toLowerCase().includes(q)  ||
-    c.email.toLowerCase().includes(q) ||
-    c.city.toLowerCase().includes(q)  ||
-    c.phone.includes(q)
+    (c.email||'').toLowerCase().includes(q) ||
+    (c.city||'').toLowerCase().includes(q)  ||
+    (c.phone||'').includes(q)
   );
 
   const list = document.getElementById('client-list');
@@ -342,7 +320,6 @@ function searchClients(query) {
     return;
   }
 
-  // Re-renderiza apenas a lista
   const tmp = document.createElement('div');
   tmp.innerHTML = renderClientList(filtered, quotes);
   const newList = tmp.querySelector('#client-list');
@@ -350,16 +327,14 @@ function searchClients(query) {
 }
 
 // ═══════════════════════════════════════════════════════
-// EDITAR / EXCLUIR CLIENTE
+// EDITAR / EXCLUIR
 // ═══════════════════════════════════════════════════════
 
 function deleteClient(id) {
   const clients = loadClients();
   const client  = clients.find(c => c.id === id);
   if (!client) return;
-
   if (!confirm(`Deseja excluir o cliente "${client.name}"?`)) return;
-
   saveClients(clients.filter(c => c.id !== id));
   renderClients();
   showToast('Cliente excluído.', 'fa-trash');
@@ -370,7 +345,6 @@ function editClient(id) {
   const c       = clients.find(cl => cl.id === id);
   if (!c) return;
 
-  // Preenche o formulário com dados do cliente
   const fields = {
     'cl-name': c.name, 'cl-email': c.email,
     'cl-phone': c.phone, 'cl-doc': c.doc,
@@ -384,14 +358,10 @@ function editClient(id) {
   const cat = document.getElementById('cl-category');
   if (cat) cat.value = c.category || 'individual';
 
-  // Remove o cliente atual para re-cadastrar
   saveClients(clients.filter(cl => cl.id !== id));
 
-  // Mostra o formulário
   const body = document.getElementById('client-form-body');
   if (body) body.style.display = '';
-
-  // Scroll para o form
   document.getElementById('client-form-card')
     ?.scrollIntoView({ behavior:'smooth', block:'start' });
 
@@ -399,7 +369,7 @@ function editClient(id) {
 }
 
 // ═══════════════════════════════════════════════════════
-// GERAR ORÇAMENTO PARA CLIENTE
+// GERAR ORÇAMENTO
 // ═══════════════════════════════════════════════════════
 
 function generateQuoteForClient(clientId) {
@@ -416,32 +386,29 @@ function generateQuoteForClient(clientId) {
   const quotes = loadQuotes();
 
   const quote = {
-    id:          Date.now(),
+    id:           Date.now(),
     clientId,
-    clientName:  client.name,
-    date:        new Date().toLocaleDateString('pt-BR'),
-    dateTime:    new Date().toLocaleString('pt-BR'),
-    status:      'pending',
-    printerName: r.printerName  || 'Impressora',
-    materialType:r.materialType || '—',
-    partWeight:  r.partWeight,
-    printHours:  r.printHours,
-    finalPrice:  r.finalPrice,
-    directCost:  r.directCost,
-    profitMargin:r.profitMargin,
-    quantity:    r.quantity,
-    batchPrice:  r.batchPrice,
-    data:        r,
-    notes:       '',
+    clientName:   client.name,
+    date:         new Date().toLocaleDateString('pt-BR'),
+    dateTime:     new Date().toLocaleString('pt-BR'),
+    status:       'pending',
+    printerName:  r.printerName   || 'Impressora',
+    materialType: r.materialType  || '—',
+    partWeight:   r.partWeight,
+    printHours:   r.printHours,
+    finalPrice:   r.finalPrice,
+    directCost:   r.directCost,
+    profitMargin: r.profitMargin,
+    quantity:     r.quantity,
+    batchPrice:   r.batchPrice,
+    data:         r,
+    notes:        '',
   };
 
   quotes.unshift(quote);
   saveQuotes(quotes);
   renderClients();
-
-  showToast(`Orçamento gerado para ${client.name}!`, 'fa-file-invoice');
-
-  // Exporta PDF do orçamento para o cliente
+  showToast(`Orçamento gerado para ${client.name}! 📄`, 'fa-file-invoice');
   setTimeout(() => exportClientQuotePDF(quote, client), 400);
 }
 
@@ -471,7 +438,6 @@ function renderQuotesList(quotes, clients) {
 
   const rows = quotes.map(q => {
     const st = statusLabels[q.status] || statusLabels.pending;
-
     return `
     <div class="quote-card" id="quote-${q.id}">
       <div class="quote-header">
@@ -493,15 +459,13 @@ function renderQuotesList(quotes, clients) {
             <small>Valor Total</small>
             <strong>${formatBRL(q.batchPrice || q.finalPrice)}</strong>
           </div>
-          <div class="quote-status"
-               style="color:${st.color};font-size:0.8rem;font-weight:700;">
+          <div style="color:${st.color};font-size:0.8rem;font-weight:700;margin-top:0.3rem;">
             ${st.label}
           </div>
         </div>
       </div>
       <div class="quote-actions">
-        <select class="quote-status-select"
-                onchange="updateQuoteStatus(${q.id}, this.value)"
+        <select onchange="updateQuoteStatus(${q.id}, this.value)"
                 style="padding:0.35rem 0.6rem;border:2px solid var(--border);
                        border-radius:8px;font-family:Poppins,sans-serif;
                        font-size:0.8rem;background:var(--light-gray);color:var(--text)">
@@ -514,7 +478,7 @@ function renderQuotesList(quotes, clients) {
           <i class="fas fa-file-pdf"></i> PDF
         </button>
         <button class="btn-small" onclick="shareQuoteWhatsApp(${q.id})">
-          <i class="fab fa-whatsapp"></i> WhatsApp
+          <i class="fab fa-whatsapp" style="color:#25d366"></i> WhatsApp
         </button>
         <button class="btn-small danger" onclick="deleteQuote(${q.id})">
           <i class="fas fa-trash"></i>
@@ -536,7 +500,7 @@ function renderQuotesList(quotes, clients) {
 }
 
 // ═══════════════════════════════════════════════════════
-// STATUS DO ORÇAMENTO
+// STATUS
 // ═══════════════════════════════════════════════════════
 
 function updateQuoteStatus(id, status) {
@@ -545,7 +509,7 @@ function updateQuoteStatus(id, status) {
   if (quote) {
     quote.status = status;
     saveQuotes(quotes);
-    showToast('Status atualizado!', 'fa-circle-check');
+    showToast('Status atualizado! ✅', 'fa-circle-check');
   }
 }
 
@@ -565,27 +529,27 @@ function shareQuoteWhatsApp(id) {
   const q      = quotes.find(qu => qu.id === id);
   if (!q) return;
 
-  const text = encodeURIComponent(
-`🖨️ *Orçamento 3D — ${q.date}*
+  const lines = [
+    `🖨️ *Orçamento 3D — ${q.date}*`,
+    ``,
+    `Olá, ${q.clientName}! Segue o orçamento:`,
+    ``,
+    `📦 Peça: ${q.printerName || 'Peça 3D'}`,
+    `🧵 Material: ${q.materialType}`,
+    `⚖️ Peso: ${q.partWeight}g`,
+    `⏱️ Tempo: ${q.printHours}h`,
+    `📦 Quantidade: ${q.quantity}x`,
+    ``,
+    `💰 *Valor Total: ${formatBRL(q.batchPrice || q.finalPrice)}*`,
+    ``,
+    `Qualquer dúvida, estou à disposição! 😊`,
+  ].join('\n');
 
-Olá, ${q.clientName}! Segue o orçamento:
-
-📦 Peça: ${q.printerName || 'Peça 3D'}
-🧵 Material: ${q.materialType}
-⚖️ Peso: ${q.partWeight}g
-⏱️ Tempo: ${q.printHours}h
-📦 Quantidade: ${q.quantity}x
-
-💰 *Valor Total: ${formatBRL(q.batchPrice || q.finalPrice)}*
-
-Qualquer dúvida, estou à disposição! 😊`
-  );
-
-  window.open(`https://wa.me/?text=${text}`, '_blank');
+  window.open(`https://wa.me/?text=${encodeURIComponent(lines)}`, '_blank');
 }
 
 // ═══════════════════════════════════════════════════════
-// PDF DO ORÇAMENTO PARA CLIENTE
+// PDF DO ORÇAMENTO
 // ═══════════════════════════════════════════════════════
 
 function exportClientQuotePDFById(id) {
@@ -604,170 +568,127 @@ function exportClientQuotePDF(quote, client) {
   }
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-
+  const doc    = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
   const W      = 210;
   const margin = 18;
   const col2   = W - margin;
   let y        = 0;
 
-  const DARK   = [26,42,74];
+  const DARK   = [26, 42, 74];
   const ORANGE = [240,123,48];
   const YELLOW = [245,200,66];
   const WHITE  = [255,255,255];
   const GRAY   = [240,242,245];
   const MUTED  = [113,128,150];
-  const TEXT   = [45,55,72];
+  const TEXT   = [45, 55, 72];
 
-  // ── CABEÇALHO ──
-  doc.setFillColor(...DARK);
-  doc.rect(0, 0, W, 48, 'F');
-
-  doc.setTextColor(...WHITE);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(20);
-  doc.text('ORÇAMENTO', margin, 18);
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
+  // CABEÇALHO
+  doc.setFillColor(...DARK); doc.rect(0,0,W,48,'F');
+  doc.setTextColor(...WHITE); doc.setFont('helvetica','bold');
+  doc.setFontSize(20); doc.text('ORÇAMENTO', margin, 18);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
   doc.setTextColor(180,200,230);
   doc.text('3D Pricer Pro — Impressão 3D Profissional', margin, 26);
-
-  // Número do orçamento
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(10);
+  doc.setFont('helvetica','bold'); doc.setFontSize(10);
   doc.setTextColor(...YELLOW);
   doc.text(`Nº ${String(quote.id).slice(-6)}`, col2, 18, { align:'right' });
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
   doc.setTextColor(180,200,230);
   doc.text(`Data: ${quote.date}`, col2, 26, { align:'right' });
-  doc.text(`Validade: 15 dias`, col2, 33, { align:'right' });
+  doc.text('Validade: 15 dias', col2, 33, { align:'right' });
 
   y = 58;
 
-  // ── DADOS DO CLIENTE ──
+  // CLIENTE
   doc.setFillColor(...GRAY);
   doc.roundedRect(margin, y-4, W-margin*2, 30, 3, 3, 'F');
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(8);
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.setTextColor(...MUTED); doc.text('CLIENTE', margin+4, y+2);
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.setTextColor(...DARK); doc.text(client.name || '—', margin+4, y+10);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
   doc.setTextColor(...MUTED);
-  doc.text('CLIENTE', margin+4, y+2);
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(11);
-  doc.setTextColor(...DARK);
-  doc.text(client.name || '—', margin+4, y+10);
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
-  doc.setTextColor(...MUTED);
-
-  let clientInfo = [];
-  if (client.email) clientInfo.push(`E-mail: ${client.email}`);
-  if (client.phone) clientInfo.push(`Tel: ${client.phone}`);
-  if (client.city)  clientInfo.push(`Local: ${client.city}`);
-  if (client.doc)   clientInfo.push(`Doc: ${client.doc}`);
-
-  doc.text(clientInfo.join('   ·   '), margin+4, y+18);
+  const info = [
+    client.email ? `E-mail: ${client.email}` : null,
+    client.phone ? `Tel: ${client.phone}`     : null,
+    client.city  ? `Local: ${client.city}`    : null,
+    client.doc   ? `Doc: ${client.doc}`       : null,
+  ].filter(Boolean).join('   ·   ');
+  doc.text(info, margin+4, y+18);
   y += 40;
 
-  // ── DETALHES DA PEÇA ──
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(9.5);
-  doc.setTextColor(...DARK);
-  doc.text('DETALHES DA PEÇA', margin, y);
+  // TABELA
+  doc.setFont('helvetica','bold'); doc.setFontSize(9.5);
+  doc.setTextColor(...DARK); doc.text('DETALHES DA PEÇA', margin, y);
   y += 6;
 
-  doc.setFillColor(...DARK);
-  doc.rect(margin, y, W-margin*2, 8, 'F');
-  doc.setTextColor(...WHITE);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(8.5);
+  doc.setFillColor(...DARK); doc.rect(margin, y, W-margin*2, 8, 'F');
+  doc.setTextColor(...WHITE); doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
   doc.text('Descrição', margin+3, y+5);
   doc.text('Qtd.', 130, y+5);
   doc.text('Unit.', 155, y+5);
   doc.text('Total', col2-3, y+5, { align:'right' });
   y += 12;
 
-  const r = quote.data;
-
-  // Linha principal
-  doc.setFillColor(250,251,253);
-  doc.rect(margin, y-3, W-margin*2, 10, 'F');
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
-  doc.setTextColor(...TEXT);
-  doc.text(`Peça em ${quote.materialType} — ${quote.partWeight}g · ${quote.printHours}h impressão`, margin+3, y+3);
+  doc.setFillColor(250,251,253); doc.rect(margin, y-3, W-margin*2, 10, 'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...TEXT);
+  doc.text(`Peça em ${quote.materialType} — ${quote.partWeight}g · ${quote.printHours}h`, margin+3, y+3);
   doc.text(String(quote.quantity), 133, y+3);
   doc.text(formatBRL(quote.finalPrice), 155, y+3);
   doc.text(formatBRL(quote.batchPrice || quote.finalPrice), col2-3, y+3, { align:'right' });
   y += 14;
 
-  // ── RESUMO DE CUSTOS (detalhado) ──
-  doc.setDrawColor(...GRAY);
-  doc.setLineWidth(0.5);
-
+  // DETALHES
   function detailRow(label, value) {
     if (y > 250) { doc.addPage(); y = 20; }
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...MUTED);
-    doc.text(label, margin+4, y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+    doc.setTextColor(...MUTED); doc.text(label, margin+4, y);
     doc.setTextColor(...TEXT);
     doc.text(formatBRL(value), col2-3, y, { align:'right' });
+    doc.setDrawColor(230,234,240); doc.setLineWidth(0.3);
     doc.line(margin, y+2, W-margin, y+2);
     y += 8;
   }
 
   y += 4;
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(9);
-  doc.setTextColor(...DARK);
-  doc.text('Composição do Preço', margin, y);
+  doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.setTextColor(...DARK); doc.text('Composição do Preço', margin, y);
   y += 7;
 
+  const r = quote.data;
   if (r) {
-    detailRow('Material principal',   r.materialCost);
-    detailRow('Energia elétrica',     r.energyCost);
-    detailRow('Depreciação equipamento', r.depreciationCost);
-    detailRow('Mão de obra',          r.laborCost + r.setupCost);
-    if (r.packagingCost > 0) detailRow('Embalagem / Envio', r.packagingCost);
-    if (r.postProcessCost > 0) detailRow('Pós-processamento', r.postProcessCost);
+    detailRow('Material principal',      r.materialCost || 0);
+    detailRow('Energia elétrica',        r.energyCost   || 0);
+    detailRow('Depreciação equipamento', r.depreciationCost || 0);
+    detailRow('Mão de obra',             (r.laborCost||0) + (r.setupCost||0));
+    if ((r.packagingCost  || 0) > 0) detailRow('Embalagem / Envio',   r.packagingCost);
+    if ((r.postProcessCost|| 0) > 0) detailRow('Pós-processamento',   r.postProcessCost);
   }
 
   y += 4;
-
-  // ── TOTAIS ──
-  doc.setFillColor(...GRAY);
-  doc.roundedRect(margin, y, W-margin*2, 8, 2, 2, 'F');
+  doc.setFillColor(...GRAY); doc.roundedRect(margin, y, W-margin*2, 8, 2, 2, 'F');
   doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...TEXT);
   doc.text('Subtotal', margin+4, y+5);
   doc.text(formatBRL(quote.finalPrice), col2-3, y+5, { align:'right' });
   y += 12;
 
-  if (r?.taxAmount > 0) {
-    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...MUTED);
+  if ((r?.taxAmount || 0) > 0) {
+    doc.setTextColor(...MUTED);
     doc.text('Impostos / Taxas', margin+4, y+5);
     doc.text(formatBRL(r.taxAmount), col2-3, y+5, { align:'right' });
     y += 10;
   }
 
-  // Total final
-  doc.setFillColor(...DARK);
-  doc.roundedRect(margin, y, W-margin*2, 14, 3, 3, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(10);
-  doc.setTextColor(...WHITE);
+  // TOTAL FINAL
+  doc.setFillColor(...DARK); doc.roundedRect(margin, y, W-margin*2, 14, 3, 3, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...WHITE);
   doc.text('VALOR TOTAL', margin+4, y+9);
-  doc.setTextColor(...YELLOW);
-  doc.setFontSize(12);
+  doc.setTextColor(...YELLOW); doc.setFontSize(12);
   doc.text(formatBRL(quote.batchPrice || quote.finalPrice), col2-4, y+9, { align:'right' });
   y += 22;
 
-  // ── PRAZO E CONDIÇÕES ──
-  doc.setFillColor(255,250,240);
-  doc.roundedRect(margin, y, W-margin*2, 28, 3, 3, 'F');
+  // CONDIÇÕES
+  doc.setFillColor(255,250,240); doc.roundedRect(margin, y, W-margin*2, 28, 3, 3, 'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...ORANGE);
   doc.text('📋 Condições e Prazo', margin+4, y+8);
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...TEXT);
@@ -777,20 +698,19 @@ function exportClientQuotePDF(quote, client) {
   doc.text('• Frete não incluso (combinado à parte)', col2/2, y+21);
   y += 36;
 
-  // ── RODAPÉ ──
-  doc.setFillColor(...DARK);
-  doc.rect(0, 285, W, 12, 'F');
+  // RODAPÉ
+  doc.setFillColor(...DARK); doc.rect(0,285,W,12,'F');
   doc.setFont('helvetica','normal'); doc.setFontSize(8);
   doc.setTextColor(180,200,230);
   doc.text('3D Pricer Pro · Orçamento gerado automaticamente', margin, 292);
   doc.text(`Nº ${String(quote.id).slice(-6)} · ${quote.date}`, col2, 292, { align:'right' });
 
   doc.save(`orcamento-${client.name.replace(/\s+/g,'-')}-${quote.id}.pdf`);
-  showToast('PDF do orçamento exportado!', 'fa-file-pdf');
+  showToast('PDF do orçamento exportado! 📄', 'fa-file-pdf');
 }
 
 // ═══════════════════════════════════════════════════════
-// EXPORTAR TODOS OS ORÇAMENTOS CSV
+// EXPORTAR CSV
 // ═══════════════════════════════════════════════════════
 
 function exportAllQuotesCSV() {
@@ -806,25 +726,20 @@ function exportAllQuotesCSV() {
   ].join(';');
 
   const rows = quotes.map(q => [
-    String(q.id).slice(-6),
-    q.date,
-    q.clientName,
-    q.materialType,
-    q.partWeight,
-    q.printHours,
-    q.quantity,
+    String(q.id).slice(-6), q.date, q.clientName, q.materialType,
+    q.partWeight, q.printHours, q.quantity,
     (q.finalPrice||0).toFixed(2).replace('.',','),
     (q.batchPrice||q.finalPrice||0).toFixed(2).replace('.',','),
     q.status,
   ].join(';')).join('\n');
 
-  const csv  = `${header}\n${rows}`;
-  const blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\uFEFF'+header+'\n'+rows], { type:'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `orcamentos-${new Date().toISOString().slice(0,10)}.csv`;
+  const a    = Object.assign(document.createElement('a'), {
+    href: url,
+    download: `orcamentos-${new Date().toISOString().slice(0,10)}.csv`
+  });
   a.click();
   URL.revokeObjectURL(url);
-  showToast('CSV exportado!', 'fa-file-csv');
+  showToast('CSV exportado! 📊', 'fa-file-csv');
 }
