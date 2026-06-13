@@ -23,12 +23,6 @@ function getStr(id) {
   return document.getElementById(id)?.value?.trim() || '';
 }
 
-function formatBRL(value) {
-  return (value || 0).toLocaleString('pt-BR', {
-    style: 'currency', currency: 'BRL',
-    minimumFractionDigits: 2,
-  });
-}
 
 function setResult(id, value) {
   const el = document.getElementById(id);
