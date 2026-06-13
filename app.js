@@ -14,15 +14,13 @@ const State = {
 // ═══════════════════════════════════════════════════════
 
 function getVal(id) {
-  const el = document.getElementById(id);
-  const v  = parseFloat(el?.value);
+  const v = parseFloat(document.getElementById(id)?.value);
   return isNaN(v) ? 0 : v;
 }
 
 function getStr(id) {
   return document.getElementById(id)?.value?.trim() || '';
 }
-
 
 function setResult(id, value) {
   const el = document.getElementById(id);
@@ -57,26 +55,25 @@ function initTabs() {
     btn.addEventListener('click', () => {
       const target = btn.dataset.tab;
 
-      document.querySelectorAll('.tab').forEach(b =>
-        b.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
       document.querySelectorAll('.tab-content').forEach(c => {
         const isTarget = c.id === `tab-${target}`;
-        c.classList.toggle('hidden',  !isTarget);
-        c.classList.toggle('active',   isTarget);
+        c.classList.toggle('hidden', !isTarget);
+        c.classList.toggle('active',  isTarget);
       });
 
       switch (target) {
-        case 'dashboard': renderDashboard();     break;
-        case 'clients':   renderClients();       break;
+        case 'dashboard': renderDashboard();      break;
+        case 'clients':   renderClients();        break;
         case 'catalog':
           renderCatalog();
           setTimeout(initCatalogCalc, 150);
           break;
-        case 'history':   renderHistory();       break;
-        case 'products':  renderProducts('all'); break;
-        case 'tips':      renderQualityTips();   break;
+        case 'history':   renderHistory();        break;
+        case 'products':  renderProducts('all');  break;
+        case 'tips':      renderQualityTips();    break;
       }
     });
   });
@@ -111,7 +108,7 @@ function updateProgress() {
 // ═══════════════════════════════════════════════════════
 
 function addConsumable() {
-  const id  = uid();
+  const id   = uid();
   State.consumables.push({ id, name:'', cost:0, lifeHours:0 });
 
   const list = document.getElementById('consumables-list');
@@ -128,7 +125,7 @@ function addConsumable() {
     <button class="btn-del" onclick="removeConsumable('${id}')">
       <i class="fas fa-xmark"></i>
     </button>`;
-  list.appendChild(row);
+  list?.appendChild(row);
 }
 
 function updateConsumable(id, field, value) {
@@ -153,7 +150,7 @@ function calcConsumablesCost(printHours) {
 // ═══════════════════════════════════════════════════════
 
 function addFinishing() {
-  const id  = uid();
+  const id   = uid();
   State.finishings.push({ id, name:'', cost:0 });
 
   const list = document.getElementById('finishing-list');
@@ -168,7 +165,7 @@ function addFinishing() {
     <button class="btn-del" onclick="removeFinishing('${id}')">
       <i class="fas fa-xmark"></i>
     </button>`;
-  list.appendChild(row);
+  list?.appendChild(row);
 }
 
 function updateFinishing(id, field, value) {
@@ -198,8 +195,7 @@ function updateEnergyPreview() {
 
   if (hours > 0 && watts > 0 && rate > 0) {
     const cost = (watts / 1000) * hours * rate;
-    if (valEl) valEl.textContent =
-      `${formatBRL(cost)} para ${hours}h de impressão`;
+    if (valEl) valEl.textContent = `${formatBRL(cost)} para ${hours}h de impressão`;
     box?.classList.remove('hidden');
   } else {
     box?.classList.add('hidden');
@@ -249,16 +245,13 @@ function onMaterialChange() {
 // ═══════════════════════════════════════════════════════
 
 function onPrinterTypeChange() {
-  const type    = getStr('printerType');
-  const watts   = document.getElementById('printerWatts');
+  const type     = getStr('printerType');
+  const watts    = document.getElementById('printerWatts');
   const defaults = { FDM:350, MSLA:100, SLS:1200, MJF:2000 };
 
   if (defaults[type] && !watts?.value) {
     if (watts) watts.value = defaults[type];
-    showToast(
-      `Consumo padrão ${type}: ${defaults[type]}W sugerido`,
-      'fa-bolt'
-    );
+    showToast(`Consumo padrão ${type}: ${defaults[type]}W sugerido`, 'fa-bolt');
   }
 }
 
@@ -291,14 +284,11 @@ function validate() {
 function highlightInvalid(fieldId) {
   const el = document.getElementById(fieldId);
   if (!el) return;
-  el.style.borderColor = 'var(--danger)';
+  el.style.borderColor = '#e74c3c';
   el.style.boxShadow   = '0 0 0 3px rgba(231,76,60,0.2)';
   el.focus();
   el.scrollIntoView({ behavior:'smooth', block:'center' });
-  setTimeout(() => {
-    el.style.borderColor = '';
-    el.style.boxShadow   = '';
-  }, 3000);
+  setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 3000);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -306,7 +296,6 @@ function highlightInvalid(fieldId) {
 // ═══════════════════════════════════════════════════════
 
 function calculate() {
-
   const check = validate();
   if (!check.valid) {
     showToast(check.message, 'fa-triangle-exclamation');
@@ -347,6 +336,7 @@ function calculate() {
   const maxDiscount    = getVal('maxDiscount');
   const quantity       = Math.max(1, getVal('quantity'));
 
+  // ── Custos ──
   const materialCostPerGram = spoolCost / spoolWeight;
   const materialCost        = materialCostPerGram * partWeight;
   const supportCost         = materialCostPerGram * supportWeight;
@@ -361,13 +351,14 @@ function calculate() {
   const failureReserve      = (materialCost + supportCost) * (failureRate / 100);
 
   const directCost =
-    materialCost     + supportCost      + finishingCost   +
-    energyCost       + depreciationCost + maintenanceCost +
-    spaceCost        + consumablesCost  +
-    laborCost        + setupCost        + washCureCost    +
-    failureReserve   + postProcessCost  +
-    packagingCost    + otherCosts;
+    materialCost + supportCost + finishingCost +
+    energyCost + depreciationCost + maintenanceCost +
+    spaceCost + consumablesCost +
+    laborCost + setupCost + washCureCost +
+    failureReserve + postProcessCost +
+    packagingCost + otherCosts;
 
+  // ── Preço ──
   const taxAmount          = directCost * (taxRate / 100);
   const baseBeforePlatform = directCost + taxAmount;
   const withPlatform       = platformFee > 0
@@ -389,11 +380,13 @@ function calculate() {
   const premiumPrice    = finalPrice * 1.20;
   const batchPrice      = finalPrice * quantity;
 
+  // ── Salva resultado global ──
   window._lastResult = {
     printerName, printerType, materialType,
     printerWatts, printerCostRaw, printerLifespan,
     maintenanceCostRaw, monthlyHours,
     partWeight, supportWeight, printHours,
+    spoolCost, spoolWeight,
     energyRate, laborCostPerH, laborHours,
     setupHours, taxRate, platformFee,
     packagingCost, otherCosts, maxDiscount,
@@ -406,6 +399,7 @@ function calculate() {
     failureReserve, directCost, taxAmount,
     platformFeeAmount, profitAmount, finalPrice,
     minPrice, discountedPrice, premiumPrice, batchPrice,
+    marginStrategy,
   };
 
   renderResult(window._lastResult);
@@ -415,9 +409,7 @@ function calculate() {
 
   const resultEl = document.getElementById('result');
   resultEl?.classList.remove('hidden');
-  setTimeout(() =>
-    resultEl?.scrollIntoView({ behavior:'smooth', block:'start' }), 100
-  );
+  setTimeout(() => resultEl?.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
 
   showToast('Precificação concluída! 🎉', 'fa-circle-check');
 }
@@ -428,31 +420,31 @@ function calculate() {
 
 function renderResult(r) {
   const fields = {
-    'r-material':    r.materialCost,
-    'r-support':     r.supportCost,
-    'r-finishing':   r.finishingCost,
-    'r-energy':      r.energyCost,
-    'r-depreciation':r.depreciationCost,
-    'r-maintenance': r.maintenanceCost,
-    'r-consumables': r.consumablesCost,
-    'r-space':       r.spaceCost,
-    'r-labor':       r.laborCost,
-    'r-setup':       r.setupCost,
-    'r-washcure':    r.washCureCost,
-    'r-failure':     r.failureReserve,
-    'r-postprocess': r.postProcessCost,
-    'r-packaging':   r.packagingCost,
-    'r-other':       r.otherCosts,
-    'r-total-cost':  r.directCost,
-    'r-tax':         r.taxAmount,
-    'r-platform':    r.platformFeeAmount,
-    'r-profit':      r.profitAmount,
-    'r-final':       r.finalPrice,
-    'r-min':         r.minPrice,
-    'r-sug':         r.finalPrice,
-    'r-discounted':  r.discountedPrice,
-    'r-prem':        r.premiumPrice,
-    'r-batch':       r.batchPrice,
+    'r-material':     r.materialCost,
+    'r-support':      r.supportCost,
+    'r-finishing':    r.finishingCost,
+    'r-energy':       r.energyCost,
+    'r-depreciation': r.depreciationCost,
+    'r-maintenance':  r.maintenanceCost,
+    'r-consumables':  r.consumablesCost,
+    'r-space':        r.spaceCost,
+    'r-labor':        r.laborCost,
+    'r-setup':        r.setupCost,
+    'r-washcure':     r.washCureCost,
+    'r-failure':      r.failureReserve,
+    'r-postprocess':  r.postProcessCost,
+    'r-packaging':    r.packagingCost,
+    'r-other':        r.otherCosts,
+    'r-total-cost':   r.directCost,
+    'r-tax':          r.taxAmount,
+    'r-platform':     r.platformFeeAmount,
+    'r-profit':       r.profitAmount,
+    'r-final':        r.finalPrice,
+    'r-min':          r.minPrice,
+    'r-sug':          r.finalPrice,
+    'r-discounted':   r.discountedPrice,
+    'r-prem':         r.premiumPrice,
+    'r-batch':        r.batchPrice,
   };
 
   Object.entries(fields).forEach(([id, val]) => setResult(id, val));
@@ -475,15 +467,16 @@ function renderChart(r) {
   const cx     = W / 2;
   const cy     = H / 2;
   const radius = Math.min(W, H) / 2 - 10;
+  const dark   = document.documentElement.getAttribute('data-theme') === 'dark';
 
   const slices = [
-    { label:'Material',      value: r.materialCost + r.supportCost,                                    color:'#2c4a7c' },
-    { label:'Energia',       value: r.energyCost,                                                      color:'#f07b30' },
-    { label:'Depreciação',   value: r.depreciationCost,                                                color:'#f5c842' },
-    { label:'Manutenção',    value: r.maintenanceCost + r.spaceCost + r.consumablesCost,               color:'#3d6199' },
-    { label:'Mão de Obra',   value: r.laborCost + r.setupCost,                                        color:'#27ae60' },
-    { label:'Falhas/Extras', value: r.failureReserve + r.postProcessCost,                             color:'#e74c3c' },
-    { label:'Embal./Outros', value: r.packagingCost + r.otherCosts + r.finishingCost + r.washCureCost, color:'#9b59b6' },
+    { label:'Material',      value: r.materialCost + r.supportCost,                                     color:'#2c4a7c' },
+    { label:'Energia',       value: r.energyCost,                                                       color:'#f07b30' },
+    { label:'Depreciação',   value: r.depreciationCost,                                                 color:'#f5c842' },
+    { label:'Manutenção',    value: r.maintenanceCost + r.spaceCost + r.consumablesCost,                color:'#3d6199' },
+    { label:'Mão de Obra',   value: r.laborCost + r.setupCost,                                         color:'#27ae60' },
+    { label:'Falhas/Extras', value: r.failureReserve + r.postProcessCost,                              color:'#e74c3c' },
+    { label:'Embal./Outros', value: r.packagingCost + r.otherCosts + r.finishingCost + r.washCureCost,  color:'#9b59b6' },
   ].filter(d => d.value > 0);
 
   const total = slices.reduce((s, d) => s + d.value, 0);
@@ -492,7 +485,6 @@ function renderChart(r) {
   ctx.clearRect(0, 0, W, H);
 
   let startAngle = -Math.PI / 2;
-  const isDark   = document.documentElement.getAttribute('data-theme') === 'dark';
 
   slices.forEach(slice => {
     const sliceAngle = (slice.value / total) * 2 * Math.PI;
@@ -503,40 +495,41 @@ function renderChart(r) {
     ctx.arc(cx, cy, radius, startAngle, endAngle);
     ctx.closePath();
     ctx.fillStyle   = slice.color;
-    ctx.strokeStyle = isDark ? '#1a2a3e' : '#ffffff';
+    ctx.strokeStyle = dark ? '#1a2a3e' : '#ffffff';
     ctx.lineWidth   = 3;
     ctx.fill();
     ctx.stroke();
 
     const pct = (slice.value / total) * 100;
     if (pct > 5) {
-      const midAngle = startAngle + sliceAngle / 2;
-      const tx = cx + radius * 0.65 * Math.cos(midAngle);
-      const ty = cy + radius * 0.65 * Math.sin(midAngle);
+      const mid = startAngle + sliceAngle / 2;
       ctx.fillStyle    = '#ffffff';
-      ctx.font         = 'bold 11px Poppins, sans-serif';
+      ctx.font         = 'bold 11px Poppins,sans-serif';
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`${pct.toFixed(0)}%`, tx, ty);
+      ctx.fillText(`${pct.toFixed(0)}%`,
+        cx + radius * 0.65 * Math.cos(mid),
+        cy + radius * 0.65 * Math.sin(mid));
     }
 
     startAngle = endAngle;
   });
 
+  // Donut central
   ctx.beginPath();
   ctx.arc(cx, cy, radius * 0.42, 0, 2 * Math.PI);
-  ctx.fillStyle = isDark ? '#1a2a3e' : '#ffffff';
+  ctx.fillStyle = dark ? '#1a2a3e' : '#ffffff';
   ctx.fill();
-
   ctx.fillStyle    = '#1a2a4a';
-  ctx.font         = 'bold 11px Poppins, sans-serif';
+  ctx.font         = 'bold 11px Poppins,sans-serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('CUSTO', cx, cy - 8);
   ctx.fillStyle = '#f07b30';
-  ctx.font      = 'bold 10px Poppins, sans-serif';
+  ctx.font      = 'bold 10px Poppins,sans-serif';
   ctx.fillText(formatBRL(total), cx, cy + 8);
 
+  // Legenda
   const legend = document.getElementById('chart-legend');
   if (legend) {
     legend.innerHTML = slices.map(d => `
@@ -548,7 +541,7 @@ function renderChart(r) {
 }
 
 // ═══════════════════════════════════════════════════════
-// ADICIONAR AO CATÁLOGO
+// ADICIONAR AO CATÁLOGO DO RESULTADO
 // ═══════════════════════════════════════════════════════
 
 function addToCatalogFromResult() {
@@ -557,55 +550,53 @@ function addToCatalogFromResult() {
     return;
   }
 
-  const r = window._lastResult;
-
+  // Muda para aba catálogo
   document.querySelectorAll('.tab').forEach(b =>
     b.classList.toggle('active', b.dataset.tab === 'catalog'));
   document.querySelectorAll('.tab-content').forEach(c => {
     const isCat = c.id === 'tab-catalog';
     c.classList.toggle('hidden', !isCat);
-    c.classList.toggle('active', isCat);
+    c.classList.toggle('active',  isCat);
   });
 
   renderCatalog();
 
   setTimeout(() => {
+    const r = window._lastResult;
     const fields = {
-      'cat-price':  r.finalPrice.toFixed(2),
-      'cat-cost':   r.directCost.toFixed(2),
+      'cat-price':  r.finalPrice?.toFixed(2),
+      'cat-cost':   r.directCost?.toFixed(2),
       'cat-weight': r.partWeight,
       'cat-hours':  r.printHours,
     };
     Object.entries(fields).forEach(([id, val]) => {
       const el = document.getElementById(id);
-      if (el) {
+      if (el && val !== undefined) {
         el.value = val;
         el.style.borderColor = 'var(--orange)';
         setTimeout(() => el.style.borderColor = '', 2000);
       }
     });
 
-    const matEl = document.getElementById('cat-material');
+    const matEl  = document.getElementById('cat-material');
     if (matEl && r.materialType) matEl.value = r.materialType;
 
     const nameEl = document.getElementById('cat-name');
     if (nameEl && r.printerName) nameEl.value = r.printerName;
 
-    initCatalogCalc();
     calcCatalogMargin();
 
     const body = document.getElementById('catalog-form-body');
     if (body) body.style.display = '';
-
     document.getElementById('catalog-form-card')
       ?.scrollIntoView({ behavior:'smooth', block:'start' });
 
-    showToast('Dados importados para o catálogo!', 'fa-cubes');
+    showToast('Dados importados para o catálogo! 🎯', 'fa-cubes');
   }, 200);
 }
 
 // ═══════════════════════════════════════════════════════
-// DICAS
+// DICAS DINÂMICAS
 // ═══════════════════════════════════════════════════════
 
 function renderDynamicTips(tips) {
@@ -657,9 +648,13 @@ function renderProducts(filter = 'all') {
   const grid = document.getElementById('products-grid');
   if (!grid) return;
 
-  const list = filter === 'all'
-    ? PRODUCTS
-    : PRODUCTS.filter(p => p.category === filter);
+  const seen = new Set();
+  const list = (filter === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.category === filter))
+    .filter(p => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
 
   grid.innerHTML = list.map(p => `
     <div class="product-card${p.highlight ? ' product-highlight' : ''}">
@@ -680,10 +675,7 @@ function renderProducts(filter = 'all') {
 }
 
 function tagLabel(tag) {
-  return {
-    hot:'🔥 Popular', new:'✨ Novo',
-    best:'⭐ Melhor', premium:'💎 Premium'
-  }[tag] || tag;
+  return { hot:'🔥 Popular', new:'✨ Novo', best:'⭐ Melhor', premium:'💎 Premium' }[tag] || tag;
 }
 
 function renderStars(rating) {
@@ -700,8 +692,7 @@ function renderStars(rating) {
 function initProductFilters() {
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn')
-        .forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       renderProducts(btn.dataset.filter);
     });
@@ -797,7 +788,7 @@ function resetForm() {
 
   setDefaults();
   window.scrollTo({ top:0, behavior:'smooth' });
-  showToast('Formulário limpo!', 'fa-arrow-rotate-left');
+  showToast('Formulário limpo! 🗑️', 'fa-arrow-rotate-left');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -832,29 +823,24 @@ function setDefaults() {
 const ONBOARDING_KEY   = '3dpricer_onboarded';
 const ONBOARDING_STEPS = [
   {
-    emoji: '👋',
-    title: 'Bem-vindo ao 3D Pricer Pro!',
-    desc:  'O app mais completo para precificação de impressão 3D. Vamos fazer um tour rápido para você começar a lucrar mais!',
+    emoji:'👋', title:'Bem-vindo ao 3D Pricer Pro!',
+    desc:'O app mais completo para precificação de impressão 3D. Vamos fazer um tour rápido para você começar a lucrar mais!',
   },
   {
-    emoji: '🖨️',
-    title: 'Configure sua Impressora',
-    desc:  'Informe o custo da sua impressora, consumo em Watts e vida útil estimada. O app calcula automaticamente a depreciação por peça.',
+    emoji:'🖨️', title:'Configure sua Impressora',
+    desc:'Informe o custo da sua impressora, consumo em Watts e vida útil estimada. O app calcula automaticamente a depreciação por peça.',
   },
   {
-    emoji: '🧵',
-    title: 'Escolha o Material',
-    desc:  'Selecione o tipo de material e o app já sugere o preço médio do carretel, temperatura e alternativas mais econômicas.',
+    emoji:'🧵', title:'Escolha o Material',
+    desc:'Selecione o tipo de material e o app já sugere o preço médio do carretel, temperatura e alternativas mais econômicas.',
   },
   {
-    emoji: '💰',
-    title: 'Defina sua Margem',
-    desc:  'Configure impostos, taxas de plataforma e margem de lucro. O sistema calcula o preço mínimo, sugerido e premium automaticamente.',
+    emoji:'💰', title:'Defina sua Margem',
+    desc:'Configure impostos, taxas de plataforma e margem de lucro. O sistema calcula o preço mínimo, sugerido e premium automaticamente.',
   },
   {
-    emoji: '📊',
-    title: 'Dashboard & Simulador',
-    desc:  'Use o Dashboard para acompanhar seu negócio e o Simulador para projetar lucro mensal, breakeven e retorno do investimento!',
+    emoji:'📊', title:'Dashboard & Simulador',
+    desc:'Use o Dashboard para acompanhar seu negócio e o Simulador para projetar lucro mensal, breakeven e retorno do investimento!',
   },
 ];
 
@@ -877,20 +863,16 @@ function renderOnboardingStep() {
   overlay.innerHTML = `
     <div class="onboarding-box">
       <div class="onboarding-emoji">${step.emoji}</div>
-      <div class="onboarding-step">
-        Passo ${onboardingStep + 1} de ${ONBOARDING_STEPS.length}
-      </div>
+      <div class="onboarding-step">Passo ${onboardingStep+1} de ${ONBOARDING_STEPS.length}</div>
       <div class="onboarding-title">${step.title}</div>
       <div class="onboarding-desc">${step.desc}</div>
       <div class="onboarding-dots">
-        ${ONBOARDING_STEPS.map((_, i) => `
-          <div class="onboarding-dot ${i === onboardingStep ? 'active' : ''}"></div>
-        `).join('')}
+        ${ONBOARDING_STEPS.map((_, i) =>
+          `<div class="onboarding-dot ${i === onboardingStep ? 'active' : ''}"></div>`
+        ).join('')}
       </div>
       <div class="onboarding-actions">
-        <button class="onboarding-skip" onclick="skipOnboarding()">
-          Pular tour
-        </button>
+        <button class="onboarding-skip" onclick="skipOnboarding()">Pular tour</button>
         <button class="onboarding-next" onclick="nextOnboardingStep()">
           ${isLast
             ? '<i class="fas fa-rocket"></i> Começar!'
@@ -898,17 +880,13 @@ function renderOnboardingStep() {
         </button>
       </div>
     </div>`;
-
   document.body.appendChild(overlay);
 }
 
 function nextOnboardingStep() {
   onboardingStep++;
-  if (onboardingStep >= ONBOARDING_STEPS.length) {
-    skipOnboarding();
-  } else {
-    renderOnboardingStep();
-  }
+  if (onboardingStep >= ONBOARDING_STEPS.length) skipOnboarding();
+  else renderOnboardingStep();
 }
 
 function skipOnboarding() {
@@ -918,7 +896,7 @@ function skipOnboarding() {
 }
 
 // ═══════════════════════════════════════════════════════
-// PWA — INSTALAÇÃO
+// PWA
 // ═══════════════════════════════════════════════════════
 
 let deferredPrompt = null;
@@ -930,16 +908,13 @@ function installPWA() {
   }
   deferredPrompt.prompt();
   deferredPrompt.userChoice.then(choice => {
-    if (choice.outcome === 'accepted') {
-      showToast('Instalando o app... 🚀', 'fa-rocket');
-    }
+    if (choice.outcome === 'accepted') showToast('Instalando o app... 🚀', 'fa-rocket');
     deferredPrompt = null;
   });
 }
 
 function closePWABanner() {
-  const banner = document.getElementById('pwa-banner');
-  if (banner) banner.classList.add('hidden');
+  document.getElementById('pwa-banner')?.classList.add('hidden');
   localStorage.setItem('pwa-banner-closed', '1');
 }
 
@@ -948,7 +923,6 @@ function closePWABanner() {
 // ═══════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
-
   applyStoredTheme();
   setDefaults();
   initTabs();
@@ -963,9 +937,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.target.id === 'comparator-modal') closeComparator();
     });
 
-  document.querySelectorAll('input, select').forEach(el => {
-    el.addEventListener('input', updateProgress);
-  });
+  document.querySelectorAll('input, select').forEach(el =>
+    el.addEventListener('input', updateProgress)
+  );
 
   setTimeout(showOnboarding, 800);
 
@@ -974,33 +948,23 @@ document.addEventListener('DOMContentLoaded', () => {
     'color:#f07b30;font-weight:bold;font-size:16px'
   );
 
-  // ── Service Worker ──
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker
-        .register('./sw.js')
-        .then(reg => {
-          console.log('[PWA] SW registrado:', reg.scope);
-        })
-        .catch(err => {
-          console.warn('[PWA] Erro no SW:', err);
-        });
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('[PWA] SW registrado:', reg.scope))
+        .catch(err => console.warn('[PWA] Erro no SW:', err));
     });
   }
 
-  // ── Banner PWA ──
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    const banner = document.getElementById('pwa-banner');
-    if (banner) banner.classList.remove('hidden');
+    document.getElementById('pwa-banner')?.classList.remove('hidden');
   });
 
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
-    const banner = document.getElementById('pwa-banner');
-    if (banner) banner.classList.add('hidden');
+    document.getElementById('pwa-banner')?.classList.add('hidden');
     showToast('App instalado com sucesso! 🎉', 'fa-mobile-screen');
   });
-
-}); // fim DOMContentLoaded
+});
