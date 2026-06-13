@@ -985,3 +985,67 @@ setTimeout(() => updateClientsBadge(
     showToast('App instalado com sucesso! 🎉', 'fa-mobile-screen');
   });
 });
+// Variável para armazenar o evento beforeinstallprompt
+let deferredPrompt;
+
+// Captura o evento beforeinstallprompt
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Previne que o mini-infobar apareça automaticamente
+  e.preventDefault();
+  // Armazena o evento para que possa ser disparado depois
+  deferredPrompt = e;
+  // Mostra o banner de instalação PWA (se estiver escondido)
+  const pwaBanner = document.getElementById('pwa-banner');
+  if (pwaBanner) {
+    pwaBanner.classList.remove('hidden');
+  }
+});
+
+// Função para iniciar a instalação do PWA
+function installPWA() {
+  if (deferredPrompt) {
+    // Esconde o banner de instalação
+    const pwaBanner = document.getElementById('pwa-banner');
+    if (pwaBanner) {
+      pwaBanner.classList.add('hidden');
+    }
+    // Dispara o prompt de instalação
+    deferredPrompt.prompt();
+    // Espera pela resposta do usuário ao prompt
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('Usuário aceitou a instalação do PWA');
+        showToast('3D Pricer Pro instalado! 🎉', 'fa-check-circle');
+      } else {
+        console.log('Usuário recusou a instalação do PWA');
+        showToast('Instalação cancelada.', 'fa-info-circle');
+      }
+      deferredPrompt = null; // Limpa o evento
+    });
+  } else {
+    // Se o evento não foi disparado (navegador não suporta ou já instalado)
+    console.log('O prompt de instalação não está disponível ou já foi disparado.');
+    showToast('Para instalar, use o menu do navegador (Adicionar à tela inicial).', 'fa-info-circle');
+  }
+}
+
+// Função para fechar o banner PWA
+function closePWABanner() {
+  const pwaBanner = document.getElementById('pwa-banner');
+  if (pwaBanner) {
+    pwaBanner.classList.add('hidden');
+  }
+  // Opcional: Você pode querer armazenar que o usuário fechou o banner
+  // para não mostrá-lo novamente por um tempo.
+  localStorage.setItem('pwaBannerClosed', 'true');
+}
+
+// Verifica se o banner deve ser mostrado ao carregar a página
+window.addEventListener('load', () => {
+  if (localStorage.getItem('pwaBannerClosed') === 'true') {
+    const pwaBanner = document.getElementById('pwa-banner');
+    if (pwaBanner) {
+      pwaBanner.classList.add('hidden');
+    }
+  }
+});
