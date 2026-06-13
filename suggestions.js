@@ -1,282 +1,139 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════════
-// UTILITÁRIO COMPARTILHADO
-// ═══════════════════════════════════════════════════════
-
-function formatBRL(value) {
-  return (value || 0).toLocaleString('pt-BR', {
-    style: 'currency', currency: 'BRL',
-    minimumFractionDigits: 2,
-  });
-}
-
-// ═══════════════════════════════════════════════════════
 // BASE DE DADOS — MATERIAIS
 // ═══════════════════════════════════════════════════════
 
-const MATERIAL_INFO = {
-  'PLA': {
-    desc: 'Material mais popular. Fácil de imprimir, boa rigidez, baixa resistência ao calor (≈60°C). Ideal para peças decorativas e protótipos.',
-    tempNozzle: '190–220°C', tempBed: '50–60°C',
-    density: 1.24, shrinkage: 0.2,
-    pros: ['Fácil impressão','Baixo warping','Biodegradável','Preço acessível'],
-    cons: ['Baixa resistência térmica','Frágil sob impacto','Não adequado para uso externo'],
-    alternatives: ['PETG','PLA-CF','ASA'],
-    avgPrice: 80,
-  },
-  'PETG': {
-    desc: 'Excelente equilíbrio entre rigidez e flexibilidade. Resistente a água e produtos químicos. Boa resistência ao calor (≈80°C).',
-    tempNozzle: '230–250°C', tempBed: '70–85°C',
-    density: 1.27, shrinkage: 0.3,
-    pros: ['Boa resistência química','Translúcido disponível','Menor warping que ABS','Resistente à umidade'],
-    cons: ['Stringing frequente','Absorve umidade','Mais difícil que PLA'],
-    alternatives: ['PLA','ABS','ASA'],
-    avgPrice: 95,
-  },
-  'ABS': {
-    desc: 'Resistente ao calor (≈100°C) e impactos. Requer ambiente controlado. Exala fumes — use com ventilação.',
-    tempNozzle: '220–250°C', tempBed: '90–110°C',
-    density: 1.04, shrinkage: 0.8,
-    pros: ['Alta resistência térmica','Pós-processamento fácil (acetona)','Leve','Resistente a impactos'],
-    cons: ['Warping intenso','Requer câmara fechada','Fumes tóxicos','Difícil de imprimir'],
-    alternatives: ['ASA','PETG','PC'],
-    avgPrice: 90,
-  },
-  'ASA': {
-    desc: 'Evolução do ABS com resistência UV superior. Ideal para uso externo. Mesmas propriedades térmicas, menos warping.',
-    tempNozzle: '240–260°C', tempBed: '90–110°C',
-    density: 1.07, shrinkage: 0.6,
-    pros: ['Resistente a UV','Menos warping que ABS','Uso externo','Boa resistência térmica'],
-    cons: ['Requer câmara','Preço superior ao ABS','Fumes presentes'],
-    alternatives: ['ABS','PETG','PA'],
-    avgPrice: 110,
-  },
-  'TPU': {
-    desc: 'Filamento flexível. Excelente para peças que precisam dobrar, absorver impacto ou ter grip. Impressão lenta necessária.',
-    tempNozzle: '220–240°C', tempBed: '30–60°C',
-    density: 1.21, shrinkage: 0.5,
-    pros: ['Flexível e elástico','Resistente a abrasão','Boa aderência','Resistente a óleos'],
-    cons: ['Impressão lenta','Difícil com extrusor Bowden','Stringing','Higroscópico'],
-    alternatives: ['TPE','Ninjaflex'],
-    avgPrice: 140,
-  },
-  'PLA-CF': {
-    desc: 'PLA reforçado com fibra de carbono. Muito mais rígido e leve. Requer bico endurecido. Acabamento fosco premium.',
-    tempNozzle: '200–230°C', tempBed: '50–60°C',
-    density: 1.18, shrinkage: 0.3,
-    pros: ['Altíssima rigidez','Leve','Acabamento premium','Ótima resistência'],
-    cons: ['Abrasivo — desgasta bico padrão','Mais frágil em flexão','Preço elevado'],
-    alternatives: ['PETG-CF','PA-CF'],
-    avgPrice: 220,
-  },
-  'PETG-CF': {
-    desc: 'PETG com fibra de carbono. Une resistência química do PETG com a rigidez do CF. Requer bico endurecido.',
-    tempNozzle: '240–260°C', tempBed: '70–85°C',
-    density: 1.30, shrinkage: 0.3,
-    pros: ['Rígido e resistente','Boa resistência química','Menos frágil que PLA-CF'],
-    cons: ['Abrasivo','Preço elevado','Requer bico endurecido'],
-    alternatives: ['PA-CF','PLA-CF'],
-    avgPrice: 260,
-  },
-  'PA': {
-    desc: 'Nylon. Alta resistência mecânica e ao impacto. Muito higroscópico — precisa secar antes de imprimir.',
-    tempNozzle: '240–270°C', tempBed: '70–90°C',
-    density: 1.14, shrinkage: 1.0,
-    pros: ['Alta resistência mecânica','Boa resistência química','Durável'],
-    cons: ['Muito higroscópico','Warping','Difícil de imprimir','Preço alto'],
-    alternatives: ['PA-CF','PETG','ASA'],
-    avgPrice: 180,
-  },
-  'PA-CF': {
-    desc: 'Nylon com fibra de carbono. Um dos materiais de engenharia mais resistentes para FDM. Requer bico endurecido e câmara aquecida.',
-    tempNozzle: '260–290°C', tempBed: '80–100°C',
-    density: 1.10, shrinkage: 0.6,
-    pros: ['Resistência excepcional','Rígido e leve','Alta temperatura'],
-    cons: ['Muito exigente','Requer câmara e bico endurecido','Preço muito alto'],
-    alternatives: ['PC','PETG-CF'],
-    avgPrice: 380,
-  },
-  'PC': {
-    desc: 'Policarbonato. Resistência térmica altíssima (≈130°C). Transparente. Usado em peças de engenharia de alta performance.',
-    tempNozzle: '270–310°C', tempBed: '100–120°C',
-    density: 1.20, shrinkage: 0.5,
-    pros: ['Alta resistência térmica','Transparente','Forte e duro'],
-    cons: ['Muito difícil de imprimir','Requer hotend all-metal','Warping severo','Absorve umidade'],
-    alternatives: ['ASA','ABS','PA'],
-    avgPrice: 200,
-  },
-  'PVA': {
-    desc: 'Material de suporte solúvel em água. Ideal para geometrias complexas com suportes impossíveis de remover manualmente.',
-    tempNozzle: '180–200°C', tempBed: '45–60°C',
-    density: 1.23, shrinkage: 0.3,
-    pros: ['Solúvel em água','Suportes perfeitos','Sem marcas na peça'],
-    cons: ['Muito higroscópico','Caro','Impressão lenta','Requer 2ª extrusora'],
-    alternatives: ['HIPS (solúvel em limoneno)'],
-    avgPrice: 350,
-  },
-  'RESIN-STD': {
-    desc: 'Resina padrão MSLA/LCD. Altíssimo detalhe. Requer pós-cura (lavagem em IPA + exposição UV). Manuseio com EPI.',
-    tempNozzle: 'N/A', tempBed: 'N/A',
-    density: 1.10, shrinkage: 0.4,
-    pros: ['Altíssima resolução','Superfície lisa','Detalhes finos','Variadas cores'],
-    cons: ['Frágil','Requer pós-processamento','Tóxica no manuseio','Odor forte'],
-    alternatives: ['RESIN-ABS','RESIN-8K'],
-    avgPrice: 120,
-  },
-  'RESIN-ABS': {
-    desc: 'Resina ABS-Like. Mais resistente e menos frágil que resina padrão. Boa para peças funcionais com alta definição.',
-    tempNozzle: 'N/A', tempBed: 'N/A',
-    density: 1.12, shrinkage: 0.35,
-    pros: ['Mais resistente que padrão','Bom detalhe','Menos quebradiça'],
-    cons: ['Mais cara','Ainda requer EPI','Pós-processamento necessário'],
-    alternatives: ['RESIN-ENG','RESIN-STD'],
-    avgPrice: 160,
-  },
-  'RESIN-8K': {
-    desc: 'Resina de alta resolução para impressoras 8K. Detalhe extremo. Ideal para miniaturas, joias e peças de precisão máxima.',
-    tempNozzle: 'N/A', tempBed: 'N/A',
-    density: 1.09, shrinkage: 0.3,
-    pros: ['Resolução extrema','Superfície impecável','Excelente para miniaturas e joias'],
-    cons: ['Cara','Compatível só com impressoras 8K','Frágil'],
-    alternatives: ['RESIN-CAST'],
-    avgPrice: 220,
-  },
-  'RESIN-ENG': {
-    desc: 'Resina de engenharia. Alta resistência mecânica e térmica mantendo o detalhe das resinas. Usada em peças funcionais de precisão.',
-    tempNozzle: 'N/A', tempBed: 'N/A',
-    density: 1.15, shrinkage: 0.4,
-    pros: ['Resistência mecânica superior','Alta temperatura','Detalhe fino'],
-    cons: ['Preço muito alto','Impressão mais lenta','Pós-cura exigente'],
-    alternatives: ['RESIN-ABS','PA-CF'],
-    avgPrice: 380,
-  },
-  'RESIN-CAST': {
-    desc: 'Resina para fundição (castable). Queima sem resíduo para fundição em metal. Usada em joias e peças metálicas de precisão.',
-    tempNozzle: 'N/A', tempBed: 'N/A',
-    density: 1.05, shrinkage: 0.25,
-    pros: ['Queima sem resíduo','Ideal para fundição em metal','Altíssimo detalhe'],
-    cons: ['Cara','Uso específico','Requer forno de queima'],
-    alternatives: ['RESIN-8K'],
-    avgPrice: 500,
-  },
-  'OUTRO': {
-    desc: 'Material personalizado. Insira manualmente o custo por grama.',
-    tempNozzle: '—', tempBed: '—',
-    density: 1.20, shrinkage: 0.5,
-    pros: ['Flexibilidade total de configuração'],
-    cons: ['Sem dados automáticos'],
-    alternatives: [],
-    avgPrice: 0,
-  },
+// Esta constante DEVE ser declarada apenas UMA VEZ e aqui.
+window.MATERIAL_INFO = {
+  "PLA": { "desc": "Filamento versátil e fácil de usar, ideal para iniciantes.", "tempNozzle": "190-220°C", "tempBed": "50-60°C", "avgPrice": 120, "alternatives": ["PETG"] },
+  "PETG": { "desc": "Mais resistente e flexível que o PLA, boa adesão de camada.", "tempNozzle": "220-250°C", "tempBed": "70-80°C", "avgPrice": 150, "alternatives": ["ABS", "ASA"] },
+  "ABS": { "desc": "Alta resistência e durabilidade, mas requer mesa aquecida e ambiente controlado.", "tempNozzle": "230-260°C", "tempBed": "90-110°C", "avgPrice": 140, "alternatives": ["ASA"] },
+  "ASA": { "desc": "Similar ao ABS, mas com maior resistência UV e menos warping.", "tempNozzle": "240-260°C", "tempBed": "90-110°C", "avgPrice": 180, "alternatives": ["PETG"] },
+  "TPU": { "desc": "Filamento flexível e resistente a impactos, ideal para peças funcionais.", "tempNozzle": "210-230°C", "tempBed": "30-50°C", "avgPrice": 160, "alternatives": [] },
+  "PLA-CF": { "desc": "PLA com fibra de carbono, mais rígido e com acabamento fosco.", "tempNozzle": "200-230°C", "tempBed": "50-60°C", "avgPrice": 250, "alternatives": [] },
+  "PETG-CF": { "desc": "PETG com fibra de carbono, alta resistência e leveza.", "tempNozzle": "230-260°C", "tempBed": "70-80°C", "avgPrice": 280, "alternatives": [] },
+  "PA": { "desc": "Nylon, alta resistência mecânica e química, mas absorve umidade.", "tempNozzle": "240-270°C", "tempBed": "80-100°C", "avgPrice": 300, "alternatives": ["PA-CF"] },
+  "PA-CF": { "desc": "Nylon com fibra de carbono, extremamente forte e rígido.", "tempNozzle": "250-280°C", "tempBed": "80-100°C", "avgPrice": 400, "alternatives": [] },
+  "PC": { "desc": "Policarbonato, alta resistência ao calor e impacto, difícil de imprimir.", "tempNozzle": "260-300°C", "tempBed": "100-120°C", "avgPrice": 350, "alternatives": [] },
+  "PVA": { "desc": "Material de suporte solúvel em água, ideal para geometrias complexas.", "tempNozzle": "190-220°C", "tempBed": "50-60°C", "avgPrice": 400, "alternatives": [] },
+  "HIPS": { "desc": "Material de suporte solúvel em Limoneno, usado com ABS.", "tempNozzle": "230-245°C", "tempBed": "90-110°C", "avgPrice": 200, "alternatives": [] },
+  "RESIN-STD": { "desc": "Resina padrão para detalhes finos e prototipagem.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 180, "alternatives": ["RESIN-ABS", "RESIN-FLEX"] },
+  "RESIN-ABS": { "desc": "Resina com maior resistência e flexibilidade, similar ao ABS.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 250, "alternatives": ["RESIN-STD"] },
+  "RESIN-FLEX": { "desc": "Resina flexível para peças que precisam dobrar.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 300, "alternatives": [] },
+  "RESIN-CAST": { "desc": "Resina para fundição, queima sem resíduos.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 400, "alternatives": [] },
+  "RESIN-DENT": { "desc": "Resina biocompatível para aplicações odontológicas.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 600, "alternatives": [] },
+  "SLS-PA12": { "desc": "Pó de Nylon 12 para SLS, alta resistência e precisão.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 800, "alternatives": [] },
+  "SLS-TPU": { "desc": "Pó de TPU para SLS, peças flexíveis e duráveis.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 900, "alternatives": [] },
+  "MJF-PA12": { "desc": "Pó de Nylon 12 para MJF, alta densidade e isotropia.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 750, "alternatives": [] },
 };
 
 // ═══════════════════════════════════════════════════════
-// BASE DE DADOS — PRODUTOS EM DESTAQUE
+// BASE DE DADOS — PRODUTOS
 // ═══════════════════════════════════════════════════════
 
-const PRODUCTS = [
-  { id:'p01', category:'filament', tag:'best', emoji:'🧵',
-    name:'PLA Basic eSUN', brand:'eSUN', price:'R$ 79,90',
-    specs:['PLA','1kg','1.75mm','+20 cores'],
-    desc:'Melhor custo-benefício do mercado. Ótima consistência de diâmetro e excelente acabamento.',
-    rating:4.8, highlight:true },
-  { id:'p02', category:'filament', tag:'hot', emoji:'🧵',
-    name:'PETG Bambu Lab', brand:'Bambu Lab', price:'R$ 129,00',
-    specs:['PETG','1kg','1.75mm','Seco de fábrica'],
-    desc:'Certificado para impressoras Bambu. Alta consistência e mínimo stringing.',
-    rating:4.9, highlight:false },
-  { id:'p03', category:'filament', tag:'new', emoji:'🧵',
-    name:'PLA-CF Bambu Lab', brand:'Bambu Lab', price:'R$ 219,00',
-    specs:['PLA-CF','1kg','1.75mm','Bico endurecido'],
-    desc:'Alta rigidez e acabamento fosco premium. Requer bico de aço endurecido.',
-    rating:4.7, highlight:false },
-  { id:'p04', category:'filament', tag:'best', emoji:'🧵',
-    name:'PETG-CF Polymaker PolyMax', brand:'Polymaker', price:'R$ 249,00',
-    specs:['PETG-CF','750g','1.75mm','Endurecido'],
-    desc:'Resistência mecânica superior. Excelente para peças funcionais e de engenharia.',
-    rating:4.6, highlight:false },
-  { id:'p05', category:'filament', tag:'hot', emoji:'🧵',
-    name:'PA12-CF Bambu Lab', brand:'Bambu Lab', price:'R$ 389,00',
-    specs:['PA-CF','500g','1.75mm','Alta Temp'],
-    desc:'Nylon carbono de alta performance. Para peças de engenharia exigentes.',
-    rating:4.8, highlight:false },
-  { id:'p06', category:'filament', tag:'new', emoji:'🧵',
-    name:'ASA Formfutura ApolloX', brand:'Formfutura', price:'R$ 189,00',
-    specs:['ASA','750g','1.75mm','UV Resist'],
-    desc:'Resistência UV excepcional. Ideal para peças externas com longa vida útil.',
-    rating:4.5, highlight:false },
-  { id:'p07', category:'filament', tag:'best', emoji:'🧵',
-    name:'TPU 95A eSUN', brand:'eSUN', price:'R$ 139,00',
-    specs:['TPU','1kg','1.75mm','95A Shore'],
-    desc:'Flexível e durável. Ótimo para protetores, juntas e peças com grip.',
-    rating:4.6, highlight:false },
-  { id:'p08', category:'filament', tag:'premium', emoji:'🧵',
-    name:'PC Polymaker PolyLite', brand:'Polymaker', price:'R$ 199,00',
-    specs:['PC','1kg','1.75mm','130°C'],
-    desc:'Alta resistência térmica e transparência. Para peças de engenharia premium.',
-    rating:4.4, highlight:false },
-  { id:'p09', category:'resin', tag:'best', emoji:'🧪',
-    name:'ABS-Like Elegoo', brand:'Elegoo', price:'R$ 119,00',
-    specs:['ABS-Like','1kg','MSLA','Multicolor'],
-    desc:'Resina de grande custo-benefício. Menos frágil que padrão, excelente detalhe.',
-    rating:4.7, highlight:true },
-  { id:'p10', category:'resin', tag:'new', emoji:'🧪',
-    name:'Water Washable Anycubic', brand:'Anycubic', price:'R$ 149,00',
-    specs:['Água Lavável','1kg','MSLA','Sem IPA'],
-    desc:'Lava apenas com água. Muito mais prática e econômica no pós-processamento.',
-    rating:4.5, highlight:false },
-  { id:'p11', category:'resin', tag:'premium', emoji:'🧪',
-    name:'Resin 8K Phrozen Aqua', brand:'Phrozen', price:'R$ 229,00',
-    specs:['8K Ultra','1kg','8K printers','Alta res.'],
-    desc:'Resolução extrema para miniaturas, joias e peças com detalhes finos.',
-    rating:4.9, highlight:false },
-  { id:'p12', category:'resin', tag:'hot', emoji:'🧪',
-    name:'Engineering Resin Formlabs', brand:'Formlabs', price:'R$ 580,00',
-    specs:['Eng. Grade','1L','Form 3','Alta Temp'],
-    desc:'Resina de engenharia líder do mercado. Usada em protótipos funcionais profissionais.',
-    rating:4.8, highlight:false },
-  { id:'p13', category:'printer', tag:'hot', emoji:'🖨️',
-    name:'Bambu Lab P1S', brand:'Bambu Lab', price:'R$ 8.990,00',
-    specs:['FDM','Câmara','AMS','700mm/s'],
-    desc:'A impressora mais rápida e automatizada do mercado. Câmara fechada para materiais exigentes.',
+window.PRODUCTS_DB = [
+  { id:'p1', category:'printer', tag:'best', emoji:'🖨️',
+    name:'Bambu Lab P1S', brand:'Bambu Lab', price:'R$ 4.999,00',
+    specs:['CoreXY','300mm/s','Filamento','Auto-nivelamento'],
+    desc:'Impressora 3D de alta velocidade e fácil uso.',
     rating:4.9, highlight:true },
-  { id:'p14', category:'printer', tag:'best', emoji:'🖨️',
-    name:'Bambu Lab A1 Mini', brand:'Bambu Lab', price:'R$ 3.290,00',
-    specs:['FDM','Compacta','AMS Lite','500mm/s'],
-    desc:'Compacta, rápida e com multifilamento. Perfeita para iniciantes e makers.',
-    rating:4.8, highlight:false },
-  { id:'p15', category:'printer', tag:'new', emoji:'🖨️',
-    name:'Bambu Lab X1E', brand:'Bambu Lab', price:'R$ 14.500,00',
-    specs:['FDM','Industrial','AMS','300°C HE'],
-    desc:'Versão enterprise do X1C. Para materiais de engenharia e uso profissional.',
-    rating:4.9, highlight:false },
-  { id:'p16', category:'printer', tag:'best', emoji:'🖨️',
-    name:'Elegoo Saturn 4 Ultra', brand:'Elegoo', price:'R$ 4.200,00',
-    specs:['MSLA','12K','310×220mm','Mono'],
-    desc:'Grande formato MSLA com resolução 12K. Referência em custo-benefício para resina.',
-    rating:4.7, highlight:false },
-  { id:'p17', category:'printer', tag:'premium', emoji:'🖨️',
-    name:'Prusa MK4S', brand:'Prusa', price:'R$ 5.800,00',
-    specs:['FDM','Open','Input Shaping','220x220'],
-    desc:'Referência em qualidade e confiabilidade. Ecossistema aberto e comunidade enorme.',
-    rating:4.8, highlight:false },
-  { id:'p18', category:'printer', tag:'hot', emoji:'🖨️',
-    name:'Creality K2 Plus', brand:'Creality', price:'R$ 6.500,00',
-    specs:['FDM','Câmara','CFS 4 cores','600mm/s'],
-    desc:'Grande formato com câmara e multifilamento. Excelente custo para grande volume.',
+  { id:'p2', category:'printer', tag:'value', emoji:'🖨️',
+    name:'Creality Ender 3 V3 SE', brand:'Creality', price:'R$ 1.799,00',
+    specs:['Bowden','250mm/s','Filamento','Auto-nivelamento'],
+    desc:'Excelente custo-benefício para iniciantes.',
     rating:4.5, highlight:false },
-  { id:'p19', category:'tool', tag:'best', emoji:'🔧',
-    name:'Secador eSUN eBox Lite', brand:'eSUN', price:'R$ 189,00',
-    specs:['0–70°C','Temporizador','Imprime seco','Display'],
-    desc:'Mantém o filamento seco durante a impressão. Essencial para PA, TPU e PETG.',
+  { id:'p3', category:'filament', tag:'best', emoji:'🧵',
+    name:'Filamento PLA Bambu Lab', brand:'Bambu Lab', price:'R$ 189,00',
+    specs:['PLA','1.75mm','1kg','Diversas cores'],
+    desc:'PLA de alta qualidade, cores vibrantes e fácil impressão.',
+    rating:4.8, highlight:true },
+  { id:'p4', category:'filament', tag:'value', emoji:'🧵',
+    name:'Filamento PETG Esun', brand:'Esun', price:'R$ 139,00',
+    specs:['PETG','1.75mm','1kg','Resistente'],
+    desc:'PETG com boa resistência mecânica e térmica.',
+    rating:4.6, highlight:false },
+  { id:'p5', category:'resin', tag:'best', emoji:'🧪',
+    name:'Resina 8K Anycubic', brand:'Anycubic', price:'R$ 299,00',
+    specs:['Resina UV','8K','500g','Alta precisão'],
+    desc:'Resina de alta resolução para impressoras 8K.',
+    rating:4.7, highlight:true },
+  { id:'p6', category:'resin', tag:'value', emoji:'🧪',
+    name:'Resina Standard Elegoo', brand:'Elegoo', price:'R$ 159,00',
+    specs:['Resina UV','Standard','1kg','Cores variadas'],
+    desc:'Resina de uso geral com bom equilíbrio entre preço e qualidade.',
+    rating:4.5, highlight:false },
+  { id:'p7', category:'tool', tag:'best', emoji:'🛠️',
+    name:'Orca Slicer', brand:'Orca', price:'Grátis',
+    specs:['Fatiador','Multi-plataforma','Recursos avançados','Perfis pré-configurados'],
+    desc:'Fatiador poderoso e gratuito para controle total da impressão.',
+    rating:4.9, highlight:true },
+  { id:'p8', category:'tool', tag:'value', emoji:'🛠️',
+    name:'Cura', brand:'Ultimaker', price:'Grátis',
+    specs:['Fatiador','Fácil de usar','Comunidade grande','Plugins'],
+    desc:'Fatiador popular e fácil de usar, ideal para iniciantes.',
     rating:4.7, highlight:false },
-  { id:'p20', category:'tool', tag:'hot', emoji:'🔧',
-    name:'Kit Bicos Endurecidos Bambu', brand:'Bambu Lab', price:'R$ 89,00',
-    specs:['Aço endurecido','0.4mm','CF/GF','P/X/A'],
-    desc:'Essencial para impressão com materiais abrasivos como CF e GF.',
-    rating:4.9, highlight:false },
-  { id:'p21', category:'tool', tag:'new', emoji:'🔧',
+  { id:'p9', category:'printer', tag:'best', emoji:'🖨️',
+    name:'Anycubic Photon Mono M5s', brand:'Anycubic', price:'R$ 3.499,00',
+    specs:['MSLA','12K','Resina','Auto-nivelamento'],
+    desc:'Impressora de resina de altíssima resolução.',
+    rating:4.8, highlight:true },
+  { id:'p10', category:'printer', tag:'value', emoji:'🖨️',
+    name:'Elegoo Mars 4 Ultra', brand:'Elegoo', price:'R$ 2.299,00',
+    specs:['MSLA','9K','Resina','Tela monocromática'],
+    desc:'Impressora de resina com excelente custo-benefício.',
+    rating:4.6, highlight:false },
+  { id:'p11', category:'filament', tag:'best', emoji:'🧵',
+    name:'Filamento PETG Bambu Lab', brand:'Bambu Lab', price:'R$ 219,00',
+    specs:['PETG','1.75mm','1kg','Alta resistência'],
+    desc:'PETG de alta performance, ideal para peças funcionais.',
+    rating:4.8, highlight:true },
+  { id:'p12', category:'filament', tag:'value', emoji:'🧵',
+    name:'Filamento ABS Voolt3D', brand:'Voolt3D', price:'R$ 119,00',
+    specs:['ABS','1.75mm','1kg','Durável'],
+    desc:'ABS nacional com boa qualidade e preço acessível.',
+    rating:4.4, highlight:false },
+  { id:'p13', category:'resin', tag:'best', emoji:'🧪',
+    name:'Resina ABS-Like Phrozen', brand:'Phrozen', price:'R$ 349,00',
+    specs:['Resina UV','ABS-Like','1kg','Resistente'],
+    desc:'Resina com propriedades mecânicas similares ao ABS.',
+    rating:4.7, highlight:true },
+  { id:'p14', category:'resin', tag:'value', emoji:'🧪',
+    name:'Resina Water Washable Siraya Tech', brand:'Siraya Tech', price:'R$ 229,00',
+    specs:['Resina UV','Lavável em água','1kg','Fácil limpeza'],
+    desc:'Resina de fácil pós-processamento, sem necessidade de IPA.',
+    rating:4.6, highlight:false },
+  { id:'p15', category:'tool', tag:'best', emoji:'🧰',
+    name:'Kit de Ferramentas 3D Print', brand:'Creality', price:'R$ 89,00',
+    specs:['Espátula','Alicate','Estilete','Pinça'],
+    desc:'Kit essencial para pós-processamento de impressões 3D.',
+    rating:4.7, highlight:true },
+  { id:'p16', category:'tool', tag:'value', emoji:'🧰',
+    name:'Estufa de Filamento Sunlu', brand:'Sunlu', price:'R$ 199,00',
+    specs:['Estufa','Secagem de filamento','Controle de temperatura','Display LCD'],
+    desc:'Ajuda a manter o filamento seco e melhora a qualidade de impressão.',
+    rating:4.5, highlight:false },
+  { id:'p17', category:'printer', tag:'best', emoji:'🖨️',
+    name:'Prusa MK4', brand:'Prusa Research', price:'R$ 6.999,00',
+    specs:['CoreXY','200mm/s','Filamento','Open-source'],
+    desc:'Impressora 3D robusta e confiável, com grande comunidade.',
+    rating:4.9, highlight:true },
+  { id:'p18', category:'printer', tag:'value', emoji:'🖨️',
+    name:'Kingroon KLP1', brand:'Kingroon', price:'R$ 2.499,00',
+    specs:['CoreXY','500mm/s','Filamento','Klipper'],
+    desc:'Impressora 3D rápida com Klipper de fábrica.',
+    rating:4.6, highlight:false },
+  { id:'p19', category:'filament', tag:'best', emoji:'🧵',
+    name:'Filamento ASA Bambu Lab', brand:'Bambu Lab', price:'R$ 249,00',
+    specs:['ASA','1.75mm','1kg','Resistente a UV'],
+    desc:'ASA de alta qualidade, ideal para peças externas.',
+    rating:4.8, highlight:true },
+  { id:'p20', category:'filament', tag:'value', emoji:'🧵',
+    name:'Filamento TPU Flexível 3DFila', brand:'3DFila', price:'R$ 169,00',
+    specs:['TPU','1.75mm','1kg','Flexível'],
+    desc:'Filamento flexível para peças que precisam de elasticidade.',
+    rating:4.5, highlight:false },
+  { id:'p21', category:'tool', tag:'best', emoji:'🧪',
     name:'Wash & Cure Plus Elegoo', brand:'Elegoo', price:'R$ 379,00',
     specs:['Lavagem IPA','Cura UV 405nm','Timer','360° UV'],
     desc:'Estação completa de lavagem e cura para resina.',
@@ -292,7 +149,7 @@ const PRODUCTS = [
 // BASE DE DADOS — DICAS DE QUALIDADE
 // ═══════════════════════════════════════════════════════
 
-const QUALITY_TIPS = [
+window.QUALITY_TIPS = [
   { icon:'🌡️', title:'Temperatura do Bico',    value:'PLA: 200–215°C | PETG: 235–245°C',     desc:'Temperatura muito alta gera stringing. Muito baixa causa underextrusion.' },
   { icon:'🛏️', title:'Temperatura da Mesa',    value:'PLA: 55°C | PETG: 75°C | ABS: 100°C',  desc:'Mesa bem quente garante aderência e evita warping.' },
   { icon:'📏', title:'Altura de Camada',        value:'0.1mm (detalhe) → 0.3mm (velocidade)', desc:'Use 0.2mm como padrão. Para decorativas, 0.1mm.' },
@@ -311,12 +168,12 @@ const QUALITY_TIPS = [
 // DICAS DINÂMICAS
 // ═══════════════════════════════════════════════════════
 
-function generateDynamicTips(data) {
+window.generateDynamicTips = function(data) {
   const tips = [];
 
   if (data.energyCost > 10) {
     tips.push({ type:'economy', icon:'⚡', title:'Custo de Energia Elevado',
-      desc:`Seu custo de energia é ${formatBRL(data.energyCost)} nesta peça. Considere imprimir em horários de bandeira verde.`,
+      desc:`Seu custo de energia é ${window.formatBRL(data.energyCost)} nesta peça. Considere imprimir em horários de bandeira verde.`,
       badge:'Economia' });
   }
 
@@ -328,7 +185,7 @@ function generateDynamicTips(data) {
 
   if (data.materialCostPerGram > 0.35) {
     tips.push({ type:'economy', icon:'💰', title:'Material com Custo/g Elevado',
-      desc:`R$ ${data.materialCostPerGram.toFixed(3)}/g é acima da média. Alternativas: ${getMaterialAlternatives(data.materialType)}.`,
+      desc:`R$ ${data.materialCostPerGram.toFixed(3)}/g é acima da média. Alternativas: ${window.getMaterialAlternatives(data.materialType)}.`,
       badge:'Economia' });
   }
 
@@ -351,7 +208,7 @@ function generateDynamicTips(data) {
       badge:'Atenção' });
   }
 
-  const premiumSuggestion = getPremiumMaterialSuggestion(data.materialType);
+  const premiumSuggestion = window.getPremiumMaterialSuggestion(data.materialType);
   if (premiumSuggestion) {
     tips.push({ type:'quality', icon:'⬆️', title:'Opção de Qualidade Superior Disponível',
       desc: premiumSuggestion, badge:'Upgrade' });
@@ -382,15 +239,15 @@ function generateDynamicTips(data) {
   }
 
   return tips;
-}
+};
 
-function getMaterialAlternatives(type) {
-  const info = MATERIAL_INFO[type];
+window.getMaterialAlternatives = function(type) {
+  const info = window.MATERIAL_INFO[type];
   if (!info || !info.alternatives.length) return 'consulte o comparador de materiais';
   return info.alternatives.join(', ');
-}
+};
 
-function getPremiumMaterialSuggestion(type) {
+window.getPremiumMaterialSuggestion = function(type) {
   const upgrades = {
     'PLA':       'Para peças funcionais, considere PETG ou PLA-CF. Custo adicional de ~30–80% com ganho significativo de performance.',
     'PETG':      'Para uso externo ou alta temperatura, ASA ou PA são excelentes alternativas.',
@@ -399,13 +256,43 @@ function getPremiumMaterialSuggestion(type) {
     'PLA-CF':    'Para resistência química além da rigidez, PETG-CF é o próximo passo.',
   };
   return upgrades[type] || null;
-}
+};
+
+// ═══════════════════════════════════════════════════════
+// RENDERIZAÇÃO DE DICAS DE QUALIDADE
+// ═══════════════════════════════════════════════════════
+
+window.renderQualityTips = function() {
+  const container = document.getElementById('tab-tips');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="card">
+      <div class="result-header">
+        <h2><i class="fas fa-lightbulb"></i> Dicas de Otimização e Qualidade</h2>
+      </div>
+      <p class="section-desc">Aprimore suas impressões e otimize seus custos com estas dicas:</p>
+      <div class="tips-grid">
+        ${window.QUALITY_TIPS.map(tip => `
+          <div class="tip-card">
+            <div class="tip-icon">${tip.icon}</div>
+            <div class="tip-content">
+              <strong>${tip.title}</strong>
+              <small>${tip.value}</small>
+              <p>${tip.desc}</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+};
 
 // ═══════════════════════════════════════════════════════
 // COMPARADOR DE MATERIAIS
 // ═══════════════════════════════════════════════════════
 
-function generateComparatorHTML() {
+window.generateComparatorHTML = function() {
   const materials = ['PLA','PETG','ABS','ASA','TPU','PLA-CF','PA','RESIN-STD'];
   const ratings = {
     'PLA':       [5,2,2,2,2,5,3],
@@ -434,4 +321,68 @@ function generateComparatorHTML() {
 
   html += `</tbody></table></div>`;
   return html;
-}
+};
+
+// ═══════════════════════════════════════════════════════
+// RENDERIZAÇÃO DE PRODUTOS
+// ═══════════════════════════════════════════════════════
+
+window.renderProducts = function(filter = 'all') {
+  const container = document.getElementById('tab-products');
+  if (!container) return;
+
+  const filteredProducts = filter === 'all'
+    ? window.PRODUCTS_DB
+    : window.PRODUCTS_DB.filter(p => p.category === filter);
+
+  container.innerHTML = `
+    <div class="card">
+      <div class="result-header">
+        <h2><i class="fas fa-star"></i> Produtos Recomendados</h2>
+      </div>
+      <p class="section-desc">Encontre as melhores impressoras, filamentos, resinas e ferramentas para seu negócio.</p>
+      <div class="product-filters">
+        <button class="btn-small product-filter-btn ${filter === 'all' ? 'active' : ''}" onclick="window.renderProducts('all', this)">Todos</button>
+        <button class="btn-small product-filter-btn ${filter === 'printer' ? 'active' : ''}" onclick="window.renderProducts('printer', this)">Impressoras</button>
+        <button class="btn-small product-filter-btn ${filter === 'filament' ? 'active' : ''}" onclick="window.renderProducts('filament', this)">Filamentos</button>
+        <button class="btn-small product-filter-btn ${filter === 'resin' ? 'active' : ''}" onclick="window.renderProducts('resin', this)">Resinas</button>
+        <button class="btn-small product-filter-btn ${filter === 'tool' ? 'active' : ''}" onclick="window.renderProducts('tool', this)">Ferramentas</button>
+      </div>
+      <div class="products-grid">
+        ${filteredProducts.map(product => `
+          <div class="product-card ${product.highlight ? 'highlight' : ''}">
+            <div class="product-header">
+              <span class="product-emoji">${product.emoji}</span>
+              <span class="product-tag ${product.tag}">${product.tag === 'best' ? 'Melhor' : product.tag === 'value' ? 'Custo-Benefício' : ''}</span>
+            </div>
+            <h3>${product.name}</h3>
+            <p class="product-brand">${product.brand}</p>
+            <div class="product-specs">
+              ${product.specs.map(spec => `<span>${spec}</span>`).join('')}
+            </div>
+            <p class="product-desc">${product.desc}</p>
+            <div class="product-footer">
+              <span class="product-price">${product.price}</span>
+              <div class="product-rating">
+                ${Array.from({length: 5}, (_, i) => `<i class="fas fa-star ${i < Math.floor(product.rating) ? 'filled' : ''}"></i>`).join('')}
+                <span>${product.rating}</span>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+};
+
+window.initProductFilters = function() {
+  // Adiciona um listener para os botões de filtro de produtos
+  document.querySelectorAll('.product-filter-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      document.querySelectorAll('.product-filter-btn').forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      const filter = this.dataset.filter; // Assume que o data-filter está no botão
+      window.renderProducts(filter);
+    });
+  });
+};
