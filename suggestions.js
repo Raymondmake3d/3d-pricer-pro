@@ -1,6 +1,17 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════════
+// UTILITÁRIO COMPARTILHADO
+// ═══════════════════════════════════════════════════════
+
+function formatBRL(value) {
+  return (value || 0).toLocaleString('pt-BR', {
+    style: 'currency', currency: 'BRL',
+    minimumFractionDigits: 2,
+  });
+}
+
+// ═══════════════════════════════════════════════════════
 // BASE DE DADOS — MATERIAIS
 // ═══════════════════════════════════════════════════════
 
@@ -165,7 +176,6 @@ const MATERIAL_INFO = {
 // ═══════════════════════════════════════════════════════
 
 const PRODUCTS = [
-  // ── FILAMENTOS ──
   { id:'p01', category:'filament', tag:'best', emoji:'🧵',
     name:'PLA Basic eSUN', brand:'eSUN', price:'R$ 79,90',
     specs:['PLA','1kg','1.75mm','+20 cores'],
@@ -206,8 +216,6 @@ const PRODUCTS = [
     specs:['PC','1kg','1.75mm','130°C'],
     desc:'Alta resistência térmica e transparência. Para peças de engenharia premium.',
     rating:4.4, highlight:false },
-
-  // ── RESINAS ──
   { id:'p09', category:'resin', tag:'best', emoji:'🧪',
     name:'ABS-Like Elegoo', brand:'Elegoo', price:'R$ 119,00',
     specs:['ABS-Like','1kg','MSLA','Multicolor'],
@@ -228,8 +236,6 @@ const PRODUCTS = [
     specs:['Eng. Grade','1L','Form 3','Alta Temp'],
     desc:'Resina de engenharia líder do mercado. Usada em protótipos funcionais profissionais.',
     rating:4.8, highlight:false },
-
-  // ── IMPRESSORAS ──
   { id:'p13', category:'printer', tag:'hot', emoji:'🖨️',
     name:'Bambu Lab P1S', brand:'Bambu Lab', price:'R$ 8.990,00',
     specs:['FDM','Câmara','AMS','700mm/s'],
@@ -260,8 +266,6 @@ const PRODUCTS = [
     specs:['FDM','Câmara','CFS 4 cores','600mm/s'],
     desc:'Grande formato com câmara e multifilamento. Excelente custo para grande volume.',
     rating:4.5, highlight:false },
-
-  // ── FERRAMENTAS ──
   { id:'p19', category:'tool', tag:'best', emoji:'🔧',
     name:'Secador eSUN eBox Lite', brand:'eSUN', price:'R$ 189,00',
     specs:['0–70°C','Temporizador','Imprime seco','Display'],
@@ -275,12 +279,12 @@ const PRODUCTS = [
   { id:'p21', category:'tool', tag:'new', emoji:'🔧',
     name:'Wash & Cure Plus Elegoo', brand:'Elegoo', price:'R$ 379,00',
     specs:['Lavagem IPA','Cura UV 405nm','Timer','360° UV'],
-    desc:'Estação completa de lavagem e cura para resina. Acelera e padroniza o pós-processamento.',
+    desc:'Estação completa de lavagem e cura para resina.',
     rating:4.8, highlight:false },
   { id:'p22', category:'tool', tag:'best', emoji:'🔧',
     name:'IPA 99.9% 1L Anidrol', brand:'Anidrol', price:'R$ 45,00',
     specs:['IPA 99.9%','1 Litro','Resina','Limpeza'],
-    desc:'Isopropanol grau farmacêutico para lavagem de resina. Uso obrigatório em SLA/MSLA.',
+    desc:'Isopropanol grau farmacêutico para lavagem de resina.',
     rating:4.6, highlight:false },
 ];
 
@@ -289,18 +293,18 @@ const PRODUCTS = [
 // ═══════════════════════════════════════════════════════
 
 const QUALITY_TIPS = [
-  { icon:'🌡️', title:'Temperatura do Bico',     value:'PLA: 200–215°C | PETG: 235–245°C',    desc:'Temperatura muito alta gera stringing e queima. Muito baixa causa underextrusion. Calibre por material e marca.' },
-  { icon:'🛏️', title:'Temperatura da Mesa',     value:'PLA: 55°C | PETG: 75°C | ABS: 100°C', desc:'Mesa bem quente garante aderência e evita warping nas primeiras camadas.' },
-  { icon:'📏', title:'Altura de Camada',         value:'0.1mm (detalhe) → 0.3mm (velocidade)', desc:'Use 0.2mm como padrão. Para peças decorativas, 0.1mm. Para estruturais rápidas, 0.28–0.3mm.' },
-  { icon:'💨', title:'Velocidade de Impressão',  value:'PLA: até 300mm/s | PETG: até 150mm/s', desc:'Alta velocidade pode causar perda de qualidade. Use aceleração gradual e Input Shaping para compensar.' },
-  { icon:'🔄', title:'Preenchimento (Infill)',   value:'15–20% decorativo | 40–60% funcional',  desc:'Padrão Gyroid é o melhor custo-benefício entre resistência e material. Honeycomb para leveza.' },
-  { icon:'🧱', title:'Perímetros (Walls)',       value:'2 paredes (estética) | 4+ (resistência)',desc:'Mais paredes = mais resistência. Para peças estruturais, use 4–6 perímetros com infill menor.' },
-  { icon:'🌬️', title:'Resfriamento',            value:'PLA: 100% | PETG: 30–50% | ABS: 0%',   desc:'ABS e ASA precisam de zero resfriamento. PETG com excesso de cooling causa layer delamination.' },
-  { icon:'📦', title:'Armazenamento',            value:'Temperatura < 25°C | Umidade < 15%',    desc:'Use caixas secas com sílica gel. PA e TPU são críticos — imprima sempre secos.' },
-  { icon:'⚙️', title:'Calibração de Fluxo',     value:'Extrusion multiplier: 0.95–1.05',       desc:'Calibre o fluxo por marca/cor de filamento. Superextrusion causa superfície irregular.' },
-  { icon:'🏠', title:'Primeira Camada',          value:'Live Adjust Z: crítico',                desc:'A primeira camada define tudo. Use 0.2mm de distância ao leito. Levemente esmagada = boa aderência.' },
-  { icon:'🔩', title:'Suportes',                 value:'Normal: 50° | Tree: geometrias complexas',desc:'Suportes Árvore (Tree) consomem menos material. Ângulo padrão de 45–55° funciona para a maioria dos casos.' },
-  { icon:'🎯', title:'Input Shaping',            value:'Reduz ghosting em alta velocidade',      desc:'Ative Input Shaping no Orca Flashforge ou Bambu Studio para imprimir rápido com qualidade.' },
+  { icon:'🌡️', title:'Temperatura do Bico',    value:'PLA: 200–215°C | PETG: 235–245°C',     desc:'Temperatura muito alta gera stringing. Muito baixa causa underextrusion.' },
+  { icon:'🛏️', title:'Temperatura da Mesa',    value:'PLA: 55°C | PETG: 75°C | ABS: 100°C',  desc:'Mesa bem quente garante aderência e evita warping.' },
+  { icon:'📏', title:'Altura de Camada',        value:'0.1mm (detalhe) → 0.3mm (velocidade)', desc:'Use 0.2mm como padrão. Para decorativas, 0.1mm.' },
+  { icon:'💨', title:'Velocidade de Impressão', value:'PLA: até 300mm/s | PETG: até 150mm/s',  desc:'Alta velocidade pode causar perda de qualidade.' },
+  { icon:'🔄', title:'Preenchimento (Infill)',  value:'15–20% decorativo | 40–60% funcional',  desc:'Gyroid é o melhor custo-benefício.' },
+  { icon:'🧱', title:'Perímetros (Walls)',      value:'2 paredes (estética) | 4+ (resistência)',desc:'Mais paredes = mais resistência.' },
+  { icon:'🌬️', title:'Resfriamento',           value:'PLA: 100% | PETG: 30–50% | ABS: 0%',   desc:'ABS e ASA precisam de zero resfriamento.' },
+  { icon:'📦', title:'Armazenamento',           value:'Temperatura < 25°C | Umidade < 15%',    desc:'Use caixas secas com sílica gel.' },
+  { icon:'⚙️', title:'Calibração de Fluxo',    value:'Extrusion multiplier: 0.95–1.05',       desc:'Calibre o fluxo por marca/cor de filamento.' },
+  { icon:'🏠', title:'Primeira Camada',         value:'Live Adjust Z: crítico',                desc:'A primeira camada define tudo.' },
+  { icon:'🔩', title:'Suportes',                value:'Normal: 50° | Tree: geometrias complexas',desc:'Suportes Árvore consomem menos material.' },
+  { icon:'🎯', title:'Input Shaping',           value:'Reduz ghosting em alta velocidade',      desc:'Ative no Orca Flashforge para imprimir rápido com qualidade.' },
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -312,38 +316,38 @@ function generateDynamicTips(data) {
 
   if (data.energyCost > 10) {
     tips.push({ type:'economy', icon:'⚡', title:'Custo de Energia Elevado',
-      desc:`Seu custo de energia é ${formatBRL(data.energyCost)} nesta peça. Considere imprimir em horários de bandeira verde ou usar tarifa noturna se disponível em seu plano.`,
+      desc:`Seu custo de energia é ${formatBRL(data.energyCost)} nesta peça. Considere imprimir em horários de bandeira verde.`,
       badge:'Economia' });
   }
 
   if (data.printerWatts > 400) {
     tips.push({ type:'economy', icon:'🔌', title:'Impressora com Alto Consumo',
-      desc:'Impressoras acima de 400W têm custo energético significativo. Ligue o aquecimento da câmara apenas quando necessário (ABS/ASA/PA). Para PLA e PETG, a câmara não precisa estar ativa.',
+      desc:'Impressoras acima de 400W têm custo energético significativo. Para PLA e PETG, a câmara não precisa estar ativa.',
       badge:'Economia' });
   }
 
   if (data.materialCostPerGram > 0.35) {
     tips.push({ type:'economy', icon:'💰', title:'Material com Custo/g Elevado',
-      desc:`R$ ${data.materialCostPerGram.toFixed(3)}/g é acima da média. Alternativas: ${getMaterialAlternatives(data.materialType)}. Comprar em quantidade (2–3 kg) costuma gerar 15–30% de desconto.`,
+      desc:`R$ ${data.materialCostPerGram.toFixed(3)}/g é acima da média. Alternativas: ${getMaterialAlternatives(data.materialType)}.`,
       badge:'Economia' });
   }
 
   if (data.failureRate > 10) {
     tips.push({ type:'warning', icon:'⚠️', title:'Taxa de Falha Muito Alta',
-      desc:`Uma taxa de ${data.failureRate}% é elevada. Verifique: calibração do leito, temperatura do ambiente, qualidade do filamento e configurações do fatiador. Uma taxa saudável fica entre 2–5%.`,
+      desc:`Uma taxa de ${data.failureRate}% é elevada. Uma taxa saudável fica entre 2–5%.`,
       badge:'Atenção' });
   }
 
   const depreciationPercent = (data.depreciationCost / data.directCost) * 100;
   if (depreciationPercent > 25) {
     tips.push({ type:'info', icon:'🖨️', title:'Alta Participação da Depreciação',
-      desc:`A depreciação representa ${depreciationPercent.toFixed(1)}% do custo. Aumente o volume de impressões mensais para diluir esse custo fixo.`,
+      desc:`A depreciação representa ${depreciationPercent.toFixed(1)}% do custo. Aumente o volume mensal para diluir esse custo fixo.`,
       badge:'Info' });
   }
 
   if (data.profitMargin < 20) {
     tips.push({ type:'warning', icon:'📉', title:'Margem de Lucro Baixa',
-      desc:`Margem de ${data.profitMargin}% pode ser insuficiente para cobrir imprevistos. Recomenda-se no mínimo 30–40% para impressões customizadas e 50%+ para produtos de prateleira.`,
+      desc:`Margem de ${data.profitMargin}% pode ser insuficiente. Recomenda-se no mínimo 30–40%.`,
       badge:'Atenção' });
   }
 
@@ -355,25 +359,25 @@ function generateDynamicTips(data) {
 
   if (data.printHours > 12) {
     tips.push({ type:'economy', icon:'⏱️', title:'Impressão de Longa Duração',
-      desc:`${data.printHours}h de impressão é um tempo significativo. Considere: aumentar altura de camada (0.28–0.3mm), reduzir infill ou dividir a peça em partes menores.`,
+      desc:`${data.printHours}h de impressão é significativo. Considere aumentar altura de camada ou reduzir infill.`,
       badge:'Eficiência' });
   }
 
   if (data.partWeight < 20 && data.printHours > 2) {
     tips.push({ type:'info', icon:'🏗️', title:'Peça Leve com Tempo Elevado',
-      desc:`Peça de apenas ${data.partWeight}g com ${data.printHours}h indica alta complexidade ou resolução muito fina. Aumente a altura de camada ou reduza o infill para ganhar eficiência.`,
+      desc:`Peça de ${data.partWeight}g com ${data.printHours}h indica alta complexidade. Aumente a altura de camada.`,
       badge:'Info' });
   }
 
   if (data.quantity > 1) {
     tips.push({ type:'economy', icon:'📦', title:'Ganho de Escala no Lote',
-      desc:`Para ${data.quantity} unidades, negocie material em maior quantidade (desconto médio de 8–15%). Custo de setup e supervisão também se diluem, reduzindo o preço unitário em até 12%.`,
+      desc:`Para ${data.quantity} unidades, negocie material em maior quantidade (desconto médio de 8–15%).`,
       badge:'Escala' });
   }
 
   if (data.materialType && data.materialType.startsWith('RESIN') && data.postProcessCost < 10) {
     tips.push({ type:'quality', icon:'🧪', title:'Pós-processamento de Resina Subestimado',
-      desc:'Para resinas, inclua: IPA ou estação de lavagem, cura UV (mínimo 5 min), remoção de suportes e lixamento. Isso costuma adicionar R$ 15–40 ao custo real da peça.',
+      desc:'Para resinas, inclua: IPA, cura UV, remoção de suportes e lixamento. Isso costuma adicionar R$ 15–40 ao custo real.',
       badge:'Qualidade' });
   }
 
@@ -388,11 +392,11 @@ function getMaterialAlternatives(type) {
 
 function getPremiumMaterialSuggestion(type) {
   const upgrades = {
-    'PLA':      'Para peças funcionais, considere PETG (melhor resistência química/térmica) ou PLA-CF (maior rigidez). Custo adicional de ~30–80% com ganho significativo de performance.',
-    'PETG':     'Para uso externo ou alta temperatura, ASA ou PA são excelentes alternativas. PETG-CF oferece rigidez muito superior com custo moderado.',
-    'ABS':      'ASA substitui o ABS com vantagens reais: melhor resistência UV, menos warping e menos fumes. Custo similar.',
-    'RESIN-STD':'Resina ABS-Like oferece muito mais resistência ao impacto por apenas ~30% a mais. Para miniaturas de alta precisão, resina 8K entrega superfície impecável.',
-    'PLA-CF':   'Se precisar de resistência química além da rigidez, PETG-CF é o próximo passo. Para engenharia séria, PA-CF é o topo de linha FDM.',
+    'PLA':       'Para peças funcionais, considere PETG ou PLA-CF. Custo adicional de ~30–80% com ganho significativo de performance.',
+    'PETG':      'Para uso externo ou alta temperatura, ASA ou PA são excelentes alternativas.',
+    'ABS':       'ASA substitui o ABS com vantagens reais: melhor resistência UV e menos warping.',
+    'RESIN-STD': 'Resina ABS-Like oferece muito mais resistência ao impacto por apenas ~30% a mais.',
+    'PLA-CF':    'Para resistência química além da rigidez, PETG-CF é o próximo passo.',
   };
   return upgrades[type] || null;
 }
