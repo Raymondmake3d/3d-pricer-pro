@@ -940,3 +940,202 @@
 }
 [data-theme="dark"] .history-card:hover { border-color: var(--orange); }
 [data-theme="dark"] .history-title strong { color: #e2e8f0; }
+/* ══════════════════════════════════════════
+   CATÁLOGO — FOTO DAS PEÇAS
+══════════════════════════════════════════ */
+.catalog-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  overflow: hidden;
+  background: var(--white);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.catalog-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+}
+
+/* Foto da peça */
+.catalog-photo {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  background: var(--light-gray);
+}
+.catalog-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.catalog-card:hover .catalog-photo img {
+  transform: scale(1.05);
+}
+.catalog-photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(26,42,74,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: #fff;
+  font-size: 1.5rem;
+}
+.catalog-card:hover .catalog-photo-overlay {
+  opacity: 1;
+}
+
+/* Placeholder sem foto */
+.catalog-photo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  cursor: default;
+}
+.catalog-photo-empty span { font-size: 2.5rem; }
+.catalog-photo-empty small {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Corpo do card */
+.catalog-card-body {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.catalog-card-header {
+  display: flex;
+  justify-content: flex-end;
+}
+.catalog-status-dot {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.catalog-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--dark-blue);
+  line-height: 1.3;
+}
+.catalog-material {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+.catalog-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.catalog-pricing {
+  margin-top: 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+}
+.catalog-price-main small {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.catalog-price-main strong {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--orange);
+}
+.catalog-price-secondary {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 0.4rem;
+  flex-wrap: wrap;
+}
+.catalog-price-secondary div small {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+.catalog-price-secondary div span {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--dark-blue);
+}
+.catalog-tags {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin-top: 0.3rem;
+}
+.catalog-tag {
+  background: rgba(44,74,124,0.08);
+  color: var(--mid-blue);
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+.catalog-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.catalog-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+}
+.catalog-actions {
+  display: flex;
+  gap: 0.3rem;
+}
+
+/* Upload de foto */
+.photo-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.photo-upload-area:hover {
+  border-color: var(--orange);
+  background: rgba(240,123,48,0.04);
+}
+.photo-upload-area.drag-over {
+  border-color: var(--orange);
+  background: rgba(240,123,48,0.08);
+  transform: scale(1.01);
+}
+
+/* Dark mode */
+[data-theme="dark"] .catalog-card {
+  background: #0d1b2e;
+  border-color: #1e3a5f;
+}
+[data-theme="dark"] .catalog-name { color: #e2e8f0; }
+[data-theme="dark"] .catalog-photo-empty { background: #1a2a3e; }
+[data-theme="dark"] .photo-upload-area {
+  border-color: #1e3a5f;
+  background: #0d1b2e;
+}
