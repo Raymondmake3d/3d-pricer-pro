@@ -7,48 +7,48 @@
 const CLIENTS_KEY = '3dpricer_clients';
 const QUOTES_KEY  = '3dpricer_quotes';
 
-function loadClients() {
+window.loadClients = function() {
   try { return JSON.parse(localStorage.getItem(CLIENTS_KEY)) || []; }
   catch { return []; }
-}
+};
 
-function saveClients(clients) {
+window.saveClients = function(clients) {
   localStorage.setItem(CLIENTS_KEY, JSON.stringify(clients));
-}
+};
 
-function loadQuotes() {
+window.loadQuotes = function() {
   try { return JSON.parse(localStorage.getItem(QUOTES_KEY)) || []; }
   catch { return []; }
-}
+};
 
-function saveQuotes(quotes) {
+window.saveQuotes = function(quotes) {
   localStorage.setItem(QUOTES_KEY, JSON.stringify(quotes));
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // RENDERIZAÇÃO PRINCIPAL
 // ═══════════════════════════════════════════════════════
 
-function renderClients() {
+window.renderClients = function() {
   const container = document.getElementById('tab-clients');
   if (!container) return;
 
-  const clients = loadClients();
-  const quotes  = loadQuotes();
+  const clients = window.loadClients();
+  const quotes  = window.loadQuotes();
 
   container.innerHTML = `
-    ${renderClientStats(clients, quotes)}
-    ${renderClientForm()}
-    ${renderClientList(clients, quotes)}
-    ${renderQuotesList(quotes, clients)}
+    ${window.renderClientStats(clients, quotes)}
+    ${window.renderClientForm()}
+    ${window.renderClientList(clients, quotes)}
+    ${window.renderQuotesList(quotes, clients)}
   `;
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // ESTATÍSTICAS
 // ═══════════════════════════════════════════════════════
 
-function renderClientStats(clients, quotes) {
+window.renderClientStats = function(clients, quotes) {
   const totalClients  = clients.length;
   const totalQuotes   = quotes.length;
   const totalRevenue  = quotes.reduce((s, q) => s + (q.finalPrice * (q.quantity||1)), 0);
@@ -76,7 +76,7 @@ function renderClientStats(clients, quotes) {
       <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
       <div class="kpi-info">
         <small>Receita de Orçamentos</small>
-        <strong>${formatBRL(totalRevenue)}</strong>
+        <strong>${window.formatBRL(totalRevenue)}</strong>
         <span>Valor total orçado</span>
       </div>
     </div>
@@ -84,23 +84,23 @@ function renderClientStats(clients, quotes) {
       <div class="kpi-icon"><i class="fas fa-handshake"></i></div>
       <div class="kpi-info">
         <small>Ticket Médio</small>
-        <strong>${totalQuotes > 0 ? formatBRL(totalRevenue/totalQuotes) : '—'}</strong>
+        <strong>${totalQuotes > 0 ? window.formatBRL(totalRevenue/totalQuotes) : '—'}</strong>
         <span>por orçamento</span>
       </div>
     </div>
   </div>`;
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // FORMULÁRIO DE CLIENTE
 // ═══════════════════════════════════════════════════════
 
-function renderClientForm() {
+window.renderClientForm = function() {
   return `
   <div class="card" id="client-form-card">
     <div class="result-header">
       <h2><i class="fas fa-user-plus"></i> Cadastrar Cliente</h2>
-      <button class="btn-small" onclick="toggleClientForm()">
+      <button class="btn-small" onclick="window.toggleClientForm()">
         <i class="fas fa-chevron-down" id="form-toggle-icon"></i>
       </button>
     </div>
@@ -116,162 +116,176 @@ function renderClientForm() {
         </div>
         <div class="field">
           <label>WhatsApp / Telefone</label>
-          <input type="tel" id="cl-phone" placeholder="(11) 99999-9999"/>
-        </div>
-        <div class="field">
-          <label>CPF / CNPJ</label>
-          <input type="text" id="cl-doc" placeholder="000.000.000-00"/>
+          <input type="tel" id="cl-phone" placeholder="Ex: (99) 99999-9999"/>
         </div>
         <div class="field">
           <label>Cidade / Estado</label>
-          <input type="text" id="cl-city" placeholder="São Paulo, SP"/>
+          <input type="text" id="cl-city" placeholder="Ex: São Paulo - SP"/>
         </div>
         <div class="field">
-          <label>Categoria</label>
-          <select id="cl-category">
-            <option value="individual">👤 Pessoa Física</option>
-            <option value="empresa">🏢 Empresa</option>
-            <option value="maker">🖨️ Maker / Parceiro</option>
-            <option value="recorrente">⭐ Cliente Recorrente</option>
-          </select>
+          <label>Documento (CPF/CNPJ)</label>
+          <input type="text" id="cl-doc" placeholder="Ex: 123.456.789-00"/>
         </div>
-        <div class="field" style="grid-column:1/-1">
+        <div class="field">
           <label>Observações</label>
-          <input type="text" id="cl-notes"
-                 placeholder="Ex: Prefere entrega em mãos, desconto de 5%..."/>
+          <input type="text" id="cl-notes" placeholder="Ex: Cliente frequente, gosta de PLA"/>
         </div>
       </div>
       <div style="display:flex;gap:0.8rem;margin-top:1.2rem;flex-wrap:wrap;">
         <button class="btn-calculate"
                 style="max-width:220px;font-size:0.9rem;padding:0.8rem 1.5rem;"
-                onclick="addClient()">
-          <i class="fas fa-user-plus"></i> Cadastrar Cliente
+                onclick="window.addClient()">
+          <i class="fas fa-plus"></i> Adicionar Cliente
         </button>
-        <button class="btn-small" onclick="clearClientForm()">
+        <button class="btn-small" onclick="window.clearClientForm()">
           <i class="fas fa-eraser"></i> Limpar
         </button>
       </div>
     </div>
   </div>`;
-}
+};
 
-function toggleClientForm() {
+window.toggleClientForm = function() {
   const body = document.getElementById('client-form-body');
   const icon = document.getElementById('form-toggle-icon');
-  if (!body) return;
-  const hidden = body.style.display === 'none';
-  body.style.display = hidden ? '' : 'none';
-  if (icon) icon.className = hidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
-}
+  if (body && icon) {
+    const isHidden = body.style.display === 'none';
+    body.style.display = isHidden ? '' : 'none';
+    icon.classList.toggle('fa-chevron-down', isHidden);
+    icon.classList.toggle('fa-chevron-up', !isHidden);
+  }
+};
 
-function clearClientForm() {
-  ['cl-name','cl-email','cl-phone','cl-doc','cl-city','cl-notes']
-    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  const cat = document.getElementById('cl-category');
-  if (cat) cat.selectedIndex = 0;
-}
+window.clearClientForm = function() {
+  document.getElementById('cl-name').value  = '';
+  document.getElementById('cl-email').value = '';
+  document.getElementById('cl-phone').value = '';
+  document.getElementById('cl-city').value  = '';
+  document.getElementById('cl-doc').value   = '';
+  document.getElementById('cl-notes').value = '';
+  window.showToast('Formulário de cliente limpo!', 'fa-eraser');
+};
 
-// ═══════════════════════════════════════════════════════
-// ADICIONAR CLIENTE
-// ═══════════════════════════════════════════════════════
+window.addClient = function() {
+  const name  = document.getElementById('cl-name').value.trim();
+  const email = document.getElementById('cl-email').value.trim();
+  const phone = document.getElementById('cl-phone').value.trim();
+  const city  = document.getElementById('cl-city').value.trim();
+  const doc   = document.getElementById('cl-doc').value.trim();
+  const notes = document.getElementById('cl-notes').value.trim();
 
-function addClient() {
-  const name = document.getElementById('cl-name')?.value?.trim();
   if (!name) {
-    showToast('Informe o nome do cliente!', 'fa-triangle-exclamation');
-    document.getElementById('cl-name')?.focus();
+    window.showToast('Nome do cliente é obrigatório!', 'fa-triangle-exclamation');
     return;
   }
 
-  const client = {
-    id:          Date.now(),
-    name,
-    email:       document.getElementById('cl-email')?.value?.trim()  || '',
-    phone:       document.getElementById('cl-phone')?.value?.trim()  || '',
-    doc:         document.getElementById('cl-doc')?.value?.trim()    || '',
-    city:        document.getElementById('cl-city')?.value?.trim()   || '',
-    category:    document.getElementById('cl-category')?.value       || 'individual',
-    notes:       document.getElementById('cl-notes')?.value?.trim()  || '',
-    createdAt:   new Date().toLocaleDateString('pt-BR'),
-    totalSpent:  0,
-    quotesCount: 0,
+  const clients = window.loadClients();
+  const newClient = {
+    id: Date.now(),
+    name, email, phone, city, doc, notes,
+    createdAt: new Date().toLocaleDateString('pt-BR'),
   };
+  clients.unshift(newClient);
+  window.saveClients(clients);
+  window.renderClients();
+  window.clearClientForm();
+  window.showToast('Cliente adicionado! ✅', 'fa-user-plus');
+};
 
-  const clients = loadClients();
-  clients.unshift(client);
-  saveClients(clients);
-  clearClientForm();
-  renderClients();
-  showToast(`Cliente "${name}" cadastrado! ✅`, 'fa-user-plus');
-}
+window.editClient = function(id) {
+  const clients = window.loadClients();
+  const client  = clients.find(c => c.id === id);
+  if (!client) return;
+
+  document.getElementById('cl-name').value  = client.name;
+  document.getElementById('cl-email').value = client.email;
+  document.getElementById('cl-phone').value = client.phone;
+  document.getElementById('cl-city').value  = client.city;
+  document.getElementById('cl-doc').value   = client.doc;
+  document.getElementById('cl-notes').value = client.notes;
+
+  // Remove o cliente da lista para que seja adicionado novamente com as edições
+  window.saveClients(clients.filter(c => c.id !== id));
+
+  const body = document.getElementById('client-form-body');
+  if (body) body.style.display = '';
+  document.getElementById('client-form-card')
+    ?.scrollIntoView({ behavior:'smooth', block:'start' });
+
+  window.showToast('Edite os campos e clique em Adicionar para salvar.', 'fa-pen');
+};
+
+window.deleteClient = function(id) {
+  const clients = window.loadClients();
+  const client  = clients.find(c => c.id === id);
+  if (!client) return;
+  if (!confirm(`Deseja excluir o cliente "${client.name}" e todos os seus orçamentos?`)) return;
+
+  window.saveClients(clients.filter(c => c.id !== id));
+  // Remove também os orçamentos associados a este cliente
+  window.saveQuotes(window.loadQuotes().filter(q => q.clientId !== id));
+
+  window.renderClients();
+  window.showToast('Cliente e orçamentos excluídos.', 'fa-trash');
+};
 
 // ═══════════════════════════════════════════════════════
 // LISTA DE CLIENTES
 // ═══════════════════════════════════════════════════════
 
-function renderClientList(clients, quotes) {
+window.renderClientList = function(clients, quotes) {
   if (!clients.length) {
     return `
     <div class="card">
-      <h2><i class="fas fa-users"></i> Clientes Cadastrados</h2>
+      <h2><i class="fas fa-users"></i> Meus Clientes</h2>
       <div class="tips-placeholder">
         <i class="fas fa-user-plus"></i>
         <p>Nenhum cliente cadastrado ainda.<br/>
-           Use o formulário acima para adicionar.</p>
+           Use o formulário acima para adicionar seu primeiro cliente.</p>
       </div>
     </div>`;
   }
 
-  const clientQuotes = {};
-  quotes.forEach(q => {
-    if (!clientQuotes[q.clientId]) clientQuotes[q.clientId] = { count:0, total:0 };
-    clientQuotes[q.clientId].count++;
-    clientQuotes[q.clientId].total += q.finalPrice * (q.quantity||1);
-  });
-
-  const catIcons  = { individual:'👤', empresa:'🏢', maker:'🖨️', recorrente:'⭐' };
-  const catLabels = { individual:'Pessoa Física', empresa:'Empresa', maker:'Maker', recorrente:'Recorrente' };
-
-  const cards = clients.map(c => {
-    const cq       = clientQuotes[c.id] || { count:0, total:0 };
-    const initials = c.name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  const rows = clients.map(c => {
+    const clientQuotes = quotes.filter(q => q.clientId === c.id);
+    const totalSpent   = clientQuotes.reduce((s, q) => s + (q.finalPrice * (q.quantity||1)), 0);
+    const lastQuote    = clientQuotes.sort((a,b) => b.id - a.id)[0]; // id é o timestamp
 
     return `
-    <div class="client-card" id="client-${c.id}">
-      <div class="client-avatar">${initials}</div>
-      <div class="client-info">
+    <div class="client-card">
+      <div class="client-header">
         <div class="client-name">
-          ${catIcons[c.category] || '👤'}
-          <strong>${c.name}</strong>
-          <span class="client-cat-badge">${catLabels[c.category] || ''}</span>
+          <i class="fas fa-user"></i> <strong>${c.name}</strong>
         </div>
         <div class="client-meta">
+          ${c.phone ? `<span><i class="fas fa-phone"></i> ${c.phone}</span>` : ''}
           ${c.email ? `<span><i class="fas fa-envelope"></i> ${c.email}</span>` : ''}
-          ${c.phone ? `<span><i class="fas fa-phone"></i> ${c.phone}</span>`    : ''}
-          ${c.city  ? `<span><i class="fas fa-location-dot"></i> ${c.city}</span>` : ''}
-          <span><i class="fas fa-calendar"></i> desde ${c.createdAt}</span>
+          ${c.city  ? `<span><i class="fas fa-map-marker-alt"></i> ${c.city}</span>` : ''}
         </div>
-        ${c.notes ? `<div class="client-notes"><i class="fas fa-note-sticky"></i> ${c.notes}</div>` : ''}
       </div>
       <div class="client-stats">
-        <div class="client-stat">
+        <div>
           <small>Orçamentos</small>
-          <strong>${cq.count}</strong>
+          <strong>${clientQuotes.length}</strong>
         </div>
-        <div class="client-stat">
-          <small>Total Gasto</small>
-          <strong>${formatBRL(cq.total)}</strong>
+        <div>
+          <small>Total Orçado</small>
+          <strong>${window.formatBRL(totalSpent)}</strong>
+        </div>
+        <div>
+          <small>Último Contato</small>
+          <span>${lastQuote?.date || '—'}</span>
         </div>
       </div>
       <div class="client-actions">
-        <button class="btn-small" onclick="generateQuoteForClient(${c.id})" title="Gerar Orçamento">
+        <button class="btn-small" onclick="window.generateQuoteForClient(${c.id})">
           <i class="fas fa-file-invoice"></i> Orçamento
         </button>
-        <button class="btn-small" onclick="editClient(${c.id})" title="Editar">
-          <i class="fas fa-pen"></i>
+        <button class="btn-small" onclick="window.editClient(${c.id})">
+          <i class="fas fa-pen"></i> Editar
         </button>
-        <button class="btn-small danger" onclick="deleteClient(${c.id})" title="Excluir">
-          <i class="fas fa-trash"></i>
+        <button class="btn-small danger" onclick="window.deleteClient(${c.id})">
+          <i class="fas fa-trash"></i> Excluir
         </button>
       </div>
     </div>`;
@@ -279,111 +293,41 @@ function renderClientList(clients, quotes) {
 
   return `
   <div class="card">
-    <div class="result-header">
-      <h2><i class="fas fa-users"></i> Clientes Cadastrados (${clients.length})</h2>
-      <input type="text" id="client-search"
-             placeholder="🔍 Buscar cliente..."
-             oninput="searchClients(this.value)"
-             style="padding:0.4rem 0.8rem;border:2px solid var(--border);
-                    border-radius:8px;font-family:Poppins,sans-serif;
-                    font-size:0.85rem;background:var(--light-gray);color:var(--text)"/>
+    <h2><i class="fas fa-users"></i> Meus Clientes (${clients.length})</h2>
+    <div class="client-list-grid">
+      ${rows}
     </div>
-    <div id="client-list">${cards}</div>
   </div>`;
-}
+};
 
 // ═══════════════════════════════════════════════════════
-// BUSCA
+// BADGE DE CLIENTES
 // ═══════════════════════════════════════════════════════
 
-function searchClients(query) {
-  const q       = query.toLowerCase();
-  const clients = loadClients();
-  const quotes  = loadQuotes();
-
-  const filtered = clients.filter(c =>
-    c.name.toLowerCase().includes(q)  ||
-    (c.email||'').toLowerCase().includes(q) ||
-    (c.city||'').toLowerCase().includes(q)  ||
-    (c.phone||'').includes(q)
-  );
-
-  const list = document.getElementById('client-list');
-  if (!list) return;
-
-  if (!filtered.length) {
-    list.innerHTML = `
-      <div class="tips-placeholder" style="padding:1.5rem">
-        <i class="fas fa-search"></i>
-        <p>Nenhum cliente encontrado para "${query}"</p>
-      </div>`;
-    return;
+window.updateClientsBadge = function(count) {
+  const badge = document.getElementById('badge-clients');
+  if (badge) {
+    badge.textContent = count;
+    badge.classList.toggle('hidden', count === 0);
   }
-
-  const tmp = document.createElement('div');
-  tmp.innerHTML = renderClientList(filtered, quotes);
-  const newList = tmp.querySelector('#client-list');
-  if (newList) list.innerHTML = newList.innerHTML;
-}
-
-// ═══════════════════════════════════════════════════════
-// EDITAR / EXCLUIR
-// ═══════════════════════════════════════════════════════
-
-function deleteClient(id) {
-  const clients = loadClients();
-  const client  = clients.find(c => c.id === id);
-  if (!client) return;
-  if (!confirm(`Deseja excluir o cliente "${client.name}"?`)) return;
-  saveClients(clients.filter(c => c.id !== id));
-  renderClients();
-  showToast('Cliente excluído.', 'fa-trash');
-}
-
-function editClient(id) {
-  const clients = loadClients();
-  const c       = clients.find(cl => cl.id === id);
-  if (!c) return;
-
-  const fields = {
-    'cl-name': c.name, 'cl-email': c.email,
-    'cl-phone': c.phone, 'cl-doc': c.doc,
-    'cl-city': c.city, 'cl-notes': c.notes,
-  };
-  Object.entries(fields).forEach(([fid, val]) => {
-    const el = document.getElementById(fid);
-    if (el) el.value = val || '';
-  });
-
-  const cat = document.getElementById('cl-category');
-  if (cat) cat.value = c.category || 'individual';
-
-  saveClients(clients.filter(cl => cl.id !== id));
-
-  const body = document.getElementById('client-form-body');
-  if (body) body.style.display = '';
-  document.getElementById('client-form-card')
-    ?.scrollIntoView({ behavior:'smooth', block:'start' });
-
-  showToast('Edite os dados e recadastre.', 'fa-pen');
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // GERAR ORÇAMENTO
 // ═══════════════════════════════════════════════════════
 
-function generateQuoteForClient(clientId) {
+window.generateQuoteForClient = function(clientId) {
   if (!window._lastResult) {
-    showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
+    window.showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
     return;
   }
 
-  const clients = loadClients();
+  const clients = window.loadClients();
   const client  = clients.find(c => c.id === clientId);
   if (!client) return;
 
   const r      = window._lastResult;
-  const quotes = loadQuotes();
+  const quotes = window.loadQuotes();
 
   const quote = {
     id:           Date.now(),
@@ -406,17 +350,17 @@ function generateQuoteForClient(clientId) {
   };
 
   quotes.unshift(quote);
-  saveQuotes(quotes);
-  renderClients();
-  showToast(`Orçamento gerado para ${client.name}! 📄`, 'fa-file-invoice');
-  setTimeout(() => exportClientQuotePDF(quote, client), 400);
-}
+  window.saveQuotes(quotes);
+  window.renderClients();
+  window.showToast(`Orçamento gerado para ${client.name}! 📄`, 'fa-file-invoice');
+  setTimeout(() => window.exportClientQuotePDF(quote, client), 400);
+};
 
 // ═══════════════════════════════════════════════════════
 // LISTA DE ORÇAMENTOS
 // ═══════════════════════════════════════════════════════
 
-function renderQuotesList(quotes, clients) {
+window.renderQuotesList = function(quotes, clients) {
   if (!quotes.length) {
     return `
     <div class="card">
@@ -457,7 +401,7 @@ function renderQuotesList(quotes, clients) {
         <div class="quote-right">
           <div class="quote-price">
             <small>Valor Total</small>
-            <strong>${formatBRL(q.batchPrice || q.finalPrice)}</strong>
+            <strong>${window.formatBRL(q.batchPrice || q.finalPrice)}</strong>
           </div>
           <div style="color:${st.color};font-size:0.8rem;font-weight:700;margin-top:0.3rem;">
             ${st.label}
@@ -465,7 +409,7 @@ function renderQuotesList(quotes, clients) {
         </div>
       </div>
       <div class="quote-actions">
-        <select onchange="updateQuoteStatus(${q.id}, this.value)"
+        <select onchange="window.updateQuoteStatus(${q.id}, this.value)"
                 style="padding:0.35rem 0.6rem;border:2px solid var(--border);
                        border-radius:8px;font-family:Poppins,sans-serif;
                        font-size:0.8rem;background:var(--light-gray);color:var(--text)">
@@ -474,13 +418,13 @@ function renderQuotesList(quotes, clients) {
           <option value="rejected" ${q.status==='rejected'?'selected':''}>❌ Recusado</option>
           <option value="done"     ${q.status==='done'    ?'selected':''}>🏁 Concluído</option>
         </select>
-        <button class="btn-small" onclick="exportClientQuotePDFById(${q.id})">
+        <button class="btn-small" onclick="window.exportClientQuotePDFById(${q.id})">
           <i class="fas fa-file-pdf"></i> PDF
         </button>
-        <button class="btn-small" onclick="shareQuoteWhatsApp(${q.id})">
+        <button class="btn-small" onclick="window.shareQuoteWhatsApp(${q.id})">
           <i class="fab fa-whatsapp" style="color:#25d366"></i> WhatsApp
         </button>
-        <button class="btn-small danger" onclick="deleteQuote(${q.id})">
+        <button class="btn-small danger" onclick="window.deleteQuote(${q.id})">
           <i class="fas fa-trash"></i>
         </button>
       </div>
@@ -491,41 +435,42 @@ function renderQuotesList(quotes, clients) {
   <div class="card">
     <div class="result-header">
       <h2><i class="fas fa-file-invoice"></i> Orçamentos (${quotes.length})</h2>
-      <button class="btn-small" onclick="exportAllQuotesCSV()">
+      <button class="btn-small" onclick="window.exportAllQuotesCSV()">
         <i class="fas fa-file-csv"></i> Exportar CSV
       </button>
     </div>
     ${rows}
   </div>`;
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // STATUS
 // ═══════════════════════════════════════════════════════
 
-function updateQuoteStatus(id, status) {
-  const quotes = loadQuotes();
+window.updateQuoteStatus = function(id, status) {
+  const quotes = window.loadQuotes();
   const quote  = quotes.find(q => q.id === id);
   if (quote) {
     quote.status = status;
-    saveQuotes(quotes);
-    showToast('Status atualizado! ✅', 'fa-circle-check');
+    window.saveQuotes(quotes);
+    window.showToast('Status atualizado! ✅', 'fa-circle-check');
+    window.renderClients(); // Re-renderiza para atualizar a lista e badges
   }
-}
+};
 
-function deleteQuote(id) {
+window.deleteQuote = function(id) {
   if (!confirm('Deseja excluir este orçamento?')) return;
-  saveQuotes(loadQuotes().filter(q => q.id !== id));
-  renderClients();
-  showToast('Orçamento excluído.', 'fa-trash');
-}
+  window.saveQuotes(window.loadQuotes().filter(q => q.id !== id));
+  window.renderClients();
+  window.showToast('Orçamento excluído.', 'fa-trash');
+};
 
 // ═══════════════════════════════════════════════════════
 // WHATSAPP
 // ═══════════════════════════════════════════════════════
 
-function shareQuoteWhatsApp(id) {
-  const quotes = loadQuotes();
+window.shareQuoteWhatsApp = function(id) {
+  const quotes = window.loadQuotes();
   const q      = quotes.find(qu => qu.id === id);
   if (!q) return;
 
@@ -540,30 +485,30 @@ function shareQuoteWhatsApp(id) {
     `⏱️ Tempo: ${q.printHours}h`,
     `📦 Quantidade: ${q.quantity}x`,
     ``,
-    `💰 *Valor Total: ${formatBRL(q.batchPrice || q.finalPrice)}*`,
+    `💰 *Valor Total: ${window.formatBRL(q.batchPrice || q.finalPrice)}*`,
     ``,
     `Qualquer dúvida, estou à disposição! 😊`,
   ].join('\n');
 
   window.open(`https://wa.me/?text=${encodeURIComponent(lines)}`, '_blank');
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // PDF DO ORÇAMENTO
 // ═══════════════════════════════════════════════════════
 
-function exportClientQuotePDFById(id) {
-  const quotes  = loadQuotes();
-  const clients = loadClients();
+window.exportClientQuotePDFById = function(id) {
+  const quotes  = window.loadQuotes();
+  const clients = window.loadClients();
   const q       = quotes.find(qu => qu.id === id);
   if (!q) return;
   const client = clients.find(c => c.id === q.clientId) || { name: q.clientName };
-  exportClientQuotePDF(q, client);
-}
+  window.exportClientQuotePDF(q, client);
+};
 
-function exportClientQuotePDF(quote, client) {
+window.exportClientQuotePDF = function(quote, client) {
   if (!window.jspdf) {
-    showToast('Biblioteca PDF não carregada!', 'fa-triangle-exclamation');
+    window.showToast('Biblioteca PDF não carregada!', 'fa-triangle-exclamation');
     return;
   }
 
@@ -634,8 +579,8 @@ function exportClientQuotePDF(quote, client) {
   doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...TEXT);
   doc.text(`Peça em ${quote.materialType} — ${quote.partWeight}g · ${quote.printHours}h`, margin+3, y+3);
   doc.text(String(quote.quantity), 133, y+3);
-  doc.text(formatBRL(quote.finalPrice), 155, y+3);
-  doc.text(formatBRL(quote.batchPrice || quote.finalPrice), col2-3, y+3, { align:'right' });
+  doc.text(window.formatBRL(quote.finalPrice), 155, y+3);
+  doc.text(window.formatBRL(quote.batchPrice || quote.finalPrice), col2-3, y+3, { align:'right' });
   y += 14;
 
   // DETALHES
@@ -644,7 +589,7 @@ function exportClientQuotePDF(quote, client) {
     doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
     doc.setTextColor(...MUTED); doc.text(label, margin+4, y);
     doc.setTextColor(...TEXT);
-    doc.text(formatBRL(value), col2-3, y, { align:'right' });
+    doc.text(window.formatBRL(value), col2-3, y, { align:'right' });
     doc.setDrawColor(230,234,240); doc.setLineWidth(0.3);
     doc.line(margin, y+2, W-margin, y+2);
     y += 8;
@@ -669,13 +614,13 @@ function exportClientQuotePDF(quote, client) {
   doc.setFillColor(...GRAY); doc.roundedRect(margin, y, W-margin*2, 8, 2, 2, 'F');
   doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...TEXT);
   doc.text('Subtotal', margin+4, y+5);
-  doc.text(formatBRL(quote.finalPrice), col2-3, y+5, { align:'right' });
+  doc.text(window.formatBRL(quote.finalPrice), col2-3, y+5, { align:'right' });
   y += 12;
 
   if ((r?.taxAmount || 0) > 0) {
     doc.setTextColor(...MUTED);
     doc.text('Impostos / Taxas', margin+4, y+5);
-    doc.text(formatBRL(r.taxAmount), col2-3, y+5, { align:'right' });
+    doc.text(window.formatBRL(r.taxAmount), col2-3, y+5, { align:'right' });
     y += 10;
   }
 
@@ -684,7 +629,7 @@ function exportClientQuotePDF(quote, client) {
   doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...WHITE);
   doc.text('VALOR TOTAL', margin+4, y+9);
   doc.setTextColor(...YELLOW); doc.setFontSize(12);
-  doc.text(formatBRL(quote.batchPrice || quote.finalPrice), col2-4, y+9, { align:'right' });
+  doc.text(window.formatBRL(quote.batchPrice || quote.finalPrice), col2-4, y+9, { align:'right' });
   y += 22;
 
   // CONDIÇÕES
@@ -706,17 +651,17 @@ function exportClientQuotePDF(quote, client) {
   doc.text(`Nº ${String(quote.id).slice(-6)} · ${quote.date}`, col2, 292, { align:'right' });
 
   doc.save(`orcamento-${client.name.replace(/\s+/g,'-')}-${quote.id}.pdf`);
-  showToast('PDF do orçamento exportado! 📄', 'fa-file-pdf');
-}
+  window.showToast('PDF do orçamento exportado! 📄', 'fa-file-pdf');
+};
 
 // ═══════════════════════════════════════════════════════
 // EXPORTAR CSV
 // ═══════════════════════════════════════════════════════
 
-function exportAllQuotesCSV() {
-  const quotes = loadQuotes();
+window.exportAllQuotesCSV = function() {
+  const quotes = window.loadQuotes();
   if (!quotes.length) {
-    showToast('Nenhum orçamento para exportar!', 'fa-triangle-exclamation');
+    window.showToast('Nenhum orçamento para exportar!', 'fa-triangle-exclamation');
     return;
   }
 
@@ -741,5 +686,5 @@ function exportAllQuotesCSV() {
   });
   a.click();
   URL.revokeObjectURL(url);
-  showToast('CSV exportado! 📊', 'fa-file-csv');
-}
+  window.showToast('CSV exportado! 📊', 'fa-file-csv');
+};
