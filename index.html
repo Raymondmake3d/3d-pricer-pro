@@ -1,41 +1,47 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- PWA -->
-<link rel="manifest" href="manifest.json"/>
-<meta name="theme-color" content="#f07b30"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="3D Pricer Pro"/>
-
-<link rel="icon" type="image/svg+xml" href="icons/icon.svg"/>
-
-<!-- SEO -->
-<meta name="description" content="Precificação inteligente para impressão 3D. Calcule custos, margem e lucro automaticamente."/>
-<meta name="keywords" content="impressão 3D, precificação, filamento, PLA, PETG, maker"/>
-<meta name="author" content="3D Pricer Pro"/>
-
-<!-- Open Graph (WhatsApp, redes sociais) -->
-<meta property="og:title" content="3D Pricer Pro — Precificação para Impressão 3D"/>
-<meta property="og:description" content="Calcule o preço ideal das suas peças 3D em segundos!"/>
-<meta property="og:image" content="https://raymondmake3d.github.io/3d-pricer-pro/icons/icon-512.png"/>
-<meta property="og:url" content="https://raymondmake3d.github.io/3d-pricer-pro"/>
-<meta property="og:type" content="website"/>
-
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="3D Pricer Pro"/>
-<meta name="twitter:description" content="Precificação inteligente para impressão 3D"/>
+<head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>3D Pricer Pro — Precificação Inteligente</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#f07b30"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="3D Pricer Pro"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg"/>
+
+  <!-- SEO -->
+  <meta name="description" content="Precificação inteligente para impressão 3D."/>
+  <meta name="keywords" content="impressão 3D, precificação, filamento, PLA, PETG, maker"/>
+  <meta name="author" content="3D Pricer Pro"/>
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="3D Pricer Pro — Precificação para Impressão 3D"/>
+  <meta property="og:description" content="Calcule o preço ideal das suas peças 3D em segundos!"/>
+  <meta property="og:image" content="https://raymondmake3d.github.io/3d-pricer-pro/icons/icon-512.png"/>
+  <meta property="og:url" content="https://raymondmake3d.github.io/3d-pricer-pro"/>
+  <meta property="og:type" content="website"/>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="3D Pricer Pro"/>
+  <meta name="twitter:description" content="Precificação inteligente para impressão 3D"/>
+
+  <!-- Estilos -->
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="style-extra.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body><!-- Banner de instalação PWA -->
+<body>
+
+<!-- Banner de instalação PWA -->
 <div id="pwa-banner" class="pwa-banner hidden">
   <div class="pwa-banner-content">
     <span class="pwa-banner-icon">📲</span>
@@ -45,41 +51,14 @@
     </div>
   </div>
   <div class="pwa-banner-actions">
-    <button class="pwa-btn-install" onclick="installPWA()">
-      Instalar
-    </button>
+    <button class="pwa-btn-install" onclick="installPWA()">Instalar</button>
     <button class="pwa-btn-close" onclick="closePWABanner()">
       <i class="fas fa-xmark"></i>
     </button>
   </div>
 </div>
-<!-- PWA -->
-<link rel="manifest" href="manifest.json"/>
-<meta name="theme-color" content="#f07b30"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="3D Pricer Pro"/>
-<link rel="apple-touch-icon" href="icons/icon-192.png"/>
-<link rel="icon" type="image/svg+xml" href="icons/icon.svg"/>
 
-<!-- SEO -->
-<meta name="description" content="Precificação inteligente para impressão 3D. Calcule custos, margem e lucro automaticamente."/>
-<meta name="keywords" content="impressão 3D, precificação, filamento, PLA, PETG, maker"/>
-<meta name="author" content="3D Pricer Pro"/>
-
-<!-- Open Graph (WhatsApp, redes sociais) -->
-<meta property="og:title" content="3D Pricer Pro — Precificação para Impressão 3D"/>
-<meta property="og:description" content="Calcule o preço ideal das suas peças 3D em segundos!"/>
-<meta property="og:image" content="https://raymondmake3d.github.io/3d-pricer-pro/icons/icon-512.png"/>
-<meta property="og:url" content="https://raymondmake3d.github.io/3d-pricer-pro"/>
-<meta property="og:type" content="website"/>
-
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="3D Pricer Pro"/>
-<meta name="twitter:description" content="Precificação inteligente para impressão 3D"/>
-<!-- ═══════════════ HEADER ═══════════════ -->
+<!-- HEADER -->
 <header>
   <div class="header-inner">
     <div class="logo">
@@ -100,12 +79,8 @@
     </div>
   </div>
 </header>
-<!-- Banner de instalação PWA -->
-<div id="pwa-banner" class="pwa-banner hidden">
-  <div class="
 
-
-<!-- ═══════════════ TABS ═══════════════ -->
+<!-- TABS -->
 <div class="tabs-wrapper">
   <div class="tabs">
     <button class="tab active" data-tab="calc">
@@ -137,7 +112,7 @@
 
 <main>
 
-<!-- ══════════════ ABA: PRECIFICAÇÃO ══════════════ -->
+<!-- ABA: PRECIFICAÇÃO -->
 <div id="tab-calc" class="tab-content active">
 
   <div class="progress-bar-wrapper">
@@ -262,7 +237,7 @@
       </div>
       <div class="field">
         <label>Peso/Volume Usado na Peça (g ou mL)
-          <span class="tooltip-icon" data-tip="Exporte do Orca Flashforge. Inclua suporte se houver.">?</span>
+          <span class="tooltip-icon" data-tip="Exporte do Orca Flashforge.">?</span>
         </label>
         <input type="number" id="partWeight" placeholder="Ex: 85" min="0"/>
       </div>
@@ -468,7 +443,7 @@
   </section>
 </div>
 
-<!-- ══════════════ ABA: DASHBOARD ══════════════ -->
+<!-- ABA: DASHBOARD -->
 <div id="tab-dashboard" class="tab-content hidden">
   <div class="card">
     <div class="result-header">
@@ -480,21 +455,21 @@
   </div>
 </div>
 
-<!-- ══════════════ ABA: CLIENTES ══════════════ -->
+<!-- ABA: CLIENTES -->
 <div id="tab-clients" class="tab-content hidden">
   <div class="card">
     <h2><i class="fas fa-users"></i> Clientes & Orçamentos</h2>
   </div>
 </div>
 
-<!-- ══════════════ ABA: CATÁLOGO ══════════════ -->
+<!-- ABA: CATÁLOGO -->
 <div id="tab-catalog" class="tab-content hidden">
   <div class="card">
     <h2><i class="fas fa-cubes"></i> Catálogo de Peças</h2>
   </div>
 </div>
 
-<!-- ══════════════ ABA: OTIMIZAÇÕES ══════════════ -->
+<!-- ABA: OTIMIZAÇÕES -->
 <div id="tab-tips" class="tab-content hidden">
   <div class="card">
     <h2><i class="fas fa-lightbulb"></i> Sugestões de Otimização</h2>
@@ -512,7 +487,7 @@
   </div>
 </div>
 
-<!-- ══════════════ ABA: PRODUTOS ══════════════ -->
+<!-- ABA: PRODUTOS -->
 <div id="tab-products" class="tab-content hidden">
   <div class="card">
     <h2><i class="fas fa-star"></i> Produtos em Destaque & Similares</h2>
@@ -528,7 +503,7 @@
   </div>
 </div>
 
-<!-- ══════════════ ABA: SIMULADOR ══════════════ -->
+<!-- ABA: SIMULADOR -->
 <div id="tab-simulator" class="tab-content hidden">
   <div class="card">
     <div class="result-header">
@@ -614,7 +589,7 @@
   </div>
 </div>
 
-<!-- ══════════════ ABA: HISTÓRICO ══════════════ -->
+<!-- ABA: HISTÓRICO -->
 <div id="tab-history" class="tab-content hidden">
   <div class="card">
     <div class="history-header">
@@ -634,7 +609,7 @@
 
 </main>
 
-<!-- ══════════════ MODAL: COMPARADOR ══════════════ -->
+<!-- MODAL: COMPARADOR -->
 <div class="modal-overlay hidden" id="comparator-modal">
   <div class="modal">
     <div class="modal-header">
@@ -660,7 +635,7 @@
   </p>
 </footer>
 
-<!-- ═══ SCRIPTS — ordem importa! ═══ -->
+<!-- SCRIPTS — ordem importa! -->
 <script src="suggestions.js"></script>
 <script src="export.js"></script>
 <script src="simulator.js"></script>
