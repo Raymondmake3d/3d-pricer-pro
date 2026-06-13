@@ -13,7 +13,7 @@
 // 1. CALCULADORA DE SPOOL RESTANTE
 // ═══════════════════════════════════════════════════════
 
-function calcSpoolRemaining() {
+window.calcSpoolRemaining = function() {
   const total    = parseFloat(document.getElementById('spool-total')?.value)     || 0;
   const used     = parseFloat(document.getElementById('spool-used')?.value)      || 0;
   const perPiece = parseFloat(document.getElementById('spool-per-piece')?.value) || 0;
@@ -25,7 +25,7 @@ function calcSpoolRemaining() {
   const pct        = (used / total) * 100;
   const pieces     = perPiece > 0 ? Math.floor(remaining / perPiece) : 0;
   const valueLeft  = price > 0 ? (remaining / total) * price : 0;
-  const pricePerG  = price > 0 ? price / total : 0;
+  // const pricePerG  = price > 0 ? price / total : 0; // Não usado, pode ser removido
 
   // Status
   let status, alert, cardColor;
@@ -56,7 +56,7 @@ function calcSpoolRemaining() {
   setText('spool-r-remaining', `${remaining.toFixed(0)}g`);
   setText('spool-r-pct',       `${(100 - pct).toFixed(1)}% restante`);
   setText('spool-r-pieces',    pieces.toLocaleString('pt-BR'));
-  setText('spool-r-value',     formatBRL(valueLeft));
+  setText('spool-r-value',     window.formatBRL(valueLeft)); // Usando window.formatBRL
   setText('spool-r-status',    status);
   setText('spool-r-alert',     alert);
   setText('spool-bar-label',   `${pct.toFixed(1)}% usado`);
@@ -83,7 +83,7 @@ function calcSpoolRemaining() {
   }
 
   document.getElementById('spool-result')?.classList.remove('hidden');
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // 2. COMPARADOR DE PLATAFORMAS
@@ -134,7 +134,7 @@ const PLATFORMS = [
   },
 ];
 
-function calcPlatformComparator() {
+window.calcPlatformComparator = function() {
   const cost     = parseFloat(document.getElementById('plat-cost')?.value)     || 0;
   const margin   = parseFloat(document.getElementById('plat-margin')?.value)   || 0;
   const tax      = parseFloat(document.getElementById('plat-tax')?.value)      || 0;
@@ -143,15 +143,15 @@ function calcPlatformComparator() {
   if (cost <= 0 || margin <= 0) return;
 
   const baseWithTax  = cost * (1 + tax / 100) + shipping;
-  const cards        = buildPlatformCards(baseWithTax, margin, PLATFORMS);
+  const cards        = window.buildPlatformCards(baseWithTax, margin, PLATFORMS); // Usando window.buildPlatformCards
 
   const grid = document.getElementById('platform-cards-grid');
   if (grid) grid.innerHTML = cards;
 
   document.getElementById('platform-result')?.classList.remove('hidden');
-}
+};
 
-function buildPlatformCards(base, margin, platforms) {
+window.buildPlatformCards = function(base, margin, platforms) {
   // Encontra melhor plataforma
   const results = platforms.map(p => {
     const salePrice   = (base / (1 - margin/100)) / (1 - p.fee/100);
@@ -178,12 +178,12 @@ function buildPlatformCards(base, margin, platforms) {
       </div>
       <div class="platform-price">
         <small>Preço de venda</small>
-        <strong style="color:${p.color}">${formatBRL(p.salePrice)}</strong>
+        <strong style="color:${p.color}">${window.formatBRL(p.salePrice)}</strong>
       </div>
       <div class="platform-profit">
         <small>Lucro líquido</small>
         <span style="color:${p.profit >= 0 ? '#27ae60' : '#e74c3c'};font-weight:700;">
-          ${formatBRL(p.profit)}
+          ${window.formatBRL(p.profit)}
         </span>
       </div>
       <div class="platform-margin">
@@ -194,28 +194,29 @@ function buildPlatformCards(base, margin, platforms) {
       </div>
     </div>`;
   }).join('');
-}
+};
 
 // Versão usada no resultado da precificação (após calcular)
-function renderPlatformComparatorInResult(r) {
+window.renderPlatformComparatorInResult = function(r) {
   const grid = document.getElementById('platform-comparator-grid');
   if (!grid || !r) return;
 
   const base = r.directCost * (1 + (r.taxRate||0)/100) + (r.packagingCost||0);
   const margin = r.profitMargin || 40;
-  grid.innerHTML = buildPlatformCards(base, margin, PLATFORMS);
-}
+  grid.innerHTML = window.buildPlatformCards(base, margin, PLATFORMS);
+};
 
 // ═══════════════════════════════════════════════════════
 // 3. ALERTAS DE ORÇAMENTOS PENDENTES
 // ═══════════════════════════════════════════════════════
 
-function renderPendingAlerts() {
+window.renderPendingAlerts = function() {
   const container = document.getElementById('pending-alerts-container');
   if (!container) return;
 
-  const quotes  = loadQuotes();
-  const clients = loadClients();
+  // Assumindo loadQuotes e loadClients estão em clients.js
+  const quotes  = window.loadQuotes();
+  const clients = window.loadClients();
 
   const now     = Date.now();
   const DAY_MS  = 24 * 60 * 60 * 1000;
@@ -232,7 +233,7 @@ function renderPendingAlerts() {
     .sort((a, b) => b.days - a.days);
 
   // Atualiza badge na aba Clientes
-  updateClientsBadge(pending.length);
+  window.updateClientsBadge(pending.length); // Usando window.updateClientsBadge
 
   if (!pending.length) {
     container.innerHTML = `
@@ -253,7 +254,7 @@ function renderPendingAlerts() {
     const waText = encodeURIComponent(
       `Olá, ${q.clientName}! Tudo bem?\n\n` +
       `Gostaria de saber se teve a chance de analisar nosso orçamento de ` +
-      `${formatBRL(q.batchPrice || q.finalPrice)} enviado em ${q.date}.\n\n` +
+      `${window.formatBRL(q.batchPrice || q.finalPrice)} enviado em ${q.date}.\n\n` +
       `Fico à disposição para qualquer dúvida! 😊`
     );
 
@@ -271,7 +272,7 @@ function renderPendingAlerts() {
           </span>
         </div>
         <div style="font-weight:700;color:var(--orange);font-size:1rem;">
-          ${formatBRL(q.batchPrice || q.finalPrice)}
+          ${window.formatBRL(q.batchPrice || q.finalPrice)}
         </div>
       </div>
       <div class="alert-card-meta">
@@ -288,26 +289,28 @@ function renderPendingAlerts() {
            target="_blank" class="btn-small">
           <i class="fab fa-whatsapp" style="color:#25d366"></i> Seguir up
         </a>` : `
-        <button class="btn-small" onclick="shareQuoteWhatsApp(${q.id})">
+        <button class="btn-small" onclick="window.shareQuoteWhatsApp(${q.id})">
           <i class="fab fa-whatsapp" style="color:#25d366"></i> WhatsApp
         </button>`}
-        <button class="btn-small" onclick="exportClientQuotePDFById(${q.id})">
+        <button class="btn-small" onclick="window.exportClientQuotePDFById(${q.id})">
           <i class="fas fa-file-pdf"></i> PDF
         </button>
         <button class="btn-small"
-                onclick="updateQuoteStatus(${q.id},'approved');renderPendingAlerts()">
+                onclick="window.updateQuoteStatus(${q.id},'approved');window.renderPendingAlerts()">
           <i class="fas fa-check" style="color:#27ae60"></i> Aprovado
         </button>
         <button class="btn-small"
-                onclick="updateQuoteStatus(${q.id},'rejected');renderPendingAlerts()">
+                onclick="window.updateQuoteStatus(${q.id},'rejected');window.renderPendingAlerts()">
           <i class="fas fa-xmark" style="color:#e74c3c"></i> Recusado
         </button>
       </div>
     </div>`;
   }).join('');
-}
+};
 
-function updateClientsBadge(count) {
+// Esta função estava no seu app.js, mas faz mais sentido aqui ou em clients.js
+// Para evitar duplicação, se já estiver em clients.js, remova daqui.
+window.updateClientsBadge = function(count) {
   const badge = document.getElementById('badge-clients');
   if (!badge) return;
   if (count > 0) {
@@ -316,17 +319,18 @@ function updateClientsBadge(count) {
   } else {
     badge.classList.add('hidden');
   }
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // 4. RELATÓRIO MENSAL EM PDF
 // ═══════════════════════════════════════════════════════
 
-function buildMonthlyReportData() {
-  const history = loadHistoryRaw();
-  const quotes  = loadQuotes();
-  const clients = loadClients();
-  const catalog = loadCatalog();
+window.buildMonthlyReportData = function() {
+  // Assumindo loadHistoryRaw, loadQuotes, loadClients, loadCatalog estão em outros scripts
+  const history = window.loadHistoryRaw();
+  const quotes  = window.loadQuotes();
+  const clients = window.loadClients();
+  const catalog = window.loadCatalog();
 
   const now      = new Date();
   const y        = now.getFullYear();
@@ -382,13 +386,13 @@ function buildMonthlyReportData() {
     totalClients: clients.length,
     catalogSize:  catalog.length,
   };
-}
+};
 
-function renderMonthlyReportPreview() {
+window.renderMonthlyReportPreview = function() {
   const container = document.getElementById('monthly-report-preview');
   if (!container) return;
 
-  const d = buildMonthlyReportData();
+  const d = window.buildMonthlyReportData();
 
   if (d.pieces === 0) {
     container.innerHTML = `
@@ -414,15 +418,15 @@ function renderMonthlyReportPreview() {
       <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
       <div class="kpi-info">
         <small>Faturamento</small>
-        <strong>${formatBRL(d.revenue)}</strong>
-        <span>Custo: ${formatBRL(d.cost)}</span>
+        <strong>${window.formatBRL(d.revenue)}</strong>
+        <span>Custo: ${window.formatBRL(d.cost)}</span>
       </div>
     </div>
     <div class="dash-kpi-card green">
       <div class="kpi-icon"><i class="fas fa-arrow-trend-up"></i></div>
       <div class="kpi-info">
         <small>Lucro do Mês</small>
-        <strong>${formatBRL(d.profit)}</strong>
+        <strong>${window.formatBRL(d.profit)}</strong>
         <span>Margem média: ${d.avgMargin.toFixed(1)}%</span>
       </div>
     </div>
@@ -467,17 +471,17 @@ function renderMonthlyReportPreview() {
       </div>
     </div>
   </div>`;
-}
+};
 
-function exportMonthlyReportPDF() {
+window.exportMonthlyReportPDF = function() {
   if (!window.jspdf) {
-    showToast('Biblioteca PDF não carregada!', 'fa-triangle-exclamation');
+    window.showToast('Biblioteca PDF não carregada!', 'fa-triangle-exclamation');
     return;
   }
 
-  const d = buildMonthlyReportData();
+  const d = window.buildMonthlyReportData();
   if (d.pieces === 0) {
-    showToast('Nenhum dado este mês para exportar!', 'fa-triangle-exclamation');
+    window.showToast('Nenhum dado este mês para exportar!', 'fa-triangle-exclamation');
     return;
   }
 
@@ -495,7 +499,7 @@ function exportMonthlyReportPDF() {
   const GRAY   = [245,247,250];
   const GREEN  = [39,174,96];
   const TEXT   = [45, 55, 72];
-  const MUTED  = [113,128,150];
+  // const MUTED  = [113,128,150]; // Não usado, pode ser removido
 
   // ── CAPA ──────────────────────────────────────────
   doc.setFillColor(...DARK);
@@ -564,8 +568,8 @@ function exportMonthlyReportPDF() {
   const bH  = 28;
 
   kpiBox(margin,          y, bW, bH, 'Precificações', String(d.pieces),       `${d.monthName}`,          DARK);
-  kpiBox(margin+bW+3,     y, bW, bH, 'Faturamento',   formatBRL(d.revenue),   `Custo: ${formatBRL(d.cost)}`, [...ORANGE]);
-  kpiBox(margin+(bW+3)*2, y, bW, bH, 'Lucro',         formatBRL(d.profit),    `Margem: ${d.avgMargin.toFixed(1)}%`, [...GREEN]);
+  kpiBox(margin+bW+3,     y, bW, bH, 'Faturamento',   window.formatBRL(d.revenue),   `Custo: ${window.formatBRL(d.cost)}`, [...ORANGE]);
+  kpiBox(margin+(bW+3)*2, y, bW, bH, 'Lucro',         window.formatBRL(d.profit),    `Margem: ${d.avgMargin.toFixed(1)}%`, [...GREEN]);
   kpiBox(margin+(bW+3)*3, y, bW, bH, 'Orçamentos',    String(d.totalQuotes),  `✅${d.approved} ⏳${d.pending} ❌${d.rejected}`, [61,97,153]);
 
   y += bH + 12;
@@ -574,9 +578,9 @@ function exportMonthlyReportPDF() {
   sectionTitle('💰 Resumo Financeiro do Mês');
 
   const rows = [
-    ['Faturamento Bruto',       formatBRL(d.revenue),          DARK],
-    ['Custo Total de Produção', formatBRL(d.cost),              [231,76,60]],
-    ['Lucro Líquido',           formatBRL(d.profit),            [...GREEN]],
+    ['Faturamento Bruto',       window.formatBRL(d.revenue),          DARK],
+    ['Custo Total de Produção', window.formatBRL(d.cost),              [231,76,60]],
+    ['Lucro Líquido',           window.formatBRL(d.profit),            [...GREEN]],
     ['Margem Média',            `${d.avgMargin.toFixed(1)}%`,   [...ORANGE]],
   ];
 
@@ -629,10 +633,10 @@ function exportMonthlyReportPDF() {
         margin+12, y+3
       );
       doc.text(`${p.partWeight||0}g`, 130, y+3);
-      doc.text(formatBRL(p.directCost), 150, y+3);
+      doc.text(window.formatBRL(p.directCost), 150, y+3);
       doc.setFont('helvetica','bold');
       doc.setTextColor(...ORANGE);
-      doc.text(formatBRL(p.finalPrice), col2-3, y+3, { align:'right' });
+      doc.text(window.formatBRL(p.finalPrice), col2-3, y+3, { align:'right' });
       y += 10;
     });
 
@@ -703,16 +707,16 @@ function exportMonthlyReportPDF() {
 
   const filename = `relatorio-${d.monthName.replace('/','_')}.pdf`;
   doc.save(filename);
-  showToast(`Relatório de ${d.monthName} exportado! 📊`, 'fa-file-pdf');
-}
+  window.showToast(`Relatório de ${d.monthName} exportado! 📊`, 'fa-file-pdf');
+};
 
 // ═══════════════════════════════════════════════════════
 // INICIALIZAÇÃO DA ABA FERRAMENTAS
 // ═══════════════════════════════════════════════════════
 
-function initTools() {
-  renderPendingAlerts();
-  renderMonthlyReportPreview();
+window.initTools = function() {
+  window.renderPendingAlerts();
+  window.renderMonthlyReportPreview();
 
   // Pré-preenche comparador de plataformas
   // com dados da última precificação (se houver)
@@ -728,7 +732,7 @@ function initTools() {
     if (taxEl    && !taxEl.value)    taxEl.value    = r.taxRate;
     if (shipEl   && !shipEl.value)   shipEl.value   = r.packagingCost;
 
-    calcPlatformComparator();
+    window.calcPlatformComparator();
   }
 
   // Pré-preenche spool com dados do formulário
@@ -748,19 +752,7 @@ function initTools() {
     const pw = document.getElementById('partWeight')?.value;
     if (pw) spoolPieceEl.value = pw;
   }
-}
-// Função para fechar o modal do comparador
-function closeComparator() {
-  const modal = document.getElementById('comparator-modal');
-  if (modal) {
-    modal.classList.add('hidden'); // Esconde o modal
-  }
-}
+};
 
-// Função para abrir o modal do comparador (se precisar de um botão para abrir)
-function openComparator() {
-  const modal = document.getElementById('comparator-modal');
-  if (modal) {
-    modal.classList.remove('hidden'); // Mostra o modal
-  }
-}
+// As funções openComparator e closeComparator foram movidas para app.js
+// para centralizar o controle do modal. Se você as tinha aqui, remova-as.
