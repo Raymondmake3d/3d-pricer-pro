@@ -749,3 +749,18 @@ function initTools() {
     if (pw) spoolPieceEl.value = pw;
   }
 }
+// Função para fechar o modal do comparador
+function closeComparator() {
+  const modal = document.getElementById('comparator-modal');
+  if (modal) {
+    modal.classList.add('hidden'); // Esconde o modal
+  }
+}
+
+// Função para abrir o modal do comparador (se precisar de um botão para abrir)
+function openComparator() {
+  const modal = document.getElementById('comparator-modal');
+  if (modal) {
+    modal.classList.remove('hidden'); // Mostra o modal
+  }
+}
