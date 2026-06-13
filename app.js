@@ -418,7 +418,7 @@ function calculate() {
 
   showToast('Precificação concluída! 🎉', 'fa-circle-check');
 }
-
+renderPlatformComparatorInResult(window._lastResult);
 // ═══════════════════════════════════════════════════════
 // RENDERIZAÇÃO DO RESULTADO
 // ═══════════════════════════════════════════════════════
@@ -933,6 +933,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initProductFilters();
   initSimulator();
+  // Badge de orçamentos pendentes
+setTimeout(() => updateClientsBadge(
+  loadQuotes().filter(q => q.status === 'pending').length
+), 500);
   renderHistory();
   renderQualityTips();
   renderProducts('all');
