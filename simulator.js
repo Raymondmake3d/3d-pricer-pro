@@ -1,131 +1,116 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════════
-// CONSTANTES
+// SIMULADOR DE LUCRO MENSAL
 // ═══════════════════════════════════════════════════════
 
-const SCENARIOS = {
-  conservative: { label:'🐢 Conservador', factor:0.65 },
-  realistic:    { label:'📊 Realista',    factor:1.00 },
-  optimistic:   { label:'🚀 Otimista',    factor:1.35 },
-};
+window.runSimulator = function(scenario = null) {
+  const price       = parseFloat(document.getElementById('sim-price')?.value)      || 0;
+  const cost        = parseFloat(document.getElementById('sim-cost')?.value)       || 0;
+  let unitsPerDay   = parseFloat(document.getElementById('sim-units-day')?.value)  || 0;
+  let workDays      = parseFloat(document.getElementById('sim-work-days')?.value)  || 0;
+  const fixedCosts  = parseFloat(document.getElementById('sim-fixed')?.value)      || 0;
+  const investment  = parseFloat(document.getElementById('sim-investment')?.value) || 0;
+  const platformFee = parseFloat(document.getElementById('sim-platform')?.value)   || 0;
+  const taxRate     = parseFloat(document.getElementById('sim-tax')?.value)        || 0;
 
-let currentScenario = 'realistic';
-
-// ═══════════════════════════════════════════════════════
-// UTILITÁRIO LOCAL
-// ═══════════════════════════════════════════════════════
-
-function getSimVal(id) {
-  const v = parseFloat(document.getElementById(id)?.value);
-  return isNaN(v) ? 0 : v;
-}
-
-function setText(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value;
-}
-
-// ═══════════════════════════════════════════════════════
-// CÁLCULO PRINCIPAL
-// ═══════════════════════════════════════════════════════
-
-function runSimulator(scenario) {
-  if (scenario) currentScenario = scenario;
-
-  document.querySelectorAll('.scenario-tab').forEach(t =>
-    t.classList.toggle('active', t.dataset.scenario === currentScenario)
-  );
-
-  const pricePerUnit    = getSimVal('sim-price');
-  const costPerUnit     = getSimVal('sim-cost');
-  const unitsPerDay     = getSimVal('sim-units-day');
-  const workDays        = getSimVal('sim-work-days');
-  const fixedCosts      = getSimVal('sim-fixed');
-  const investmentTotal = getSimVal('sim-investment');
-  const platformFeeP    = getSimVal('sim-platform');
-  const taxRateP        = getSimVal('sim-tax');
-
-  if (pricePerUnit <= 0 || costPerUnit <= 0 || unitsPerDay <= 0 || workDays <= 0) return;
-
-  const factor = SCENARIOS[currentScenario].factor;
-
-  const unitsMonth      = Math.floor(unitsPerDay * workDays * factor);
-  const netPrice        = pricePerUnit * (1 - platformFeeP/100) * (1 - taxRateP/100);
-  const grossRevenue    = pricePerUnit * unitsMonth;
-  const netRevenue      = netPrice     * unitsMonth;
-  const varCosts        = costPerUnit  * unitsMonth;
-  const totalCosts      = varCosts + fixedCosts;
-  const netProfit       = netRevenue - totalCosts;
-  const profitMarginPct = netRevenue > 0 ? (netProfit / netRevenue) * 100 : 0;
-
-  const contribMargin  = netPrice - costPerUnit;
-  const breakevenUnits = contribMargin > 0 ? Math.ceil(fixedCosts / contribMargin) : Infinity;
-  const breakevenDays  = (workDays > 0 && unitsPerDay > 0 && isFinite(breakevenUnits))
-    ? Math.ceil(breakevenUnits / (unitsPerDay * factor))
-    : Infinity;
-
-  const annualProfit  = netProfit * 12;
-  const paybackMonths = (netProfit > 0 && investmentTotal > 0)
-    ? investmentTotal / netProfit : null;
-  const roi = investmentTotal > 0 ? (annualProfit / investmentTotal) * 100 : null;
-
-  renderSimCards({
-    unitsMonth, grossRevenue, netRevenue,
-    totalCosts, netProfit, profitMarginPct,
-    annualProfit, roi, paybackMonths,
-    breakevenUnits, breakevenDays,
-  });
-
-  renderProjectionBars({ grossRevenue, netRevenue, totalCosts, netProfit });
-
-  window._lastSimData = { netPrice, costPerUnit, fixedCosts, unitsPerDay, workDays, factor };
-  renderMonthlyChart(window._lastSimData);
-
-  document.getElementById('sim-result')?.classList.remove('hidden');
-}
-
-// ═══════════════════════════════════════════════════════
-// CARDS DE RESULTADO
-// ═══════════════════════════════════════════════════════
-
-function renderSimCards(d) {
-  setText('sim-r-units',      `${d.unitsMonth.toLocaleString('pt-BR')} un.`);
-  setText('sim-r-revenue',    formatBRL(d.grossRevenue));
-  setText('sim-r-netrevenue', `Líquida: ${formatBRL(d.netRevenue)}`);
-  setText('sim-r-profit',     formatBRL(d.netProfit));
-  setText('sim-r-margin',     `Margem: ${d.profitMarginPct.toFixed(1)}%`);
-  setText('sim-r-costs',      formatBRL(d.totalCosts));
-  setText('sim-r-annual',     formatBRL(d.annualProfit));
-
-  setText('sim-r-roi', d.roi !== null
-    ? `${d.roi.toFixed(1)}% ao ano`
-    : '— (sem investimento)');
-
-  if (d.paybackMonths !== null && isFinite(d.paybackMonths)) {
-    const months = d.paybackMonths.toFixed(1);
-    const years  = (d.paybackMonths / 12).toFixed(1);
-    setText('sim-r-payback',  `Payback: ${months} meses (${years} anos)`);
-    setText('sim-r-payback2', `${months} meses`);
-  } else {
-    const msg = d.netProfit <= 0 ? 'Prejuízo ⚠️' : '—';
-    setText('sim-r-payback',  msg);
-    setText('sim-r-payback2', msg);
+  if (price <= 0 || cost <= 0 || unitsPerDay <= 0 || workDays <= 0) {
+    document.getElementById('sim-result')?.classList.add('hidden');
+    return;
   }
 
-  setText('sim-r-be-units', isFinite(d.breakevenUnits)
-    ? `${d.breakevenUnits.toLocaleString('pt-BR')} peças/mês`
-    : 'Margem negativa ⚠️');
-  setText('sim-r-be-days', isFinite(d.breakevenDays)
-    ? `${d.breakevenDays} dias de trabalho para cobrir os fixos`
-    : '—');
-}
+  let growthFactor = 1; // Fator de crescimento para cenários
 
-// ═══════════════════════════════════════════════════════
-// BARRAS DE PROJEÇÃO
-// ═══════════════════════════════════════════════════════
+  // Aplica o cenário se fornecido
+  if (scenario) {
+    document.querySelectorAll('.scenario-tab').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.querySelector(`.scenario-tab[data-scenario="${scenario}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
 
-function renderProjectionBars(d) {
+    switch (scenario) {
+      case 'conservative':
+        unitsPerDay *= 0.8; // 20% menos peças
+        workDays    *= 0.9; // 10% menos dias
+        growthFactor = 0.9; // Crescimento mais lento
+        break;
+      case 'realistic':
+        // Valores padrão
+        break;
+      case 'optimistic':
+        unitsPerDay *= 1.2; // 20% mais peças
+        workDays    *= 1.1; // 10% mais dias
+        growthFactor = 1.1; // Crescimento mais rápido
+        break;
+    }
+  } else {
+    // Se nenhum cenário foi passado, verifica qual está ativo e aplica
+    const activeScenario = document.querySelector('.scenario-tab.active')?.dataset.scenario;
+    if (activeScenario) {
+      window.runSimulator(activeScenario); // Chama recursivamente com o cenário ativo
+      return; // Sai para evitar recalcular
+    }
+  }
+
+  const unitsPerMonth = unitsPerDay * workDays;
+  const grossRevenue  = price * unitsPerMonth;
+  const variableCosts = cost * unitsPerMonth;
+
+  const platformAmount = grossRevenue * (platformFee / 100);
+  const taxAmount      = (grossRevenue - platformAmount) * (taxRate / 100); // Imposto sobre receita líquida da plataforma
+
+  const netRevenue    = grossRevenue - platformAmount - taxAmount;
+  const totalCosts    = variableCosts + fixedCosts;
+  const netProfit     = netRevenue - totalCosts;
+  const profitMargin  = netRevenue > 0 ? (netProfit / netRevenue) * 100 : 0;
+
+  // Ponto de Equilíbrio
+  const contributionMargin = price - (cost + (price * (platformFee / 100)) + (price * (taxRate / 100)));
+  const breakevenUnits     = contributionMargin > 0 ? fixedCosts / contributionMargin : Infinity;
+  const breakevenDays      = unitsPerDay > 0 ? breakevenUnits / unitsPerDay : Infinity;
+
+  // ROI e Payback
+  const annualProfit = netProfit * 12;
+  const roi          = investment > 0 ? (annualProfit / investment) * 100 : 0;
+  const paybackMonths = annualProfit > 0 ? investment / (annualProfit / 12) : Infinity;
+
+  // Atualiza os resultados na UI
+  window.setResultText('sim-r-units',   `${unitsPerMonth.toFixed(0)} peças`);
+  window.setResultText('sim-r-revenue', window.formatBRL(grossRevenue));
+  window.setResultText('sim-r-netrevenue', `Líquida: ${window.formatBRL(netRevenue)}`);
+  window.setResultText('sim-r-profit',  window.formatBRL(netProfit));
+  window.setResultText('sim-r-margin',  `Margem: ${profitMargin.toFixed(1)}%`);
+  window.setResultText('sim-r-costs',   window.formatBRL(totalCosts));
+  window.setResultText('sim-r-annual',  window.formatBRL(annualProfit));
+  window.setResultText('sim-r-roi',     `${roi.toFixed(1)}% ao ano`);
+  window.setResultText('sim-r-payback', `Payback: ${paybackMonths.toFixed(1)} meses`);
+
+  window.setResultText('sim-r-be-units', `${Math.ceil(breakevenUnits)} peças`);
+  window.setResultText('sim-r-be-days',  `${Math.ceil(breakevenDays)} dias para o breakeven`);
+  window.setResultText('sim-r-payback2', `${paybackMonths.toFixed(1)} meses`);
+
+  window.updateProjectionBars({ grossRevenue, netRevenue, totalCosts, netProfit });
+
+  const chartData = {
+    netPrice:    price - (price * (platformFee / 100)) - (price * (taxRate / 100)), // Preço líquido por peça
+    costPerUnit: cost,
+    fixedCosts:  fixedCosts,
+    unitsPerDay: unitsPerDay,
+    workDays:    workDays,
+    factor:      growthFactor,
+  };
+  window._lastSimData = chartData; // Armazena para redesenhar no resize
+  window.renderMonthlyChart(chartData);
+
+  document.getElementById('sim-result')?.classList.remove('hidden');
+};
+
+// Helper para setar texto (já que setResult usa formatBRL)
+window.setResultText = function(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+};
+
+window.updateProjectionBars = function(d) {
   const maxVal = Math.max(d.grossRevenue, 0.01);
   const bars = [
     { fillId:'bar-revenue', valId:'bar-revenue-val', value:d.grossRevenue,          color:'#2c4a7c' },
@@ -140,15 +125,15 @@ function renderProjectionBars(d) {
       fill.style.width      = `${Math.min(100, (b.value / maxVal) * 100)}%`;
       fill.style.background = b.color;
     }
-    if (val) val.textContent = formatBRL(b.value);
+    if (val) val.textContent = window.formatBRL(b.value);
   });
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // GRÁFICO 12 MESES (Canvas puro)
 // ═══════════════════════════════════════════════════════
 
-function renderMonthlyChart({ netPrice, costPerUnit, fixedCosts, unitsPerDay, workDays, factor }) {
+window.renderMonthlyChart = function({ netPrice, costPerUnit, fixedCosts, unitsPerDay, workDays, factor }) {
   const canvas = document.getElementById('monthlyChart');
   if (!canvas) return;
 
@@ -273,16 +258,16 @@ function renderMonthlyChart({ netPrice, costPerUnit, fixedCosts, unitsPerDay, wo
     ctx.fillText(item.label, lx+15, 13);
     lx += ctx.measureText(item.label).width + 32;
   });
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // IMPORTAR DA PRECIFICAÇÃO
 // ═══════════════════════════════════════════════════════
 
-function importFromPricing() {
+window.importFromPricing = function() {
   const r = window._lastResult;
   if (!r) {
-    showToast('Calcule uma precificação antes de simular!', 'fa-triangle-exclamation');
+    window.showToast('Calcule uma precificação antes de simular!', 'fa-triangle-exclamation');
     return;
   }
 
@@ -301,24 +286,24 @@ function importFromPricing() {
     }
   });
 
-  showToast('Dados importados da precificação! ✅', 'fa-file-import');
-  runSimulator();
-}
+  window.showToast('Dados importados da precificação! ✅', 'fa-file-import');
+  window.runSimulator();
+};
 
 // ═══════════════════════════════════════════════════════
 // INICIALIZAÇÃO
 // ═══════════════════════════════════════════════════════
 
-function initSimulator() {
+window.initSimulator = function() {
   document.querySelectorAll('.scenario-tab').forEach(btn =>
-    btn.addEventListener('click', () => runSimulator(btn.dataset.scenario))
+    btn.addEventListener('click', () => window.runSimulator(btn.dataset.scenario))
   );
 
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-      if (window._lastSimData) renderMonthlyChart(window._lastSimData);
+      if (window._lastSimData) window.renderMonthlyChart(window._lastSimData);
     }, 200);
   });
-}
+};
