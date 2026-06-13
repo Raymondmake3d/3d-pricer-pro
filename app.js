@@ -708,20 +708,28 @@ function initProductFilters() {
 // COMPARADOR DE MATERIAIS
 // ═══════════════════════════════════════════════════════
 
+// Função para abrir o modal do comparador
 function openComparator() {
-  const modal   = document.getElementById('comparator-modal');
-  const content = document.getElementById('comparator-content');
-  if (!modal || !content) return;
-  content.innerHTML = generateComparatorHTML();
-  modal.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  const modal = document.getElementById('comparator-modal');
+  if (modal) {
+    modal.classList.add('show'); // Adiciona a classe 'show'
+    // Opcional: Adiciona um listener para fechar o modal ao clicar fora dele
+    modal.addEventListener('click', function handler(event) {
+      if (event.target === modal) { // Verifica se o clique foi no overlay, não no modal em si
+        closeComparator();
+        modal.removeEventListener('click', handler); // Remove o listener para evitar múltiplos
+      }
+    });
+  }
 }
 
+// Função para fechar o modal do comparador
 function closeComparator() {
-  document.getElementById('comparator-modal')?.classList.add('hidden');
-  document.body.style.overflow = '';
+  const modal = document.getElementById('comparator-modal');
+  if (modal) {
+    modal.classList.remove('show'); // Remove a classe 'show'
+  }
 }
-
 // ═══════════════════════════════════════════════════════
 // DARK MODE
 // ═══════════════════════════════════════════════════════
