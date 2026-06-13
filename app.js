@@ -9,25 +9,30 @@ const State = {
   finishings:  [],
 };
 
+// Variável global para armazenar o último resultado da precificação
+window._lastResult = null;
+// Variável global para armazenar os últimos dados do simulador
+window._lastSimData = null;
+
 // ═══════════════════════════════════════════════════════
 // UTILITÁRIOS GLOBAIS
 // ═══════════════════════════════════════════════════════
 
-function getVal(id) {
+window.getVal = function(id) {
   const v = parseFloat(document.getElementById(id)?.value);
   return isNaN(v) ? 0 : v;
-}
+};
 
-function getStr(id) {
+window.getStr = function(id) {
   return document.getElementById(id)?.value?.trim() || '';
-}
+};
 
-function setResult(id, value) {
+window.setResult = function(id, value) {
   const el = document.getElementById(id);
-  if (el) el.textContent = formatBRL(value);
-}
+  if (el) el.textContent = window.formatBRL(value); // Usando formatBRL global
+};
 
-function showToast(message, icon = 'fa-circle-info') {
+window.showToast = function(message, icon = 'fa-circle-info') {
   document.querySelectorAll('.toast').forEach(t => t.remove());
   const toast = document.createElement('div');
   toast.className = 'toast';
@@ -40,17 +45,27 @@ function showToast(message, icon = 'fa-circle-info') {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 400);
   }, 3500);
-}
+};
 
-function uid() {
+window.uid = function() {
   return `_${Math.random().toString(36).slice(2, 9)}`;
-}
+};
+
+// Função de formatação de BRL (assumindo que está em outro script ou será adicionada)
+// Se não estiver em outro lugar, adicione-a aqui:
+window.formatBRL = function(value) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
+};
+
 
 // ═══════════════════════════════════════════════════════
 // SISTEMA DE TABS
 // ═══════════════════════════════════════════════════════
 
-function initTabs() {
+window.initTabs = function() {
   document.querySelectorAll('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
       const target = btn.dataset.tab;
@@ -63,32 +78,34 @@ function initTabs() {
         c.classList.toggle('hidden', !isTarget);
         c.classList.toggle('active',  isTarget);
       });
-switch (target) {
-  case 'dashboard': renderDashboard();      break;
-  case 'clients':   renderClients();        break;
-  case 'catalog':
-    renderCatalog();
-    setTimeout(initCatalogCalc, 150);
-    break;
-  case 'tools':
-    initTools();
-    renderPendingAlerts();
-    renderMonthlyReportPreview();
-    break;
-  case 'history':   renderHistory();        break;
-  case 'products':  renderProducts('all');  break;
-  case 'tips':      renderQualityTips();    break;
-}
-     
+
+      // Funções de renderização das abas
+      switch (target) {
+        case 'dashboard': window.renderDashboard();      break;
+        case 'clients':   window.renderClients();        break;
+        case 'catalog':
+          window.renderCatalog();
+          setTimeout(window.initCatalogCalc, 150); // Assumindo initCatalogCalc existe
+          break;
+        case 'tools':
+          window.initTools(); // Assumindo initTools existe
+          window.renderPendingAlerts(); // Assumindo renderPendingAlerts existe
+          window.renderMonthlyReportPreview(); // Assumindo renderMonthlyReportPreview existe
+          break;
+        case 'history':   window.renderHistory();        break;
+        case 'products':  window.renderProducts('all');  break;
+        case 'tips':      window.renderQualityTips();    break;
+        case 'simulator': window.runSimulator();         break; // Adicionado para iniciar o simulador ao abrir a aba
+      }
     });
   });
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // PROGRESS STEPS
 // ═══════════════════════════════════════════════════════
 
-function updateProgress() {
+window.updateProgress = function() {
   const sections = [
     { step:1, fields:['printerCost','printerLifespan','printerWatts'] },
     { step:2, fields:['spoolCost','spoolWeight','partWeight']          },
@@ -98,7 +115,7 @@ function updateProgress() {
 
   sections.forEach(({ step, fields }) => {
     const el   = document.querySelector(`.step[data-step="${step}"]`);
-    const done = fields.every(f => getVal(f) > 0);
+    const done = fields.every(f => window.getVal(f) > 0);
     if (!el) return;
     el.classList.toggle('done',   done);
     el.classList.toggle('active', !done);
@@ -106,14 +123,14 @@ function updateProgress() {
       ? '<i class="fas fa-check"></i>'
       : step;
   });
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // CONSUMÍVEIS DINÂMICOS
 // ═══════════════════════════════════════════════════════
 
-function addConsumable() {
-  const id   = uid();
+window.addConsumable = function() {
+  const id   = window.uid();
   State.consumables.push({ id, name:'', cost:0, lifeHours:0 });
 
   const list = document.getElementById('consumables-list');
@@ -122,40 +139,42 @@ function addConsumable() {
   row.id        = `crow-${id}`;
   row.innerHTML = `
     <input type="text"   placeholder="Ex: Bico 0.4mm"
-           oninput="updateConsumable('${id}','name',this.value)"/>
+           oninput="window.updateConsumable('${id}','name',this.value)"/>
     <input type="number" placeholder="R$"    min="0"
-           oninput="updateConsumable('${id}','cost',this.value)"/>
+           oninput="window.updateConsumable('${id}','cost',this.value)"/>
     <input type="number" placeholder="Horas" min="0"
-           oninput="updateConsumable('${id}','lifeHours',this.value)"/>
-    <button class="btn-del" onclick="removeConsumable('${id}')">
+           oninput="window.updateConsumable('${id}','lifeHours',this.value)"/>
+    <button class="btn-del" onclick="window.removeConsumable('${id}')">
       <i class="fas fa-xmark"></i>
     </button>`;
   list?.appendChild(row);
-}
+};
 
-function updateConsumable(id, field, value) {
+window.updateConsumable = function(id, field, value) {
   const item = State.consumables.find(c => c.id === id);
   if (item) item[field] = field === 'name' ? value : parseFloat(value) || 0;
-}
+  window.updateProgress(); // Atualiza o progresso ao mudar consumíveis
+};
 
-function removeConsumable(id) {
+window.removeConsumable = function(id) {
   State.consumables = State.consumables.filter(c => c.id !== id);
   document.getElementById(`crow-${id}`)?.remove();
-}
+  window.updateProgress(); // Atualiza o progresso ao remover consumíveis
+};
 
-function calcConsumablesCost(printHours) {
+window.calcConsumablesCost = function(printHours) {
   return State.consumables.reduce((sum, c) => {
     if (!c.cost || !c.lifeHours) return sum;
     return sum + (c.cost / c.lifeHours) * printHours;
   }, 0);
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // ACABAMENTOS DINÂMICOS
 // ═══════════════════════════════════════════════════════
 
-function addFinishing() {
-  const id   = uid();
+window.addFinishing = function() {
+  const id   = window.uid();
   State.finishings.push({ id, name:'', cost:0 });
 
   const list = document.getElementById('finishing-list');
@@ -164,55 +183,77 @@ function addFinishing() {
   row.id        = `frow-${id}`;
   row.innerHTML = `
     <input type="text"   placeholder="Ex: Primer em spray"
-           oninput="updateFinishing('${id}','name',this.value)"/>
+           oninput="window.updateFinishing('${id}','name',this.value)"/>
     <input type="number" placeholder="R$" min="0"
-           oninput="updateFinishing('${id}','cost',this.value)"/>
-    <button class="btn-del" onclick="removeFinishing('${id}')">
+           oninput="window.updateFinishing('${id}','cost',this.value)"/>
+    <button class="btn-del" onclick="window.removeFinishing('${id}')">
       <i class="fas fa-xmark"></i>
     </button>`;
   list?.appendChild(row);
-}
+};
 
-function updateFinishing(id, field, value) {
+window.updateFinishing = function(id, field, value) {
   const item = State.finishings.find(f => f.id === id);
   if (item) item[field] = field === 'name' ? value : parseFloat(value) || 0;
-}
+};
 
-function removeFinishing(id) {
+window.removeFinishing = function(id) {
   State.finishings = State.finishings.filter(f => f.id !== id);
   document.getElementById(`frow-${id}`)?.remove();
-}
+};
 
-function calcFinishingCost() {
+window.calcFinishingCost = function() {
   return State.finishings.reduce((sum, f) => sum + (f.cost || 0), 0);
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // PREVIEW DE ENERGIA
 // ═══════════════════════════════════════════════════════
 
-function updateEnergyPreview() {
-  const hours = getVal('printHours');
-  const watts = getVal('printerWatts');
-  const rate  = getVal('energyRate');
+window.updateEnergyPreview = function() {
+  const hours = window.getVal('printHours');
+  const watts = window.getVal('printerWatts');
+  const rate  = window.getVal('energyRate');
   const box   = document.getElementById('energy-preview');
   const valEl = document.getElementById('energy-preview-val');
 
   if (hours > 0 && watts > 0 && rate > 0) {
     const cost = (watts / 1000) * hours * rate;
-    if (valEl) valEl.textContent = `${formatBRL(cost)} para ${hours}h de impressão`;
+    if (valEl) valEl.textContent = `${window.formatBRL(cost)} para ${hours}h de impressão`;
     box?.classList.remove('hidden');
   } else {
     box?.classList.add('hidden');
   }
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // MUDANÇA DE MATERIAL
 // ═══════════════════════════════════════════════════════
 
-function onMaterialChange() {
-  const type    = getStr('materialType');
+// Assumindo que MATERIAL_INFO está definido em outro script (ex: suggestions.js)
+const MATERIAL_INFO = {
+  "PLA": { "desc": "Filamento versátil e fácil de usar, ideal para iniciantes.", "tempNozzle": "190-220°C", "tempBed": "50-60°C", "avgPrice": 120, "alternatives": ["PETG"] },
+  "PETG": { "desc": "Mais resistente e flexível que o PLA, boa adesão de camada.", "tempNozzle": "220-250°C", "tempBed": "70-80°C", "avgPrice": 150, "alternatives": ["ABS", "ASA"] },
+  "ABS": { "desc": "Alta resistência e durabilidade, mas requer mesa aquecida e ambiente controlado.", "tempNozzle": "230-260°C", "tempBed": "90-110°C", "avgPrice": 140, "alternatives": ["ASA"] },
+  "ASA": { "desc": "Similar ao ABS, mas com maior resistência UV e menos warping.", "tempNozzle": "240-260°C", "tempBed": "90-110°C", "avgPrice": 180, "alternatives": ["PETG"] },
+  "TPU": { "desc": "Filamento flexível e resistente a impactos, ideal para peças funcionais.", "tempNozzle": "210-230°C", "tempBed": "30-50°C", "avgPrice": 160, "alternatives": [] },
+  "PLA-CF": { "desc": "PLA com fibra de carbono, mais rígido e com acabamento fosco.", "tempNozzle": "200-230°C", "tempBed": "50-60°C", "avgPrice": 250, "alternatives": [] },
+  "PETG-CF": { "desc": "PETG com fibra de carbono, alta resistência e leveza.", "tempNozzle": "230-260°C", "tempBed": "70-80°C", "avgPrice": 280, "alternatives": [] },
+  "PA": { "desc": "Nylon, alta resistência mecânica e química, mas absorve umidade.", "tempNozzle": "240-270°C", "tempBed": "80-100°C", "avgPrice": 300, "alternatives": ["PA-CF"] },
+  "PA-CF": { "desc": "Nylon com fibra de carbono, extremamente forte e rígido.", "tempNozzle": "250-280°C", "tempBed": "80-100°C", "avgPrice": 400, "alternatives": [] },
+  "PC": { "desc": "Policarbonato, alta resistência ao calor e impacto, difícil de imprimir.", "tempNozzle": "260-300°C", "tempBed": "100-120°C", "avgPrice": 350, "alternatives": [] },
+  "PVA": { "desc": "Material de suporte solúvel em água, ideal para geometrias complexas.", "tempNozzle": "190-220°C", "tempBed": "50-60°C", "avgPrice": 200, "alternatives": [] },
+  "RESIN-STD": { "desc": "Resina padrão, boa para detalhes e protótipos.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 100, "alternatives": ["RESIN-ABS"] },
+  "RESIN-ABS": { "desc": "Resina ABS-Like, mais resistente e menos quebradiça que a padrão.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 130, "alternatives": ["RESIN-8K"] },
+  "RESIN-8K": { "desc": "Resina de alta resolução, para impressoras 8K e detalhes finos.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 150, "alternatives": [] },
+  "RESIN-ENG": { "desc": "Resina de engenharia, para aplicações funcionais e maior durabilidade.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 200, "alternatives": [] },
+  "RESIN-CAST": { "desc": "Resina para fundição, queima sem deixar resíduos.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 250, "alternatives": [] },
+  "OUTRO": { "desc": "Material personalizado. Preencha os detalhes manualmente.", "tempNozzle": "N/A", "tempBed": "N/A", "avgPrice": 0, "alternatives": [] }
+};
+
+
+window.onMaterialChange = function() {
+  const type    = window.getStr('materialType');
   const infoBox = document.getElementById('material-info');
   const infoTxt = document.getElementById('material-info-text');
   const info    = MATERIAL_INFO[type];
@@ -243,28 +284,30 @@ function onMaterialChange() {
     spoolEl.style.borderColor = 'var(--orange)';
     setTimeout(() => spoolEl.style.borderColor = '', 2000);
   }
-}
+  window.updateProgress(); // Atualiza o progresso ao mudar material
+};
 
 // ═══════════════════════════════════════════════════════
 // TIPO DE IMPRESSORA
 // ═══════════════════════════════════════════════════════
 
-function onPrinterTypeChange() {
-  const type     = getStr('printerType');
+window.onPrinterTypeChange = function() {
+  const type     = window.getStr('printerType');
   const watts    = document.getElementById('printerWatts');
   const defaults = { FDM:350, MSLA:100, SLS:1200, MJF:2000 };
 
   if (defaults[type] && !watts?.value) {
     if (watts) watts.value = defaults[type];
-    showToast(`Consumo padrão ${type}: ${defaults[type]}W sugerido`, 'fa-bolt');
+    window.showToast(`Consumo padrão ${type}: ${defaults[type]}W sugerido`, 'fa-bolt');
   }
-}
+  window.updateProgress(); // Atualiza o progresso ao mudar tipo de impressora
+};
 
 // ═══════════════════════════════════════════════════════
 // VALIDAÇÃO
 // ═══════════════════════════════════════════════════════
 
-function validate() {
+window.validate = function() {
   const required = [
     { id:'printerCost',     label:'Custo de Aquisição da Impressora' },
     { id:'printerLifespan', label:'Vida Útil da Impressora (horas)'  },
@@ -279,14 +322,14 @@ function validate() {
   ];
 
   for (const f of required) {
-    if (getVal(f.id) <= 0) {
+    if (window.getVal(f.id) <= 0) {
       return { valid:false, message:`Preencha: ${f.label}`, fieldId:f.id };
     }
   }
   return { valid:true, message:'', fieldId:'' };
-}
+};
 
-function highlightInvalid(fieldId) {
+window.highlightInvalid = function(fieldId) {
   const el = document.getElementById(fieldId);
   if (!el) return;
   el.style.borderColor = '#e74c3c';
@@ -294,63 +337,63 @@ function highlightInvalid(fieldId) {
   el.focus();
   el.scrollIntoView({ behavior:'smooth', block:'center' });
   setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 3000);
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // CÁLCULO PRINCIPAL
 // ═══════════════════════════════════════════════════════
 
-function calculate() {
-  const check = validate();
+window.calculate = function() {
+  const check = window.validate();
   if (!check.valid) {
-    showToast(check.message, 'fa-triangle-exclamation');
-    highlightInvalid(check.fieldId);
+    window.showToast(check.message, 'fa-triangle-exclamation');
+    window.highlightInvalid(check.fieldId);
     return;
   }
 
-  const printerName        = getStr('printerName');
-  const printerType        = getStr('printerType');
-  const printerCostRaw     = getVal('printerCost');
-  const printerLifespan    = getVal('printerLifespan');
-  const printerWatts       = getVal('printerWatts');
-  const maintenanceCostRaw = getVal('maintenanceCost');
-  const spaceCostMonthly   = getVal('spaceCost');
-  const monthlyHours       = getVal('monthlyHours');
+  const printerName        = window.getStr('printerName');
+  const printerType        = window.getStr('printerType');
+  const printerCostRaw     = window.getVal('printerCost');
+  const printerLifespan    = window.getVal('printerLifespan');
+  const printerWatts       = window.getVal('printerWatts');
+  const maintenanceCostRaw = window.getVal('maintenanceCost');
+  const spaceCostMonthly   = window.getVal('spaceCost');
+  const monthlyHours       = window.getVal('monthlyHours');
 
-  const materialType    = getStr('materialType');
-  const spoolCost       = getVal('spoolCost');
-  const spoolWeight     = getVal('spoolWeight');
-  const partWeight      = getVal('partWeight');
-  const supportWeight   = getVal('supportWeight');
-  const failureRate     = getVal('failureRate');
-  const postProcessCost = getVal('postProcessCost');
+  const materialType    = window.getStr('materialType');
+  const spoolCost       = window.getVal('spoolCost');
+  const spoolWeight     = window.getVal('spoolWeight');
+  const partWeight      = window.getVal('partWeight');
+  const supportWeight   = window.getVal('supportWeight');
+  const failureRate     = window.getVal('failureRate');
+  const postProcessCost = window.getVal('postProcessCost');
 
-  const printHours    = getVal('printHours');
-  const energyRate    = getVal('energyRate');
-  const laborCostPerH = getVal('laborCost');
-  const laborHours    = getVal('laborHours');
-  const setupHours    = getVal('setupHours');
-  const washCureCost  = getVal('washCureCost');
+  const printHours    = window.getVal('printHours');
+  const energyRate    = window.getVal('energyRate');
+  const laborCostPerH = window.getVal('laborCost');
+  const laborHours    = window.getVal('laborHours');
+  const setupHours    = window.getVal('setupHours');
+  const washCureCost  = window.getVal('washCureCost');
 
-  const marginStrategy = getStr('marginStrategy');
-  const profitMargin   = getVal('profitMargin');
-  const taxRate        = getVal('taxRate');
-  const platformFee    = getVal('platformFee');
-  const packagingCost  = getVal('packagingCost');
-  const otherCosts     = getVal('otherCosts');
-  const maxDiscount    = getVal('maxDiscount');
-  const quantity       = Math.max(1, getVal('quantity'));
+  const marginStrategy = window.getStr('marginStrategy');
+  const profitMargin   = window.getVal('profitMargin');
+  const taxRate        = window.getVal('taxRate');
+  const platformFee    = window.getVal('platformFee');
+  const packagingCost  = window.getVal('packagingCost');
+  const otherCosts     = window.getVal('otherCosts');
+  const maxDiscount    = window.getVal('maxDiscount');
+  const quantity       = Math.max(1, window.getVal('quantity'));
 
   // ── Custos ──
   const materialCostPerGram = spoolCost / spoolWeight;
   const materialCost        = materialCostPerGram * partWeight;
   const supportCost         = materialCostPerGram * supportWeight;
-  const finishingCost       = calcFinishingCost();
+  const finishingCost       = window.calcFinishingCost();
   const energyCost          = (printerWatts / 1000) * printHours * energyRate;
   const depreciationCost    = (printerCostRaw / printerLifespan) * printHours;
   const maintenanceCost     = (maintenanceCostRaw / monthlyHours) * printHours;
   const spaceCost           = (spaceCostMonthly / monthlyHours) * printHours;
-  const consumablesCost     = calcConsumablesCost(printHours);
+  const consumablesCost     = window.calcConsumablesCost(printHours);
   const laborCost           = laborCostPerH * laborHours;
   const setupCost           = laborCostPerH * setupHours;
   const failureReserve      = (materialCost + supportCost) * (failureRate / 100);
@@ -407,23 +450,24 @@ function calculate() {
     marginStrategy,
   };
 
-  renderResult(window._lastResult);
-  renderChart(window._lastResult);
-  updateProgress();
-  renderDynamicTips(generateDynamicTips(window._lastResult));
+  window.renderResult(window._lastResult); // Assumindo renderResult existe
+  window.renderChart(window._lastResult); // Assumindo renderChart existe
+  window.updateProgress();
+  window.renderDynamicTips(window.generateDynamicTips(window._lastResult)); // Assumindo generateDynamicTips existe
+  window.renderPlatformComparatorInResult(window._lastResult); // Assumindo renderPlatformComparatorInResult existe
 
   const resultEl = document.getElementById('result');
   resultEl?.classList.remove('hidden');
   setTimeout(() => resultEl?.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
 
-  showToast('Precificação concluída! 🎉', 'fa-circle-check');
-}
-renderPlatformComparatorInResult(window._lastResult);
+  window.showToast('Precificação concluída! 🎉', 'fa-circle-check');
+};
+
 // ═══════════════════════════════════════════════════════
 // RENDERIZAÇÃO DO RESULTADO
 // ═══════════════════════════════════════════════════════
 
-function renderResult(r) {
+window.renderResult = function(r) {
   const fields = {
     'r-material':     r.materialCost,
     'r-support':      r.supportCost,
@@ -452,17 +496,17 @@ function renderResult(r) {
     'r-batch':        r.batchPrice,
   };
 
-  Object.entries(fields).forEach(([id, val]) => setResult(id, val));
+  Object.entries(fields).forEach(([id, val]) => window.setResult(id, val));
 
   const qLabel = document.getElementById('r-qty-label');
   if (qLabel) qLabel.textContent = r.quantity;
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // GRÁFICO DE PIZZA
 // ═══════════════════════════════════════════════════════
 
-function renderChart(r) {
+window.renderChart = function(r) {
   const canvas = document.getElementById('costChart');
   if (!canvas) return;
 
@@ -532,7 +576,7 @@ function renderChart(r) {
   ctx.fillText('CUSTO', cx, cy - 8);
   ctx.fillStyle = '#f07b30';
   ctx.font      = 'bold 10px Poppins,sans-serif';
-  ctx.fillText(formatBRL(total), cx, cy + 8);
+  ctx.fillText(window.formatBRL(total), cx, cy + 8);
 
   // Legenda
   const legend = document.getElementById('chart-legend');
@@ -543,15 +587,15 @@ function renderChart(r) {
         ${d.label} (${((d.value/total)*100).toFixed(1)}%)
       </div>`).join('');
   }
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // ADICIONAR AO CATÁLOGO DO RESULTADO
 // ═══════════════════════════════════════════════════════
 
-function addToCatalogFromResult() {
+window.addToCatalogFromResult = function() {
   if (!window._lastResult) {
-    showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
+    window.showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
     return;
   }
 
@@ -564,7 +608,7 @@ function addToCatalogFromResult() {
     c.classList.toggle('active',  isCat);
   });
 
-  renderCatalog();
+  window.renderCatalog(); // Assumindo renderCatalog existe
 
   setTimeout(() => {
     const r = window._lastResult;
@@ -589,22 +633,34 @@ function addToCatalogFromResult() {
     const nameEl = document.getElementById('cat-name');
     if (nameEl && r.printerName) nameEl.value = r.printerName;
 
-    calcCatalogMargin();
+    window.calcCatalogMargin(); // Assumindo calcCatalogMargin existe
 
     const body = document.getElementById('catalog-form-body');
     if (body) body.style.display = '';
     document.getElementById('catalog-form-card')
       ?.scrollIntoView({ behavior:'smooth', block:'start' });
 
-    showToast('Dados importados para o catálogo! 🎯', 'fa-cubes');
+    window.showToast('Dados importados para o catálogo! 🎯', 'fa-cubes');
   }, 200);
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // DICAS DINÂMICAS
 // ═══════════════════════════════════════════════════════
 
-function renderDynamicTips(tips) {
+// Assumindo QUALITY_TIPS e generateDynamicTips estão em suggestions.js
+const QUALITY_TIPS = [
+  { icon: '⚙️', title: 'Altura da Camada', value: '0.2mm', desc: 'Equilíbrio entre velocidade e detalhe.' },
+  { icon: '💨', title: 'Velocidade de Impressão', value: '50-80mm/s', desc: 'Evita falhas e mantém qualidade.' },
+  { icon: '🌡️', title: 'Temperatura do Bico', value: '200-220°C', desc: 'Ideal para PLA, boa fusão.' },
+  { icon: '🛏️', title: 'Temperatura da Mesa', value: '50-60°C', desc: 'Melhora adesão da primeira camada.' },
+  { icon: '🌬️', title: 'Ventilação da Peça', value: '100%', desc: 'Resfriamento rápido para detalhes finos.' },
+  { icon: '📏', title: 'Retração', value: '1-5mm', desc: 'Evita stringing e blobs.' },
+  { icon: '💧', title: 'Umidade do Filamento', value: '<20%', desc: 'Filamento seco evita bolhas e falhas.' },
+  { icon: '🛠️', title: 'Manutenção Preventiva', value: 'Regular', desc: 'Limpeza e lubrificação prolongam a vida útil.' }
+];
+
+window.renderDynamicTips = function(tips) {
   const container = document.getElementById('tips-container');
   if (!container) return;
 
@@ -630,9 +686,9 @@ function renderDynamicTips(tips) {
         <span class="tip-badge">${t.badge}</span>
       </div>
     </div>`).join('');
-}
+};
 
-function renderQualityTips() {
+window.renderQualityTips = function() {
   const container = document.getElementById('quality-tips');
   if (!container || container.children.length > 0) return;
 
@@ -643,13 +699,76 @@ function renderQualityTips() {
       <div class="q-value">${q.value}</div>
       <div class="q-desc">${q.desc}</div>
     </div>`).join('');
-}
+};
+
+// Assumindo que generateDynamicTips está em suggestions.js
+window.generateDynamicTips = function(result) {
+  const tips = [];
+
+  if (result.profitMargin < 20) {
+    tips.push({
+      type: 'warning', icon: '⚠️', title: 'Margem de Lucro Baixa',
+      desc: `Sua margem de ${result.profitMargin}% é muito baixa. Considere aumentar para garantir a sustentabilidade do negócio.`,
+      badge: 'Negócio'
+    });
+  }
+
+  if (result.failureRate > 10) {
+    tips.push({
+      type: 'danger', icon: '❌', title: 'Alta Taxa de Falha',
+      desc: `Sua taxa de falha de ${result.failureRate}% impacta muito o custo. Revise configurações ou manutenção.`,
+      badge: 'Produção'
+    });
+  }
+
+  if (result.materialCostPerGram > 0.15 && result.materialType === 'PLA') {
+    tips.push({
+      type: 'economy', icon: '💰', title: 'PLA Caro',
+      desc: `O custo do seu PLA (${window.formatBRL(result.materialCostPerGram)}/g) está acima da média. Pesquise fornecedores ou outras marcas.`,
+      badge: 'Economia'
+    });
+  }
+
+  if (result.printHours > 10 && result.energyCost > 5) {
+    tips.push({
+      type: 'warning', icon: '⚡', title: 'Alto Custo de Energia',
+      desc: `Impressões longas (${result.printHours}h) com alto consumo de energia (${window.formatBRL(result.energyCost)}) podem ser otimizadas.`,
+      badge: 'Energia'
+    });
+  }
+
+  if (result.platformFee > 15) {
+    tips.push({
+      type: 'info', icon: '🛍️', title: 'Taxa de Plataforma Alta',
+      desc: `A taxa de ${result.platformFee}% da plataforma reduz seu lucro. Explore vendas diretas ou outras plataformas.`,
+      badge: 'Vendas'
+    });
+  }
+
+  return tips;
+};
+
 
 // ═══════════════════════════════════════════════════════
 // PRODUTOS
 // ═══════════════════════════════════════════════════════
 
-function renderProducts(filter = 'all') {
+// Assumindo PRODUCTS está em suggestions.js
+const PRODUCTS = [
+  { id: 'p1', emoji: '🌱', name: 'Filamento PLA Premium', brand: 'Creality', price: 'R$ 119,90', specs: ['1kg', '1.75mm'], desc: 'Alta qualidade, cores vibrantes.', rating: 4.8, category: 'filament', tag: 'best' },
+  { id: 'p2', emoji: '💪', name: 'Filamento PETG Resistente', brand: 'Esun', price: 'R$ 149,90', specs: ['1kg', '1.75mm'], desc: 'Ideal para peças funcionais.', rating: 4.5, category: 'filament', tag: 'hot' },
+  { id: 'p3', emoji: '💎', name: 'Resina 8K de Alta Detalhe', brand: 'Anycubic', price: 'R$ 199,90', specs: ['1L', '405nm'], desc: 'Para impressões ultra-detalhadas.', rating: 4.9, category: 'resin', tag: 'premium' },
+  { id: 'p4', emoji: '🚀', name: 'Impressora 3D Bambu Lab P1S', brand: 'Bambu Lab', price: 'R$ 5.999,00', specs: ['CoreXY', 'AMS'], desc: 'Velocidade e precisão incríveis.', rating: 5.0, category: 'printer', tag: 'best', highlight: true },
+  { id: 'p5', emoji: '🛠️', name: 'Kit de Ferramentas Essencial', brand: 'Generic', price: 'R$ 79,90', specs: ['12 peças', 'Pós-processamento'], desc: 'Tudo que você precisa para acabamento.', rating: 4.2, category: 'tool', tag: 'new' },
+  { id: 'p6', emoji: '🌈', name: 'Filamento PLA Multicolor', brand: '3D Fila', price: 'R$ 139,90', specs: ['1kg', '1.75mm'], desc: 'Cores gradientes para projetos criativos.', rating: 4.7, category: 'filament', tag: 'new' },
+  { id: 'p7', emoji: '🧪', name: 'Resina Standard Rápida', brand: 'Elegoo', price: 'R$ 99,90', specs: ['1L', '405nm'], desc: 'Cura rápida, baixo odor.', rating: 4.3, category: 'resin', tag: 'hot' },
+  { id: 'p8', emoji: '🧽', name: 'Estação de Lavagem e Cura', brand: 'Creality', price: 'R$ 899,00', specs: ['UV', 'Rotação'], desc: 'Otimiza o pós-processamento de resina.', rating: 4.6, category: 'tool', tag: 'best' },
+  { id: 'p9', emoji: '🤖', name: 'Impressora 3D Ender 3 V3 SE', brand: 'Creality', price: 'R$ 1.799,00', specs: ['FDM', 'Auto-level'], desc: 'Excelente custo-benefício para iniciantes.', rating: 4.4, category: 'printer', tag: 'hot' },
+  { id: 'p10', emoji: '🔥', name: 'Filamento ABS de Alta Temperatura', brand: 'Polimaker', price: 'R$ 159,90', specs: ['1kg', '1.75mm'], desc: 'Para peças que exigem resistência ao calor.', rating: 4.1, category: 'filament', tag: 'hot' }
+];
+
+
+window.renderProducts = function(filter = 'all') {
   const grid = document.getElementById('products-grid');
   if (!grid) return;
 
@@ -663,7 +782,7 @@ function renderProducts(filter = 'all') {
 
   grid.innerHTML = list.map(p => `
     <div class="product-card${p.highlight ? ' product-highlight' : ''}">
-      <span class="product-badge-tag tag-${p.tag}">${tagLabel(p.tag)}</span>
+      <span class="product-badge-tag tag-${p.tag}">${window.tagLabel(p.tag)}</span>
       <div class="product-emoji">${p.emoji}</div>
       <div class="product-name">${p.name}</div>
       <div class="product-brand">${p.brand}</div>
@@ -673,17 +792,17 @@ function renderProducts(filter = 'all') {
       </div>
       <div class="product-desc">${p.desc}</div>
       <div class="product-rating">
-        ${renderStars(p.rating)}
+        ${window.renderStars(p.rating)}
         <small>${p.rating}</small>
       </div>
     </div>`).join('');
-}
+};
 
-function tagLabel(tag) {
+window.tagLabel = function(tag) {
   return { hot:'🔥 Popular', new:'✨ Novo', best:'⭐ Melhor', premium:'💎 Premium' }[tag] || tag;
-}
+};
 
-function renderStars(rating) {
+window.renderStars = function(rating) {
   const full  = Math.floor(rating);
   const half  = rating % 1 >= 0.5 ? 1 : 0;
   const empty = 5 - full - half;
@@ -692,51 +811,50 @@ function renderStars(rating) {
     ...Array(half).fill('<i class="fas fa-star-half-stroke"></i>'),
     ...Array(empty).fill('<i class="far fa-star"></i>'),
   ].join('');
-}
+};
 
-function initProductFilters() {
+window.initProductFilters = function() {
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      renderProducts(btn.dataset.filter);
+      window.renderProducts(btn.dataset.filter);
     });
   });
-}
+};
 
 // ═══════════════════════════════════════════════════════
-// COMPARADOR DE MATERIAIS
+// COMPARADOR DE MATERIAIS (MODAL)
 // ═══════════════════════════════════════════════════════
 
-// Função para abrir o modal do comparador
-function openComparator() {
+window.openComparator = function() {
   const modal = document.getElementById('comparator-modal');
   if (modal) {
-    modal.classList.add('show'); // Adiciona a classe 'show'
-    // Opcional: Adiciona um listener para fechar o modal ao clicar fora dele
+    modal.classList.add('show');
+    // Adiciona um listener para fechar o modal ao clicar fora dele
     modal.addEventListener('click', function handler(event) {
       if (event.target === modal) { // Verifica se o clique foi no overlay, não no modal em si
-        closeComparator();
+        window.closeComparator();
         modal.removeEventListener('click', handler); // Remove o listener para evitar múltiplos
       }
     });
   }
-}
+};
 
-// Função para fechar o modal do comparador
-function closeComparator() {
+window.closeComparator = function() {
   const modal = document.getElementById('comparator-modal');
   if (modal) {
-    modal.classList.remove('show'); // Remove a classe 'show'
+    modal.classList.remove('show');
   }
-}
+};
+
 // ═══════════════════════════════════════════════════════
 // DARK MODE
 // ═══════════════════════════════════════════════════════
 
 const THEME_KEY = '3dpricer_theme';
 
-function toggleTheme() {
+window.toggleTheme = function() {
   const html   = document.documentElement;
   const icon   = document.getElementById('theme-icon');
   const isDark = html.getAttribute('data-theme') === 'dark';
@@ -751,24 +869,24 @@ function toggleTheme() {
     localStorage.setItem(THEME_KEY, 'dark');
   }
 
-  if (window._lastResult)  renderChart(window._lastResult);
-  if (window._lastSimData) renderMonthlyChart(window._lastSimData);
-}
+  if (window._lastResult)  window.renderChart(window._lastResult);
+  if (window._lastSimData) window.renderMonthlyChart(window._lastSimData); // Assumindo renderMonthlyChart existe
+};
 
-function applyStoredTheme() {
+window.applyStoredTheme = function() {
   const saved = localStorage.getItem(THEME_KEY);
   const icon  = document.getElementById('theme-icon');
   if (saved === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
     if (icon) icon.className = 'fas fa-sun';
   }
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // RESET DO FORMULÁRIO
 // ═══════════════════════════════════════════════════════
 
-function resetForm() {
+window.resetForm = function() {
   document.querySelectorAll('input, select').forEach(el => {
     if (el.tagName === 'SELECT') el.selectedIndex = 0;
     else el.value = '';
@@ -799,16 +917,16 @@ function resetForm() {
   window._lastResult  = null;
   window._lastSimData = null;
 
-  setDefaults();
+  window.setDefaults();
   window.scrollTo({ top:0, behavior:'smooth' });
-  showToast('Formulário limpo! 🗑️', 'fa-arrow-rotate-left');
-}
+  window.showToast('Formulário limpo! 🗑️', 'fa-arrow-rotate-left');
+};
 
 // ═══════════════════════════════════════════════════════
 // VALORES PADRÃO
 // ═══════════════════════════════════════════════════════
 
-function setDefaults() {
+window.setDefaults = function() {
   const defaults = {
     printerLifespan: 5000,
     printerWatts:    350,
@@ -827,7 +945,7 @@ function setDefaults() {
     const el = document.getElementById(id);
     if (el && !el.value) el.value = val;
   });
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // ONBOARDING
@@ -859,13 +977,13 @@ const ONBOARDING_STEPS = [
 
 let onboardingStep = 0;
 
-function showOnboarding() {
+window.showOnboarding = function() {
   if (localStorage.getItem(ONBOARDING_KEY)) return;
   onboardingStep = 0;
-  renderOnboardingStep();
-}
+  window.renderOnboardingStep();
+};
 
-function renderOnboardingStep() {
+window.renderOnboardingStep = function() {
   document.querySelector('.onboarding-overlay')?.remove();
 
   const step   = ONBOARDING_STEPS[onboardingStep];
@@ -885,8 +1003,8 @@ function renderOnboardingStep() {
         ).join('')}
       </div>
       <div class="onboarding-actions">
-        <button class="onboarding-skip" onclick="skipOnboarding()">Pular tour</button>
-        <button class="onboarding-next" onclick="nextOnboardingStep()">
+        <button class="onboarding-skip" onclick="window.skipOnboarding()">Pular tour</button>
+        <button class="onboarding-next" onclick="window.nextOnboardingStep()">
           ${isLast
             ? '<i class="fas fa-rocket"></i> Começar!'
             : 'Próximo <i class="fas fa-arrow-right"></i>'}
@@ -894,179 +1012,117 @@ function renderOnboardingStep() {
       </div>
     </div>`;
   document.body.appendChild(overlay);
-}
+};
 
-function nextOnboardingStep() {
+window.nextOnboardingStep = function() {
   onboardingStep++;
-  if (onboardingStep >= ONBOARDING_STEPS.length) skipOnboarding();
-  else renderOnboardingStep();
-}
+  if (onboardingStep >= ONBOARDING_STEPS.length) window.skipOnboarding();
+  else window.renderOnboardingStep();
+};
 
-function skipOnboarding() {
+window.skipOnboarding = function() {
   document.querySelector('.onboarding-overlay')?.remove();
   localStorage.setItem(ONBOARDING_KEY, '1');
-  showToast('Pronto! Vamos precificar! 🚀', 'fa-rocket');
-}
+  window.showToast('Pronto! Vamos precificar! 🚀', 'fa-rocket');
+};
 
 // ═══════════════════════════════════════════════════════
 // PWA
 // ═══════════════════════════════════════════════════════
 
-let deferredPrompt = null;
+let deferredPrompt = null; // Única declaração de deferredPrompt
 
-function installPWA() {
+window.installPWA = function() {
   if (!deferredPrompt) {
-    showToast('Use o menu do navegador para instalar!', 'fa-circle-info');
+    window.showToast('Use o menu do navegador para instalar!', 'fa-circle-info');
     return;
+  }
+  // Esconde o banner de instalação
+  const pwaBanner = document.getElementById('pwa-banner');
+  if (pwaBanner) {
+    pwaBanner.classList.add('hidden');
   }
   deferredPrompt.prompt();
   deferredPrompt.userChoice.then(choice => {
-    if (choice.outcome === 'accepted') showToast('Instalando o app... 🚀', 'fa-rocket');
+    if (choice.outcome === 'accepted') window.showToast('Instalando o app... 🚀', 'fa-rocket');
     deferredPrompt = null;
   });
-}
+};
 
-function closePWABanner() {
+window.closePWABanner = function() {
   document.getElementById('pwa-banner')?.classList.add('hidden');
   localStorage.setItem('pwa-banner-closed', '1');
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // INICIALIZAÇÃO
 // ═══════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
-  applyStoredTheme();
-  setDefaults();
-  initTabs();
-  initProductFilters();
-  initSimulator();
-  // Badge de orçamentos pendentes
-setTimeout(() => updateClientsBadge(
-  loadQuotes().filter(q => q.status === 'pending').length
-), 500);
-  renderHistory();
-  renderQualityTips();
-  renderProducts('all');
+  window.applyStoredTheme();
+  window.setDefaults();
+  window.initTabs();
+  window.initProductFilters(); // Assumindo initProductFilters existe
+  window.initSimulator(); // Assumindo initSimulator existe
 
+  // Badge de orçamentos pendentes
+  setTimeout(() => window.updateClientsBadge( // Assumindo updateClientsBadge e loadQuotes existem
+    window.loadQuotes().filter(q => q.status === 'pending').length
+  ), 500);
+
+  window.renderHistory(); // Assumindo renderHistory existe
+  window.renderQualityTips();
+  window.renderProducts('all');
+
+  // Listener para fechar o modal do comparador ao clicar no overlay
   document.getElementById('comparator-modal')
     ?.addEventListener('click', e => {
-      if (e.target.id === 'comparator-modal') closeComparator();
+      if (e.target.id === 'comparator-modal') window.closeComparator();
     });
 
+  // Adiciona listeners para atualizar o progresso em todos os inputs/selects
   document.querySelectorAll('input, select').forEach(el =>
-    el.addEventListener('input', updateProgress)
+    el.addEventListener('input', window.updateProgress)
   );
 
-  setTimeout(showOnboarding, 800);
+  setTimeout(window.showOnboarding, 800);
 
   console.log(
     '%c3D Pricer Pro v2.0 ✅',
     'color:#f07b30;font-weight:bold;font-size:16px'
   );
 
+  // Registro do Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
+      // Ajuste o caminho para o seu service-worker.js
+      // Se estiver na raiz do projeto, use '/service-worker.js'
+      // Se estiver em uma subpasta '3d-pricer-pro', use '/3d-pricer-pro/service-worker.js'
+      navigator.serviceWorker.register('/3d-pricer-pro/service-worker.js')
         .then(reg => console.log('[PWA] SW registrado:', reg.scope))
         .catch(err => console.warn('[PWA] Erro no SW:', err));
     });
   }
 
+  // Listener para o evento beforeinstallprompt (PWA)
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    document.getElementById('pwa-banner')?.classList.remove('hidden');
+    // Mostra o banner PWA apenas se o usuário não o fechou antes
+    if (localStorage.getItem('pwa-banner-closed') !== '1') {
+      document.getElementById('pwa-banner')?.classList.remove('hidden');
+    }
   });
 
+  // Listener para quando o app é instalado (PWA)
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
     document.getElementById('pwa-banner')?.classList.add('hidden');
-    showToast('App instalado com sucesso! 🎉', 'fa-mobile-screen');
+    window.showToast('App instalado com sucesso! 🎉', 'fa-mobile-screen');
   });
-});
-// Variável para armazenar o evento beforeinstallprompt
-let deferredPrompt;
 
-// Captura o evento beforeinstallprompt
-window.addEventListener('beforeinstallprompt', (e) => {
-  // Previne que o mini-infobar apareça automaticamente
-  e.preventDefault();
-  // Armazena o evento para que possa ser disparado depois
-  deferredPrompt = e;
-  // Mostra o banner de instalação PWA (se estiver escondido)
-  const pwaBanner = document.getElementById('pwa-banner');
-  if (pwaBanner) {
-    pwaBanner.classList.remove('hidden');
+  // Verifica se o banner PWA deve ser mostrado ao carregar a página (se não foi fechado antes)
+  if (localStorage.getItem('pwa-banner-closed') === '1') {
+    document.getElementById('pwa-banner')?.classList.add('hidden');
   }
 });
-
-// Função para iniciar a instalação do PWA
-function installPWA() {
-  if (deferredPrompt) {
-    // Esconde o banner de instalação
-    const pwaBanner = document.getElementById('pwa-banner');
-    if (pwaBanner) {
-      pwaBanner.classList.add('hidden');
-    }
-    // Dispara o prompt de instalação
-    deferredPrompt.prompt();
-    // Espera pela resposta do usuário ao prompt
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('Usuário aceitou a instalação do PWA');
-        showToast('3D Pricer Pro instalado! 🎉', 'fa-check-circle');
-      } else {
-        console.log('Usuário recusou a instalação do PWA');
-        showToast('Instalação cancelada.', 'fa-info-circle');
-      }
-      deferredPrompt = null; // Limpa o evento
-    });
-  } else {
-    // Se o evento não foi disparado (navegador não suporta ou já instalado)
-    console.log('O prompt de instalação não está disponível ou já foi disparado.');
-    showToast('Para instalar, use o menu do navegador (Adicionar à tela inicial).', 'fa-info-circle');
-  }
-}
-
-// Função para fechar o banner PWA
-function closePWABanner() {
-  const pwaBanner = document.getElementById('pwa-banner');
-  if (pwaBanner) {
-    pwaBanner.classList.add('hidden');
-  }
-  // Opcional: Você pode querer armazenar que o usuário fechou o banner
-  // para não mostrá-lo novamente por um tempo.
-  localStorage.setItem('pwaBannerClosed', 'true');
-}
-
-// Verifica se o banner deve ser mostrado ao carregar a página
-window.addEventListener('load', () => {
-  if (localStorage.getItem('pwaBannerClosed') === 'true') {
-    const pwaBanner = document.getElementById('pwa-banner');
-    if (pwaBanner) {
-      pwaBanner.classList.add('hidden');
-    }
-  }
-});
-// app.js
-
-// ... (seu código existente) ...
-
-// Registro do Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    // Ajuste o caminho para o seu service-worker.js
-    // Se estiver na raiz do projeto, use '/service-worker.js'
-    // Se estiver em uma subpasta '3d-pricer-pro', use '/3d-pricer-pro/service-worker.js'
-    navigator.serviceWorker.register('/3d-pricer-pro/service-worker.js')
-      .then(registration => {
-        console.log('Service Worker registrado com sucesso:', registration.scope);
-      })
-      .catch(error => {
-        console.error('Falha no registro do Service Worker:', error);
-      });
-  });
-}
-
-// ... (o restante do seu código app.js, incluindo as funções PWA que te dei antes) ...
