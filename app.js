@@ -63,18 +63,23 @@ function initTabs() {
         c.classList.toggle('hidden', !isTarget);
         c.classList.toggle('active',  isTarget);
       });
-
-      switch (target) {
-        case 'dashboard': renderDashboard();      break;
-        case 'clients':   renderClients();        break;
-        case 'catalog':
-          renderCatalog();
-          setTimeout(initCatalogCalc, 150);
-          break;
-        case 'history':   renderHistory();        break;
-        case 'products':  renderProducts('all');  break;
-        case 'tips':      renderQualityTips();    break;
-      }
+switch (target) {
+  case 'dashboard': renderDashboard();      break;
+  case 'clients':   renderClients();        break;
+  case 'catalog':
+    renderCatalog();
+    setTimeout(initCatalogCalc, 150);
+    break;
+  case 'tools':
+    initTools();
+    renderPendingAlerts();
+    renderMonthlyReportPreview();
+    break;
+  case 'history':   renderHistory();        break;
+  case 'products':  renderProducts('all');  break;
+  case 'tips':      renderQualityTips();    break;
+}
+     
     });
   });
 }
