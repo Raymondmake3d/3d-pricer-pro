@@ -1049,3 +1049,24 @@ window.addEventListener('load', () => {
     }
   }
 });
+// app.js
+
+// ... (seu código existente) ...
+
+// Registro do Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // Ajuste o caminho para o seu service-worker.js
+    // Se estiver na raiz do projeto, use '/service-worker.js'
+    // Se estiver em uma subpasta '3d-pricer-pro', use '/3d-pricer-pro/service-worker.js'
+    navigator.serviceWorker.register('/3d-pricer-pro/service-worker.js')
+      .then(registration => {
+        console.log('Service Worker registrado com sucesso:', registration.scope);
+      })
+      .catch(error => {
+        console.error('Falha no registro do Service Worker:', error);
+      });
+  });
+}
+
+// ... (o restante do seu código app.js, incluindo as funções PWA que te dei antes) ...
