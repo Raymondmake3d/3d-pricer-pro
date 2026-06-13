@@ -6,22 +6,22 @@
 
 const HISTORY_KEY = '3dpricer_history';
 
-function loadHistoryRaw() {
+window.loadHistoryRaw = function() {
   try {
     return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
   } catch {
     return [];
   }
-}
+};
 
-function saveToHistory() {
+window.saveToHistory = function() {
   if (!window._lastResult) {
-    showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
+    window.showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
     return;
   }
 
   const r       = window._lastResult;
-  const history = loadHistoryRaw();
+  const history = window.loadHistoryRaw();
 
   const entry = {
     id:           Date.now(),
@@ -41,19 +41,19 @@ function saveToHistory() {
   if (history.length > 50) history.pop();
 
   localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  renderHistory();
-  showToast('Salvo no histórico! 💾', 'fa-floppy-disk');
-}
+  window.renderHistory();
+  window.showToast('Salvo no histórico! 💾', 'fa-floppy-disk');
+};
 
 // ═══════════════════════════════════════════════════════
 // RENDERIZAR HISTÓRICO
 // ═══════════════════════════════════════════════════════
 
-function renderHistory() {
+window.renderHistory = function() {
   const container = document.getElementById('history-list');
   if (!container) return;
 
-  const history = loadHistoryRaw();
+  const history = window.loadHistoryRaw();
 
   if (!history.length) {
     container.innerHTML = `
@@ -89,236 +89,153 @@ function renderHistory() {
       </div>
       <div class="history-price">
         <small>Preço Final</small>
-        <strong>${formatBRL(entry.finalPrice)}</strong>
+        <strong>${window.formatBRL(entry.finalPrice)}</strong>
         <small style="color:${profitColor}">
-          Lucro: ${formatBRL(profit)} (${profitPct}%)
+          Lucro: ${window.formatBRL(profit)} (${profitPct}%)
         </small>
       </div>
       <div class="history-actions">
-        <button class="btn-small" onclick="loadFromHistory(${entry.id})" title="Recarregar nos campos">
+        <button class="btn-small" onclick="window.loadFromHistory(${entry.id})" title="Recarregar nos campos">
           <i class="fas fa-upload"></i>
         </button>
-        <button class="btn-small" onclick="exportSinglePDF(${entry.id})" title="Exportar PDF">
-          <i class="fas fa-file-pdf"></i>
-        </button>
-        <button class="btn-small danger" onclick="deleteHistory(${entry.id})" title="Excluir">
+        <button class="btn-small" onclick="window.deleteHistoryEntry(${entry.id})" title="Excluir">
           <i class="fas fa-trash"></i>
         </button>
       </div>
     </div>`;
   }).join('');
-}
+};
 
 // ═══════════════════════════════════════════════════════
-// CARREGAR DO HISTÓRICO
+// AÇÕES DO HISTÓRICO
 // ═══════════════════════════════════════════════════════
 
-function loadFromHistory(id) {
-  const history = loadHistoryRaw();
+window.loadFromHistory = function(id) {
+  const history = window.loadHistoryRaw();
   const entry   = history.find(e => e.id === id);
-  if (!entry?.data) return;
+  if (!entry) return;
 
-  const d = entry.data;
+  const r = entry.data;
 
-  const map = {
-    printerName:     d.printerName,
-    printerType:     d.printerType,
-    printerCost:     d.printerCostRaw,
-    printerLifespan: d.printerLifespan,
-    printerWatts:    d.printerWatts,
-    maintenanceCost: d.maintenanceCostRaw,
-    monthlyHours:    d.monthlyHours,
-    materialType:    d.materialType,
-    spoolCost:       d.spoolCost,
-    spoolWeight:     d.spoolWeight,
-    partWeight:      d.partWeight,
-    supportWeight:   d.supportWeight,
-    failureRate:     d.failureRate,
-    postProcessCost: d.postProcessCost,
-    printHours:      d.printHours,
-    energyRate:      d.energyRate,
-    laborCost:       d.laborCostPerH,
-    laborHours:      d.laborHours,
-    setupHours:      d.setupHours,
-    profitMargin:    d.profitMargin,
-    taxRate:         d.taxRate,
-    platformFee:     d.platformFee,
-    packagingCost:   d.packagingCost,
-    otherCosts:      d.otherCosts,
-    maxDiscount:     d.maxDiscount,
-    quantity:        d.quantity,
-    spaceCost:       d.spaceCost,
-    washCureCost:    d.washCureCost,
-    marginStrategy:  d.marginStrategy,
-  };
+  // Preenche os campos da calculadora
+  document.getElementById('printerName').value     = r.printerName || '';
+  document.getElementById('printerCost').value     = r.printerCost || '';
+  document.getElementById('printerLifespan').value = r.printerLifespan || '';
+  document.getElementById('printerWatts').value    = r.printerWatts || '';
+  document.getElementById('energyRate').value      = r.energyRate || '';
+  document.getElementById('spoolCost').value       = r.spoolCost || '';
+  document.getElementById('spoolWeight').value     = r.spoolWeight || '';
+  document.getElementById('partWeight').value      = r.partWeight || '';
+  document.getElementById('printHours').value      = r.printHours || '';
+  document.getElementById('laborCost').value       = r.laborCost || '';
+  document.getElementById('setupCost').value       = r.setupCost || '';
+  document.getElementById('postProcessCost').value = r.postProcessCost || '';
+  document.getElementById('packagingCost').value   = r.packagingCost || '';
+  document.getElementById('otherCosts').value      = r.otherCosts || '';
+  document.getElementById('profitMargin').value    = r.profitMargin || '';
+  document.getElementById('taxRate').value         = r.taxRate || '';
+  document.getElementById('platformFee').value     = r.platformFee || '';
+  document.getElementById('quantity').value        = r.quantity || '';
+  document.getElementById('failureReserve').value  = r.failureReserve || '';
+  document.getElementById('spaceCost').value       = r.spaceCost || '';
+  document.getElementById('maintenanceCost').value = r.maintenanceCost || '';
+  document.getElementById('washCureCost').value    = r.washCureCost || '';
 
-  Object.entries(map).forEach(([fieldId, val]) => {
-    const el = document.getElementById(fieldId);
-    if (el && val !== undefined && val !== null) el.value = val;
-  });
+  // Seleciona o tipo de impressora e material
+  const printerTypeEl = document.getElementById('printerType');
+  if (printerTypeEl) printerTypeEl.value = r.printerType || 'FDM';
+  const materialTypeEl = document.getElementById('materialType');
+  if (materialTypeEl) materialTypeEl.value = r.materialType || 'PLA';
 
-  // Volta para aba de cálculo
-  document.querySelectorAll('.tab').forEach(b =>
-    b.classList.toggle('active', b.dataset.tab === 'calc'));
-  document.querySelectorAll('.tab-content').forEach(c => {
-    c.classList.toggle('hidden', c.id !== 'tab-calc');
-    c.classList.toggle('active', c.id === 'tab-calc');
-  });
+  // Carrega consumíveis e acabamentos
+  State.consumables = r.consumables || [];
+  document.getElementById('consumables-list').innerHTML = State.consumables.map(c => `
+    <div class="dynamic-row" id="crow-${c.id}">
+      <input type="text" value="${c.name}" oninput="window.updateConsumable('${c.id}','name',this.value)"/>
+      <input type="number" value="${c.cost}" oninput="window.updateConsumable('${c.id}','cost',this.value)"/>
+      <input type="number" value="${c.lifeHours}" oninput="window.updateConsumable('${c.id}','lifeHours',this.value)"/>
+      <button class="btn-del" onclick="window.removeConsumable('${c.id}')"><i class="fas fa-xmark"></i></button>
+    </div>
+  `).join('');
 
-  onMaterialChange();
-  updateEnergyPreview();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  showToast('Precificação carregada! ✅', 'fa-upload');
-}
+  State.finishings = r.finishings || [];
+  document.getElementById('finishing-list').innerHTML = State.finishings.map(f => `
+    <div class="dynamic-row finishing-row" id="frow-${f.id}">
+      <input type="text" value="${f.name}" oninput="window.updateFinishing('${f.id}','name',this.value)"/>
+      <input type="number" value="${f.cost}" oninput="window.updateFinishing('${f.id}','cost',this.value)"/>
+      <button class="btn-del" onclick="window.removeFinishing('${f.id}')"><i class="fas fa-xmark"></i></button>
+    </div>
+  `).join('');
 
-// ═══════════════════════════════════════════════════════
-// DELETAR / LIMPAR HISTÓRICO
-// ═══════════════════════════════════════════════════════
+  // Recalcula e atualiza o UI
+  window.calculate();
+  window.updateProgress();
+  window.showToast('Precificação carregada do histórico!', 'fa-upload');
 
-function deleteHistory(id) {
-  const history = loadHistoryRaw().filter(e => e.id !== id);
+  // Muda para a aba de precificação
+  document.querySelector('.tab[data-tab="calc"]').click();
+};
+
+window.deleteHistoryEntry = function(id) {
+  if (!confirm('Tem certeza que deseja excluir esta precificação do histórico?')) return;
+  let history = window.loadHistoryRaw();
+  history = history.filter(e => e.id !== id);
   localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  document.getElementById(`hcard-${id}`)?.remove();
-  if (!history.length) renderHistory();
-  showToast('Registro excluído.', 'fa-trash');
-}
+  window.renderHistory();
+  window.showToast('Precificação excluída do histórico.', 'fa-trash');
+};
 
-function clearHistory() {
-  if (!confirm('Deseja apagar todo o histórico de precificações?')) return;
+window.clearHistory = function() {
+  if (!confirm('Tem certeza que deseja limpar TODO o histórico de precificações?')) return;
   localStorage.removeItem(HISTORY_KEY);
-  renderHistory();
-  showToast('Histórico limpo.', 'fa-trash');
-}
+  window.renderHistory();
+  window.showToast('Histórico limpo!', 'fa-trash');
+};
 
 // ═══════════════════════════════════════════════════════
-// COPIAR RESULTADO
+// EXPORTAR PDF
 // ═══════════════════════════════════════════════════════
 
-function copyResult() {
+window.exportPDF = function() {
   if (!window._lastResult) {
-    showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
+    window.showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
     return;
   }
-
-  const r   = window._lastResult;
-  const now = new Date().toLocaleString('pt-BR');
-
-  const pad = (str, len) => String(str).substring(0, len).padEnd(len);
-  const padL = (str, len) => String(str).padStart(len);
-
-  const text = [
-    '╔══════════════════════════════════════════╗',
-    '║        3D PRICER PRO — RELATÓRIO         ║',
-    '╠══════════════════════════════════════════╣',
-    `║ Data:        ${pad(now, 28)}║`,
-    `║ Impressora:  ${pad(r.printerName || 'N/A', 28)}║`,
-    `║ Material:    ${pad(r.materialType || 'N/A', 28)}║`,
-    `║ Peso:        ${pad(r.partWeight + 'g', 28)}║`,
-    `║ Tempo:       ${pad(r.printHours + 'h', 28)}║`,
-    '╠══════════════════════════════════════════╣',
-    '║ CUSTOS                                   ║',
-    `║  Material:        ${padL(formatBRL(r.materialCost), 22)} ║`,
-    `║  Energia:         ${padL(formatBRL(r.energyCost), 22)} ║`,
-    `║  Depreciação:     ${padL(formatBRL(r.depreciationCost), 22)} ║`,
-    `║  Manutenção:      ${padL(formatBRL(r.maintenanceCost), 22)} ║`,
-    `║  Mão de Obra:     ${padL(formatBRL(r.laborCost), 22)} ║`,
-    `║  Falhas:          ${padL(formatBRL(r.failureReserve), 22)} ║`,
-    `║  Embalagem:       ${padL(formatBRL(r.packagingCost), 22)} ║`,
-    '╠══════════════════════════════════════════╣',
-    `║  Custo Total:     ${padL(formatBRL(r.directCost), 22)} ║`,
-    `║  Impostos:        ${padL(formatBRL(r.taxAmount), 22)} ║`,
-    `║  Lucro:           ${padL(formatBRL(r.profitAmount), 22)} ║`,
-    '╠══════════════════════════════════════════╣',
-    `║  PREÇO FINAL:     ${padL(formatBRL(r.finalPrice), 22)} ║`,
-    `║  Preço Mínimo:    ${padL(formatBRL(r.minPrice), 22)} ║`,
-    `║  Premium +20%:    ${padL(formatBRL(r.premiumPrice), 22)} ║`,
-    '╚══════════════════════════════════════════╝',
-  ].join('\n');
-
-  navigator.clipboard.writeText(text)
-    .then(() => showToast('Resultado copiado! 📋', 'fa-copy'))
-    .catch(() => {
-      const ta = Object.assign(document.createElement('textarea'), { value: text });
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      showToast('Resultado copiado! 📋', 'fa-copy');
-    });
-}
-
-// ═══════════════════════════════════════════════════════
-// EXPORTAR PDF — RESULTADO ATUAL
-// ═══════════════════════════════════════════════════════
-
-function exportPDF() {
-  if (!window._lastResult) {
-    showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
-    return;
-  }
-  gerarPDF(window._lastResult);
-}
-
-// ═══════════════════════════════════════════════════════
-// EXPORTAR PDF — DO HISTÓRICO
-// ═══════════════════════════════════════════════════════
-
-function exportSinglePDF(id) {
-  const history = loadHistoryRaw();
-  const entry   = history.find(e => e.id === id);
-  if (!entry?.data) {
-    showToast('Dados não encontrados!', 'fa-triangle-exclamation');
-    return;
-  }
-  gerarPDF(entry.data);
-}
-
-// ═══════════════════════════════════════════════════════
-// GERADOR DE PDF (CORE)
-// ═══════════════════════════════════════════════════════
-
-function gerarPDF(r) {
   if (!window.jspdf) {
-    showToast('Biblioteca PDF não carregada. Aguarde e tente novamente.', 'fa-triangle-exclamation');
+    window.showToast('Biblioteca PDF não carregada!', 'fa-triangle-exclamation');
     return;
   }
 
+  const r = window._lastResult;
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
+  const doc    = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
   const W      = 210;
   const margin = 18;
   const col2   = W - margin;
   let y        = 0;
 
-  // Paleta de cores
-  const DARK   = [26,  42,  74];
-  const MID    = [44,  74,  124];
-  const ORANGE = [240, 123, 48];
-  const YELLOW = [245, 200, 66];
-  const GRAY   = [240, 242, 245];
-  const WHITE  = [255, 255, 255];
-  const TEXT   = [45,  55,  72];
-  const MUTED  = [113, 128, 150];
+  const DARK   = [26, 42, 74];
+  const ORANGE = [240,123,48];
+  const YELLOW = [245,200,66];
+  const WHITE  = [255,255,255];
+  const GRAY   = [240,242,245];
+  const MID    = [113,128,150];
+  const TEXT   = [45, 55, 72];
+  const now    = new Date();
 
   // ── CABEÇALHO ──────────────────────────────────────
   doc.setFillColor(...DARK);
-  doc.rect(0, 0, W, 42, 'F');
-  doc.setFillColor(...MID);
-  doc.rect(W/2, 0, W/2, 42, 'F');
-
+  doc.rect(0, 0, W, 45, 'F');
   doc.setTextColor(...WHITE);
   doc.setFont('helvetica','bold');
   doc.setFontSize(22);
-  doc.text('3D Pricer Pro', margin, 18);
-
+  doc.text('3D PRICER PRO', margin, 18);
   doc.setFont('helvetica','normal');
-  doc.setFontSize(10);
-  doc.setTextColor(200, 210, 230);
-  doc.text('Relatório de Precificação para Impressão 3D', margin, 27);
-
-  const now = new Date();
   doc.setFontSize(9);
+  doc.setTextColor(180, 200, 230);
+  doc.text('Relatório de Precificação', margin, 26);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(10);
   doc.setTextColor(...YELLOW);
   doc.text(
     `Gerado em: ${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`,
@@ -392,30 +309,30 @@ function gerarPDF(r) {
 
   // ── CUSTOS ─────────────────────────────────────────
   sectionTitle('📦 Materiais');
-  itemRow('Material Principal',        formatBRL(r.materialCost));
-  itemRow('Material de Suporte',       formatBRL(r.supportCost));
-  itemRow('Acabamentos',               formatBRL(r.finishingCost));
+  itemRow('Material Principal',        window.formatBRL(r.materialCost));
+  itemRow('Material de Suporte',       window.formatBRL(r.supportCost));
+  itemRow('Acabamentos',               window.formatBRL(r.finishingCost));
 
   y += 2;
   sectionTitle('⚙️ Equipamento & Energia');
-  itemRow('Energia Elétrica',          formatBRL(r.energyCost));
-  itemRow('Depreciação da Impressora', formatBRL(r.depreciationCost));
-  itemRow('Manutenção (rateada)',       formatBRL(r.maintenanceCost));
-  itemRow('Consumíveis',               formatBRL(r.consumablesCost));
-  itemRow('Espaço / Localização',      formatBRL(r.spaceCost));
+  itemRow('Energia Elétrica',          window.formatBRL(r.energyCost));
+  itemRow('Depreciação da Impressora', window.formatBRL(r.depreciationCost));
+  itemRow('Manutenção (rateada)',       window.formatBRL(r.maintenanceCost));
+  itemRow('Consumíveis',               window.formatBRL(r.consumablesCost));
+  itemRow('Espaço / Localização',      window.formatBRL(r.spaceCost));
 
   y += 2;
   sectionTitle('👷 Mão de Obra');
-  itemRow('Trabalho Manual',           formatBRL(r.laborCost));
-  itemRow('Setup / Supervisão',        formatBRL(r.setupCost));
-  itemRow('Lavagem / Cura',            formatBRL(r.washCureCost));
+  itemRow('Trabalho Manual',           window.formatBRL(r.laborCost));
+  itemRow('Setup / Supervisão',        window.formatBRL(r.setupCost));
+  itemRow('Lavagem / Cura',            window.formatBRL(r.washCureCost));
 
   y += 2;
   sectionTitle('⚠️ Riscos & Extras');
-  itemRow('Reserva de Falhas',         formatBRL(r.failureReserve));
-  itemRow('Pós-processamento',         formatBRL(r.postProcessCost));
-  itemRow('Embalagem / Envio',         formatBRL(r.packagingCost));
-  itemRow('Outros Custos',             formatBRL(r.otherCosts));
+  itemRow('Reserva de Falhas',         window.formatBRL(r.failureReserve));
+  itemRow('Pós-processamento',         window.formatBRL(r.postProcessCost));
+  itemRow('Embalagem / Envio',         window.formatBRL(r.packagingCost));
+  itemRow('Outros Custos',             window.formatBRL(r.otherCosts));
 
   y += 4;
   doc.setDrawColor(...MID);
@@ -423,16 +340,16 @@ function gerarPDF(r) {
   doc.line(margin, y, W-margin, y);
   y += 6;
 
-  itemRow('Custo Total (unitário)',   formatBRL(r.directCost), true);
-  itemRow('Impostos',                formatBRL(r.taxAmount));
-  itemRow('Taxa de Plataforma',      formatBRL(r.platformFeeAmount));
-  itemRow('Margem de Lucro',         formatBRL(r.profitAmount));
+  itemRow('Custo Total (unitário)',   window.formatBRL(r.directCost), true);
+  itemRow('Impostos',                window.formatBRL(r.taxAmount));
+  itemRow('Taxa de Plataforma',      window.formatBRL(r.platformFeeAmount));
+  itemRow('Margem de Lucro',         window.formatBRL(r.profitAmount));
 
   y += 4;
-  totalRow('PREÇO FINAL UNITÁRIO', formatBRL(r.finalPrice), DARK);
+  totalRow('PREÇO FINAL UNITÁRIO', window.formatBRL(r.finalPrice), DARK);
 
   if (r.quantity > 1) {
-    itemRow(`Total do Lote (${r.quantity} unidades)`, formatBRL(r.batchPrice), true);
+    itemRow(`Total do Lote (${r.quantity} unidades)`, window.formatBRL(r.batchPrice), true);
     y += 4;
   }
 
@@ -445,10 +362,10 @@ function gerarPDF(r) {
   // Mínimo
   doc.setFillColor(...GRAY);
   doc.roundedRect(margin, bY, bW, bH, 3, 3, 'F');
-  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...MID);
   doc.text('PREÇO MÍNIMO', margin + bW/2, bY+7, { align:'center' });
   doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...DARK);
-  doc.text(formatBRL(r.minPrice), margin + bW/2, bY+16, { align:'center' });
+  doc.text(window.formatBRL(r.minPrice), margin + bW/2, bY+16, { align:'center' });
 
   // Sugerido
   doc.setFillColor(...ORANGE);
@@ -456,7 +373,7 @@ function gerarPDF(r) {
   doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...WHITE);
   doc.text('⭐ SUGERIDO', margin+bW+4 + bW/2, bY+7, { align:'center' });
   doc.setFont('helvetica','bold'); doc.setFontSize(10);
-  doc.text(formatBRL(r.finalPrice), margin+bW+4 + bW/2, bY+16, { align:'center' });
+  doc.text(window.formatBRL(r.finalPrice), margin+bW+4 + bW/2, bY+16, { align:'center' });
 
   // Premium
   doc.setFillColor(...MID);
@@ -464,7 +381,7 @@ function gerarPDF(r) {
   doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...WHITE);
   doc.text('PREMIUM (+20%)', margin+bW*2+8 + bW/2, bY+7, { align:'center' });
   doc.setFont('helvetica','bold'); doc.setFontSize(10);
-  doc.text(formatBRL(r.premiumPrice), margin+bW*2+8 + bW/2, bY+16, { align:'center' });
+  doc.text(window.formatBRL(r.premiumPrice), margin+bW*2+8 + bW/2, bY+16, { align:'center' });
 
   y = bY + bH + 10;
 
@@ -476,7 +393,7 @@ function gerarPDF(r) {
     doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...TEXT);
     doc.text(`Com desconto máximo de ${r.maxDiscount}%:`, margin+3, y+6.5);
     doc.setFont('helvetica','bold'); doc.setTextColor(...DARK);
-    doc.text(formatBRL(r.discountedPrice), col2-3, y+6.5, { align:'right' });
+    doc.text(window.formatBRL(r.discountedPrice), col2-3, y+6.5, { align:'right' });
     y += 16;
   }
 
@@ -494,5 +411,5 @@ function gerarPDF(r) {
 
   const filename = `3d-pricer-${now.toISOString().slice(0,10)}.pdf`;
   doc.save(filename);
-  showToast('PDF exportado com sucesso! 📄', 'fa-file-pdf');
-}
+  window.showToast('PDF exportado com sucesso! 📄', 'fa-file-pdf');
+};
