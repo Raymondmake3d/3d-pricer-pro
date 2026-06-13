@@ -6,35 +6,35 @@
 
 const CATALOG_KEY = '3dpricer_catalog';
 
-function loadCatalog() {
+window.loadCatalog = function() {
   try { return JSON.parse(localStorage.getItem(CATALOG_KEY)) || []; }
   catch { return []; }
-}
+};
 
-function saveCatalog(items) {
+window.saveCatalog = function(items) {
   localStorage.setItem(CATALOG_KEY, JSON.stringify(items));
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // RENDERIZAÇÃO PRINCIPAL
 // ═══════════════════════════════════════════════════════
 
-function renderCatalog() {
+window.renderCatalog = function() {
   const container = document.getElementById('tab-catalog');
   if (!container) return;
-  const items = loadCatalog();
+  const items = window.loadCatalog();
   container.innerHTML = `
-    ${renderCatalogStats(items)}
-    ${renderCatalogForm()}
-    ${renderCatalogGrid(items)}
+    ${window.renderCatalogStats(items)}
+    ${window.renderCatalogForm()}
+    ${window.renderCatalogGrid(items)}
   `;
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // ESTATÍSTICAS DO CATÁLOGO
 // ═══════════════════════════════════════════════════════
 
-function renderCatalogStats(items) {
+window.renderCatalogStats = function(items) {
   const total      = items.length;
   const avgPrice   = total > 0 ? items.reduce((s,i) => s + i.price, 0) / total : 0;
   const avgMargin  = total > 0 ? items.reduce((s,i) => s + i.margin, 0) / total : 0;
@@ -55,7 +55,7 @@ function renderCatalogStats(items) {
       <div class="kpi-icon"><i class="fas fa-tag"></i></div>
       <div class="kpi-info">
         <small>Preço Médio</small>
-        <strong>${formatBRL(avgPrice)}</strong>
+        <strong>${window.formatBRL(avgPrice)}</strong>
         <span>por peça</span>
       </div>
     </div>
@@ -71,27 +71,27 @@ function renderCatalogStats(items) {
       <div class="kpi-icon"><i class="fas fa-trophy"></i></div>
       <div class="kpi-info">
         <small>Peça de Maior Valor</small>
-        <strong>${topItem ? formatBRL(topItem.price) : '—'}</strong>
+        <strong>${topItem ? window.formatBRL(topItem.price) : '—'}</strong>
         <span>${topItem?.name || 'Nenhuma ainda'}</span>
       </div>
     </div>
   </div>`;
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // FORMULÁRIO DE CADASTRO
 // ═══════════════════════════════════════════════════════
 
-function renderCatalogForm() {
+window.renderCatalogForm = function() {
   return `
   <div class="card" id="catalog-form-card">
     <div class="result-header">
       <h2><i class="fas fa-cube"></i> Adicionar Peça ao Catálogo</h2>
       <div style="display:flex;gap:0.6rem;">
-        <button class="btn-small" onclick="importFromPricingToCatalog()">
+        <button class="btn-small" onclick="window.importFromPricingToCatalog()">
           <i class="fas fa-file-import"></i> Importar da Precificação
         </button>
-        <button class="btn-small" onclick="toggleCatalogForm()">
+        <button class="btn-small" onclick="window.toggleCatalogForm()">
           <i class="fas fa-chevron-down" id="catalog-form-icon"></i>
         </button>
       </div>
@@ -138,12 +138,12 @@ function renderCatalogForm() {
         <div class="field">
           <label>Preço de Venda (R$) *</label>
           <input type="number" id="cat-price" placeholder="Ex: 45.00"
-                 min="0" step="0.01" oninput="calcCatalogMargin()"/>
+                 min="0" step="0.01" oninput="window.calcCatalogMargin()"/>
         </div>
         <div class="field">
           <label>Custo de Produção (R$)</label>
           <input type="number" id="cat-cost" placeholder="Ex: 18.00"
-                 min="0" step="0.01" oninput="calcCatalogMargin()"/>
+                 min="0" step="0.01" oninput="window.calcCatalogMargin()"/>
         </div>
         <div class="field">
           <label>Margem de Lucro (%)</label>
@@ -190,9 +190,11 @@ function renderCatalogForm() {
           <label><i class="fas fa-camera"></i> Foto da Peça</label>
           <div class="photo-upload-area" id="photo-upload-area"
                onclick="document.getElementById('cat-photo-input').click()"
-               ondragover="event.preventDefault();this.classList.add('drag-over')"
-               ondragleave="this.classList.remove('drag-over')"
-               ondrop="handlePhotoDrop(event)">
+               ondragover="event.preventDefault();this.style.borderColor='var(--orange)';"
+               ondragleave="this.style.borderColor='';"
+               ondrop="window.handlePhotoDrop(event)">
+            <input type="file" id="cat-photo-input" accept="image/jpeg,image/png,image/webp"
+                   onchange="window.handlePhotoUpload(event)" class="hidden"/>
             <div id="photo-preview-wrap">
               <i class="fas fa-camera" style="font-size:2rem;color:var(--text-muted)"></i>
               <p style="color:var(--text-muted);font-size:0.82rem;margin-top:0.5rem;">
@@ -200,116 +202,77 @@ function renderCatalogForm() {
                 <small>JPG, PNG ou WEBP · Máx 2MB</small>
               </p>
             </div>
-            <input type="file" id="cat-photo-input" accept="image/*"
-                   style="display:none" onchange="handlePhotoUpload(event)"/>
           </div>
-          <div style="display:flex;gap:0.5rem;margin-top:0.4rem;flex-wrap:wrap;">
-            <button class="btn-small" type="button"
-                    onclick="document.getElementById('cat-photo-input').click()">
-              <i class="fas fa-upload"></i> Escolher foto
+          <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+            <button class="btn-small" onclick="window.captureFromCamera()">
+              <i class="fas fa-video"></i> Câmera
             </button>
-            <button class="btn-small" type="button" onclick="captureFromCamera()">
-              <i class="fas fa-camera"></i> Câmera
-            </button>
-            <button class="btn-small danger" type="button" onclick="removePhoto()">
+            <button class="btn-small danger" onclick="window.removePhoto()">
               <i class="fas fa-trash"></i> Remover
             </button>
           </div>
         </div>
-      </div>
 
-      <div style="display:flex;gap:0.8rem;margin-top:1.2rem;flex-wrap:wrap;">
-        <button class="btn-calculate"
-                style="max-width:220px;font-size:0.9rem;padding:0.8rem 1.5rem;"
-                onclick="addCatalogItem()">
-          <i class="fas fa-plus"></i> Adicionar ao Catálogo
-        </button>
-        <button class="btn-small" onclick="clearCatalogForm()">
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:0.8rem;margin-top:1.5rem;">
+        <button class="btn-secondary" onclick="window.clearCatalogForm()">
           <i class="fas fa-eraser"></i> Limpar
+        </button>
+        <button class="btn-primary" onclick="window.addCatalogItem()">
+          <i class="fas fa-plus"></i> Adicionar Peça
         </button>
       </div>
     </div>
   </div>`;
-}
+};
 
-// ═══════════════════════════════════════════════════════
-// FOTO — UPLOAD E COMPRESSÃO
-// ═══════════════════════════════════════════════════════
-
-// Guarda a foto temporariamente em base64
+// Variável temporária para a foto do catálogo
 let _catalogPhotoTemp = null;
 
-function handlePhotoUpload(event) {
+window.handlePhotoUpload = function(event) {
   const file = event.target.files[0];
   if (!file) return;
-  processPhotoFile(file);
-}
+  window.processAndShowPhoto(file);
+};
 
-function handlePhotoDrop(event) {
+window.handlePhotoDrop = function(event) {
   event.preventDefault();
-  document.getElementById('photo-upload-area')?.classList.remove('drag-over');
+  const area = document.getElementById('photo-upload-area');
+  if (area) area.style.borderColor = '';
   const file = event.dataTransfer.files[0];
-  if (!file || !file.type.startsWith('image/')) {
-    showToast('Arquivo inválido! Use JPG, PNG ou WEBP.', 'fa-triangle-exclamation');
+  if (!file) return;
+  window.processAndShowPhoto(file);
+};
+
+window.processAndShowPhoto = function(file) {
+  if (!file.type.startsWith('image/')) {
+    window.showToast('Apenas imagens são permitidas!', 'fa-triangle-exclamation');
     return;
   }
-  processPhotoFile(file);
-}
-
-function processPhotoFile(file) {
-  if (file.size > 2 * 1024 * 1024) {
-    showToast('Foto muito grande! Máx 2MB.', 'fa-triangle-exclamation');
+  if (file.size > 2 * 1024 * 1024) { // 2MB
+    window.showToast('Imagem muito grande! Máx 2MB.', 'fa-triangle-exclamation');
     return;
   }
 
   const reader = new FileReader();
   reader.onload = (e) => {
-    compressPhoto(e.target.result, 800, 0.75, (compressed) => {
-      _catalogPhotoTemp = compressed;
-      showPhotoPreview(compressed);
-      showToast('Foto carregada! ✅', 'fa-camera');
-    });
+    _catalogPhotoTemp = e.target.result;
+    window.showPhotoPreview(_catalogPhotoTemp);
+    window.showToast('Foto carregada! ✨', 'fa-image');
   };
   reader.readAsDataURL(file);
-}
+};
 
-function compressPhoto(dataURL, maxSize, quality, callback) {
-  const img    = new Image();
-  img.onload   = () => {
-    const canvas = document.createElement('canvas');
-    let { width, height } = img;
-
-    // Redimensiona mantendo proporção
-    if (width > maxSize || height > maxSize) {
-      if (width > height) {
-        height = Math.round(height * maxSize / width);
-        width  = maxSize;
-      } else {
-        width  = Math.round(width * maxSize / height);
-        height = maxSize;
-      }
-    }
-
-    canvas.width  = width;
-    canvas.height = height;
-    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-    callback(canvas.toDataURL('image/jpeg', quality));
-  };
-  img.src = dataURL;
-}
-
-function showPhotoPreview(src) {
+window.showPhotoPreview = function(dataURL) {
   const wrap = document.getElementById('photo-preview-wrap');
-  if (!wrap) return;
-  wrap.innerHTML = `
-    <img src="${src}"
-         style="max-width:100%;max-height:200px;border-radius:10px;
-                object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,0.15)"/>`;
+  if (wrap) wrap.innerHTML = `
+    <img src="${dataURL}" alt="Preview" style="max-width:100%;max-height:150px;object-fit:contain;border-radius:8px;"/>
+    <small style="color:var(--text-muted);margin-top:0.5rem;">Clique para trocar ou arraste</small>`;
   const area = document.getElementById('photo-upload-area');
   if (area) area.style.borderColor = 'var(--orange)';
-}
+};
 
-function removePhoto() {
+window.removePhoto = function() {
   _catalogPhotoTemp = null;
   const wrap = document.getElementById('photo-preview-wrap');
   if (wrap) wrap.innerHTML = `
@@ -322,21 +285,21 @@ function removePhoto() {
   if (area) area.style.borderColor = '';
   const input = document.getElementById('cat-photo-input');
   if (input) input.value = '';
-  showToast('Foto removida.', 'fa-trash');
-}
+  window.showToast('Foto removida.', 'fa-trash');
+};
 
-function captureFromCamera() {
+window.captureFromCamera = function() {
   const input = document.getElementById('cat-photo-input');
   if (!input) return;
   input.setAttribute('capture', 'environment');
   input.click();
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // CÁLCULO AUTOMÁTICO DE MARGEM
 // ═══════════════════════════════════════════════════════
 
-function calcCatalogMargin() {
+window.calcCatalogMargin = function() {
   const price = parseFloat(document.getElementById('cat-price')?.value) || 0;
   const cost  = parseFloat(document.getElementById('cat-cost')?.value)  || 0;
   const mEl   = document.getElementById('cat-margin');
@@ -344,22 +307,22 @@ function calcCatalogMargin() {
   mEl.value = (price > 0 && cost > 0)
     ? (((price - cost) / price) * 100).toFixed(1)
     : '';
-}
+};
 
-function initCatalogCalc() {
+window.initCatalogCalc = function() {
   // oninput já está inline no HTML — não precisa de listeners extras
-}
+};
 
-function toggleCatalogForm() {
+window.toggleCatalogForm = function() {
   const body = document.getElementById('catalog-form-body');
   const icon = document.getElementById('catalog-form-icon');
   if (!body) return;
   const hidden = body.style.display === 'none';
   body.style.display = hidden ? '' : 'none';
   if (icon) icon.className = hidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
-}
+};
 
-function clearCatalogForm() {
+window.clearCatalogForm = function() {
   ['cat-name','cat-price','cat-cost','cat-margin',
    'cat-weight','cat-hours','cat-leadtime','cat-desc','cat-tags']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -367,17 +330,17 @@ function clearCatalogForm() {
   if (stock) stock.value = '0';
   ['cat-category','cat-material','cat-status']
     .forEach(id => { const el = document.getElementById(id); if (el) el.selectedIndex = 0; });
-  removePhoto();
-}
+  window.removePhoto();
+};
 
 // ═══════════════════════════════════════════════════════
 // IMPORTAR DA PRECIFICAÇÃO
 // ═══════════════════════════════════════════════════════
 
-function importFromPricingToCatalog() {
+window.importFromPricingToCatalog = function() {
   const r = window._lastResult;
   if (!r) {
-    showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
+    window.showToast('Calcule uma precificação primeiro!', 'fa-triangle-exclamation');
     return;
   }
 
@@ -400,32 +363,31 @@ function importFromPricingToCatalog() {
   const matEl = document.getElementById('cat-material');
   if (matEl && r.materialType) matEl.value = r.materialType;
 
-  calcCatalogMargin();
+  window.calcCatalogMargin();
 
   const body = document.getElementById('catalog-form-body');
   if (body) body.style.display = '';
-
   document.getElementById('catalog-form-card')
     ?.scrollIntoView({ behavior:'smooth', block:'start' });
 
-  showToast('Dados importados da precificação! ✅', 'fa-file-import');
-}
+  window.showToast('Dados importados da precificação! ✅', 'fa-file-import');
+};
 
 // ═══════════════════════════════════════════════════════
 // ADICIONAR PEÇA (com foto!)
 // ═══════════════════════════════════════════════════════
 
-function addCatalogItem() {
+window.addCatalogItem = function() {
   const name  = document.getElementById('cat-name')?.value?.trim();
   const price = parseFloat(document.getElementById('cat-price')?.value) || 0;
 
   if (!name) {
-    showToast('Informe o nome da peça!', 'fa-triangle-exclamation');
+    window.showToast('Informe o nome da peça!', 'fa-triangle-exclamation');
     document.getElementById('cat-name')?.focus();
     return;
   }
   if (price <= 0) {
-    showToast('Informe o preço de venda!', 'fa-triangle-exclamation');
+    window.showToast('Informe o preço de venda!', 'fa-triangle-exclamation');
     document.getElementById('cat-price')?.focus();
     return;
   }
@@ -454,19 +416,19 @@ function addCatalogItem() {
     sales:     0,
   };
 
-  const catalog = loadCatalog();
+  const catalog = window.loadCatalog();
   catalog.unshift(item);
-  saveCatalog(catalog);
-  clearCatalogForm();
-  renderCatalog();
-  showToast(`"${name}" adicionada ao catálogo! 🎉`, 'fa-cube');
-}
+  window.saveCatalog(catalog);
+  window.clearCatalogForm();
+  window.renderCatalog();
+  window.showToast(`"${name}" adicionada ao catálogo! 🎉`, 'fa-cube');
+};
 
 // ═══════════════════════════════════════════════════════
 // GRID DE CARDS (com foto!)
 // ═══════════════════════════════════════════════════════
 
-function renderCatalogGrid(items) {
+window.renderCatalogGrid = function(items) {
   if (!items.length) {
     return `
     <div class="card">
@@ -496,8 +458,8 @@ function renderCatalogGrid(items) {
   const filters = categories.map((cat, idx) => `
     <button class="filter-btn ${idx === 0 ? 'active' : ''}"
             data-cat-filter="${cat}"
-            onclick="filterCatalog('${cat}',this)">
-      ${cat === 'Todas' ? '📦 Todas' : `${categoryIcons[cat]||'📦'} ${capitalize(cat)}`}
+            onclick="window.filterCatalog('${cat}',this)">
+      ${cat === 'Todas' ? '📦 Todas' : `${categoryIcons[cat]||'📦'} ${window.capitalize(cat)}`}
     </button>`).join('');
 
   const cards = items.map(item => {
@@ -509,7 +471,7 @@ function renderCatalogGrid(items) {
     const photoHTML = item.photo
       ? `<div class="catalog-photo">
            <img src="${item.photo}" alt="${item.name}"
-                onclick="openPhotoModal('${item.id}')"/>
+                onclick="window.openPhotoModal('${item.id}')"/>
            <div class="catalog-photo-overlay">
              <i class="fas fa-expand"></i>
            </div>
@@ -518,7 +480,7 @@ function renderCatalogGrid(items) {
            <span>${icon}</span>
            <small>Sem foto</small>
            <button class="btn-small" style="margin-top:0.4rem;font-size:0.7rem;"
-                   onclick="editCatalogItem(${item.id})">
+                   onclick="window.editCatalogItem(${item.id})">
              <i class="fas fa-camera"></i> Adicionar
            </button>
          </div>`;
@@ -546,13 +508,13 @@ function renderCatalogGrid(items) {
         <div class="catalog-pricing">
           <div class="catalog-price-main">
             <small>Preço de Venda</small>
-            <strong>${formatBRL(item.price)}</strong>
+            <strong>${window.formatBRL(item.price)}</strong>
           </div>
           ${item.cost > 0 ? `
           <div class="catalog-price-secondary">
-            <div><small>Custo</small><span>${formatBRL(item.cost)}</span></div>
+            <div><small>Custo</small><span>${window.formatBRL(item.cost)}</span></div>
             <div><small>Lucro</small>
-              <span style="color:#27ae60">${formatBRL(profit)}</span>
+              <span style="color:#27ae60">${window.formatBRL(profit)}</span>
             </div>
             <div><small>Margem</small>
               <span style="color:var(--orange)">${item.margin.toFixed(1)}%</span>
@@ -579,19 +541,19 @@ function renderCatalogGrid(items) {
             </span>
           </div>
           <div class="catalog-actions">
-            <button class="btn-small" onclick="duplicateCatalogItem(${item.id})"
+            <button class="btn-small" onclick="window.duplicateCatalogItem(${item.id})"
                     title="Duplicar">
               <i class="fas fa-copy"></i>
             </button>
-            <button class="btn-small" onclick="editCatalogItem(${item.id})"
+            <button class="btn-small" onclick="window.editCatalogItem(${item.id})"
                     title="Editar">
               <i class="fas fa-pen"></i>
             </button>
-            <button class="btn-small" onclick="shareCatalogItem(${item.id})"
+            <button class="btn-small" onclick="window.shareCatalogItem(${item.id})"
                     title="WhatsApp">
               <i class="fab fa-whatsapp" style="color:#25d366"></i>
             </button>
-            <button class="btn-small danger" onclick="deleteCatalogItem(${item.id})"
+            <button class="btn-small danger" onclick="window.deleteCatalogItem(${item.id})"
                     title="Excluir">
               <i class="fas fa-trash"></i>
             </button>
@@ -606,10 +568,10 @@ function renderCatalogGrid(items) {
     <div class="result-header">
       <h2><i class="fas fa-cubes"></i> Catálogo (${items.length} peças)</h2>
       <div style="display:flex;gap:0.6rem;">
-        <button class="btn-small" onclick="exportCatalogCSV()">
+        <button class="btn-small" onclick="window.exportCatalogCSV()">
           <i class="fas fa-file-csv"></i> CSV
         </button>
-        <button class="btn-small" onclick="exportCatalogPDF()">
+        <button class="btn-small" onclick="window.exportCatalogPDF()">
           <i class="fas fa-file-pdf"></i> PDF
         </button>
       </div>
@@ -619,7 +581,7 @@ function renderCatalogGrid(items) {
 
     <div style="margin-bottom:1.2rem;">
       <input type="text" placeholder="🔍 Buscar peça no catálogo..."
-             oninput="searchCatalog(this.value)"
+             oninput="window.searchCatalog(this.value)"
              style="width:100%;padding:0.6rem 1rem;border:2px solid var(--border);
                     border-radius:10px;font-family:Poppins,sans-serif;font-size:0.88rem;
                     background:var(--light-gray);color:var(--text)"/>
@@ -627,14 +589,14 @@ function renderCatalogGrid(items) {
 
     <div class="catalog-grid" id="catalog-grid">${cards}</div>
   </div>`;
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // MODAL DE FOTO (zoom)
 // ═══════════════════════════════════════════════════════
 
-function openPhotoModal(id) {
-  const catalog = loadCatalog();
+window.openPhotoModal = function(id) {
+  const catalog = window.loadCatalog();
   const item    = catalog.find(i => i.id === Number(id));
   if (!item?.photo) return;
 
@@ -654,7 +616,7 @@ function openPhotoModal(id) {
         ${item.name}
       </div>
       <div style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:0.3rem;">
-        ${item.material} · ${formatBRL(item.price)}
+        ${item.material} · ${window.formatBRL(item.price)}
       </div>
       <button onclick="document.getElementById('photo-modal').remove()"
               style="position:absolute;top:-12px;right:-12px;width:36px;height:36px;
@@ -669,14 +631,14 @@ function openPhotoModal(id) {
   });
 
   document.body.appendChild(modal);
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // EDITAR PEÇA (mantém foto existente)
 // ═══════════════════════════════════════════════════════
 
-function editCatalogItem(id) {
-  const catalog = loadCatalog();
+window.editCatalogItem = function(id) {
+  const catalog = window.loadCatalog();
   const item    = catalog.find(i => i.id === id);
   if (!item) return;
 
@@ -710,26 +672,26 @@ function editCatalogItem(id) {
   // ✨ Mantém a foto existente no preview
   if (item.photo) {
     _catalogPhotoTemp = item.photo;
-    showPhotoPreview(item.photo);
+    window.showPhotoPreview(item.photo);
   } else {
     _catalogPhotoTemp = null;
   }
 
-  saveCatalog(catalog.filter(i => i.id !== id));
+  window.saveCatalog(catalog.filter(i => i.id !== id));
 
   const body = document.getElementById('catalog-form-body');
   if (body) body.style.display = '';
   document.getElementById('catalog-form-card')
     ?.scrollIntoView({ behavior:'smooth', block:'start' });
 
-  showToast('Edite os campos e clique em Adicionar para salvar.', 'fa-pen');
-}
+  window.showToast('Edite os campos e clique em Adicionar para salvar.', 'fa-pen');
+};
 
 // ═══════════════════════════════════════════════════════
 // FILTRO E BUSCA
 // ═══════════════════════════════════════════════════════
 
-function filterCatalog(category, btn) {
+window.filterCatalog = function(category, btn) {
   document.querySelectorAll('[data-cat-filter]')
     .forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -737,31 +699,31 @@ function filterCatalog(category, btn) {
     card.style.display =
       (category === 'Todas' || card.dataset.category === category) ? '' : 'none';
   });
-}
+};
 
-function searchCatalog(query) {
+window.searchCatalog = function(query) {
   const q = query.toLowerCase();
   document.querySelectorAll('.catalog-card').forEach(card => {
     card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // AÇÕES
 // ═══════════════════════════════════════════════════════
 
-function deleteCatalogItem(id) {
-  const catalog = loadCatalog();
+window.deleteCatalogItem = function(id) {
+  const catalog = window.loadCatalog();
   const item    = catalog.find(i => i.id === id);
   if (!item) return;
   if (!confirm(`Deseja excluir "${item.name}" do catálogo?`)) return;
-  saveCatalog(catalog.filter(i => i.id !== id));
-  renderCatalog();
-  showToast('Peça removida do catálogo.', 'fa-trash');
-}
+  window.saveCatalog(catalog.filter(i => i.id !== id));
+  window.renderCatalog();
+  window.showToast('Peça removida do catálogo.', 'fa-trash');
+};
 
-function duplicateCatalogItem(id) {
-  const catalog = loadCatalog();
+window.duplicateCatalogItem = function(id) {
+  const catalog = window.loadCatalog();
   const item    = catalog.find(i => i.id === id);
   if (!item) return;
   const copy = {
@@ -772,13 +734,13 @@ function duplicateCatalogItem(id) {
     stock: 0, views: 0, sales: 0,
   };
   catalog.unshift(copy);
-  saveCatalog(catalog);
-  renderCatalog();
-  showToast(`"${copy.name}" duplicada! 📋`, 'fa-copy');
-}
+  window.saveCatalog(catalog);
+  window.renderCatalog();
+  window.showToast(`"${copy.name}" duplicada! 📋`, 'fa-copy');
+};
 
-function shareCatalogItem(id) {
-  const catalog = loadCatalog();
+window.shareCatalogItem = function(id) {
+  const catalog = window.loadCatalog();
   const item    = catalog.find(i => i.id === id);
   if (!item) return;
 
@@ -791,7 +753,7 @@ function shareCatalogItem(id) {
     item.hours  > 0 ? `⏱️ Tempo: ${item.hours}h`  : null,
     item.desc   ? `📋 ${item.desc}`               : null,
     ``,
-    `💰 *Preço: ${formatBRL(item.price)}*`,
+    `💰 *Preço: ${window.formatBRL(item.price)}*`,
     item.stock > 0
       ? `✅ ${item.stock} unidades em estoque`
       : `🕐 Prazo: ${item.leadtime || '?'} dias`,
@@ -800,16 +762,16 @@ function shareCatalogItem(id) {
   ].filter(l => l !== null).join('\n');
 
   window.open(`https://wa.me/?text=${encodeURIComponent(lines)}`, '_blank');
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // EXPORTAR CSV
 // ═══════════════════════════════════════════════════════
 
-function exportCatalogCSV() {
-  const catalog = loadCatalog();
+window.exportCatalogCSV = function() {
+  const catalog = window.loadCatalog();
   if (!catalog.length) {
-    showToast('Catálogo vazio!', 'fa-triangle-exclamation');
+    window.showToast('Catálogo vazio!', 'fa-triangle-exclamation');
     return;
   }
 
@@ -837,21 +799,21 @@ function exportCatalogCSV() {
   });
   a.click();
   URL.revokeObjectURL(url);
-  showToast('Catálogo exportado em CSV! 📊', 'fa-file-csv');
-}
+  window.showToast('Catálogo exportado em CSV! 📊', 'fa-file-csv');
+};
 
 // ═══════════════════════════════════════════════════════
 // EXPORTAR PDF (com foto!)
 // ═══════════════════════════════════════════════════════
 
-function exportCatalogPDF() {
-  const catalog = loadCatalog().filter(i => i.status === 'active');
+window.exportCatalogPDF = function() {
+  const catalog = window.loadCatalog().filter(i => i.status === 'active');
   if (!catalog.length) {
-    showToast('Nenhuma peça ativa para exportar!', 'fa-triangle-exclamation');
+    window.showToast('Nenhuma peça ativa para exportar!', 'fa-triangle-exclamation');
     return;
   }
   if (!window.jspdf) {
-    showToast('Biblioteca PDF não carregada!', 'fa-triangle-exclamation');
+    window.showToast('Biblioteca PDF não carregada!', 'fa-triangle-exclamation');
     return;
   }
 
@@ -867,7 +829,7 @@ function exportCatalogPDF() {
   const WHITE  = [255,255,255];
   const GRAY   = [245,247,250];
   const TEXT   = [45, 55, 72];
-  const MUTED  = [113,128,150];
+  // const MUTED  = [113,128,150]; // Não usado, pode ser removido
 
   // CAPA
   doc.setFillColor(...DARK); doc.rect(0, 0, W, 60, 'F');
@@ -926,7 +888,7 @@ function exportCatalogPDF() {
 
     // Specs
     doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-    doc.setTextColor(...MUTED);
+    doc.setTextColor(...TEXT); // Alterado de MUTED para TEXT para melhor contraste
     const specs = [
       item.material,
       item.weight > 0 ? `${item.weight}g` : null,
@@ -944,7 +906,7 @@ function exportCatalogPDF() {
 
     // Estoque/Prazo
     doc.setFont('helvetica','normal'); doc.setFontSize(8);
-    doc.setTextColor(...MUTED);
+    doc.setTextColor(...TEXT); // Alterado de MUTED para TEXT para melhor contraste
     doc.text(
       item.stock > 0
         ? `📦 ${item.stock} em estoque`
@@ -963,7 +925,7 @@ function exportCatalogPDF() {
     doc.text('PREÇO', boxX + 20, boxY+7, { align:'center' });
     doc.setFont('helvetica','bold'); doc.setFontSize(10);
     doc.setTextColor(...YELLOW);
-    doc.text(formatBRL(item.price), boxX+20, boxY+17, { align:'center' });
+    doc.text(window.formatBRL(item.price), boxX+20, boxY+17, { align:'center' });
     if (item.margin > 0) {
       doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
       doc.setTextColor(...ORANGE);
@@ -985,13 +947,13 @@ function exportCatalogPDF() {
   }
 
   doc.save(`catalogo-3d-${new Date().toISOString().slice(0,10)}.pdf`);
-  showToast('PDF do catálogo exportado! 📄', 'fa-file-pdf');
-}
+  window.showToast('PDF do catálogo exportado! 📄', 'fa-file-pdf');
+};
 
 // ═══════════════════════════════════════════════════════
 // UTILITÁRIOS
 // ═══════════════════════════════════════════════════════
 
-function capitalize(str) {
+window.capitalize = function(str) {
   return str ? str.charAt(0).toUpperCase() + str.slice(1) : str;
-}
+};
