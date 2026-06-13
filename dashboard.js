@@ -7,20 +7,20 @@
 const DASHBOARD_KEY = '3dpricer_history';
 const GOAL_KEY      = '3dpricer_goal';
 
-function loadDashboardData() {
+window.loadDashboardData = function() {
   try {
     return JSON.parse(localStorage.getItem(DASHBOARD_KEY)) || [];
   } catch {
     return [];
   }
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // RENDERIZAÇÃO PRINCIPAL
 // ═══════════════════════════════════════════════════════
 
-function renderDashboard() {
-  const history   = loadDashboardData();
+window.renderDashboard = function() {
+  const history   = window.loadDashboardData();
   const container = document.getElementById('tab-dashboard');
   if (!container) return;
 
@@ -29,7 +29,7 @@ function renderDashboard() {
       <div class="card">
         <div class="result-header">
           <h2><i class="fas fa-chart-pie"></i> Dashboard do Negócio</h2>
-          <button class="btn-small" onclick="exportDashboardCSV()">
+          <button class="btn-small" onclick="window.exportDashboardCSV()">
             <i class="fas fa-file-csv"></i> Exportar CSV
           </button>
         </div>
@@ -42,323 +42,241 @@ function renderDashboard() {
     return;
   }
 
-  const kpis = calcKPIs(history);
+  const kpis = window.calcKPIs(history);
 
   container.innerHTML = `
     <div class="card">
       <div class="result-header">
         <h2><i class="fas fa-chart-pie"></i> Dashboard do Negócio</h2>
-        <button class="btn-small" onclick="exportDashboardCSV()">
+        <button class="btn-small" onclick="window.exportDashboardCSV()">
           <i class="fas fa-file-csv"></i> Exportar CSV
         </button>
       </div>
     </div>
-    ${renderKPICards(kpis)}
-    ${renderGoalSection(kpis)}
-    ${renderChartsSection()}
-    ${renderTopPiecesSection(history)}
-    ${renderMaterialBreakdown(history)}
-    ${renderMonthlyEvolution(history)}
+    ${window.renderKPICards(kpis)}
+    ${window.renderGoalsCard(kpis)}
+    ${window.renderMaterialPerformance(history)}
+    ${window.renderMonthlyEvolution(history)}
+    <div class="card">
+      <h2><i class="fas fa-chart-line"></i> Gráficos de Performance</h2>
+      <div class="chart-container">
+        <h3>Receita vs Custo Mensal</h3>
+        <canvas id="dash-revenue-chart" width="600" height="200"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Distribuição de Materiais</h3>
+        <canvas id="dash-material-chart" width="200" height="200"></canvas>
+        <div id="dash-material-legend" class="chart-legend"></div>
+      </div>
+      <div class="chart-container">
+        <h3>Evolução da Margem (últimas 10 peças)</h3>
+        <canvas id="dash-margin-chart" width="600" height="160"></canvas>
+      </div>
+    </div>
   `;
 
-  setTimeout(() => {
-    drawRevenueChart(history);
-    drawMaterialPieChart(history);
-    drawMarginChart(history);
-  }, 50);
-}
+  // Desenha os gráficos após o HTML ser renderizado
+  window.drawRevenueChart(history);
+  window.drawMaterialPieChart(history);
+  window.drawMarginChart(history);
+};
 
 // ═══════════════════════════════════════════════════════
-// CÁLCULO DE KPIs
+// CÁLCULO DE KPIS
 // ═══════════════════════════════════════════════════════
 
-function calcKPIs(history) {
-  const total        = history.length;
-  const totalRevenue = history.reduce((s, e) => s + (e.finalPrice  * (e.quantity || 1)), 0);
-  const totalCost    = history.reduce((s, e) => s + (e.directCost  * (e.quantity || 1)), 0);
+window.calcKPIs = function(history) {
+  const totalRevenue = history.reduce((sum, e) => sum + (e.finalPrice * (e.quantity || 1)), 0);
+  const totalCost    = history.reduce((sum, e) => sum + (e.directCost * (e.quantity || 1)), 0);
   const totalProfit  = totalRevenue - totalCost;
-  const avgMargin    = history.reduce((s, e) => s + (e.profitMargin || 0), 0) / total;
-  const avgPrice     = totalRevenue / total;
-  const avgCost      = totalCost    / total;
+  const avgMargin    = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+  const totalPieces  = history.reduce((sum, e) => sum + (e.quantity || 1), 0);
 
-  const sorted     = [...history].sort((a, b) => b.finalPrice - a.finalPrice);
-  const bestPiece  = sorted[0];
-
-  const materialCount = {};
-  history.forEach(e => {
-    const m = e.materialType || 'N/A';
-    materialCount[m] = (materialCount[m] || 0) + 1;
-  });
-  const topMaterial = Object.entries(materialCount)
-    .sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
-
-  const now        = Date.now();
-  const last30     = history.filter(e => (now - e.id) < 30 * 24 * 60 * 60 * 1000);
-  const rev30      = last30.reduce((s, e) => s + (e.finalPrice * (e.quantity || 1)), 0);
+  const monthly = window.buildMonthlyData(history);
+  const currentMonth = monthly[monthly.length - 1] || { revenue: 0, profit: 0, count: 0 };
 
   return {
-    total, totalRevenue, totalCost, totalProfit,
-    avgMargin, avgPrice, avgCost,
-    bestPiece, topMaterial,
-    rev30, last30Count: last30.length,
-    materialCount,
+    totalRevenue,
+    totalCost,
+    totalProfit,
+    avgMargin,
+    totalPieces,
+    currentMonthRevenue: currentMonth.revenue,
+    currentMonthProfit:  currentMonth.profit,
+    currentMonthPieces:  currentMonth.count,
   };
-}
-
-function buildMonthlyData(history) {
-  const map = {};
-  history.forEach(e => {
-    const d   = new Date(e.id);
-    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    if (!map[key]) map[key] = { revenue:0, cost:0, count:0 };
-    map[key].revenue += e.finalPrice * (e.quantity || 1);
-    map[key].cost    += e.directCost * (e.quantity || 1);
-    map[key].count++;
-  });
-
-  return Object.entries(map)
-    .sort(([a],[b]) => a.localeCompare(b))
-    .slice(-6)
-    .map(([key, val]) => ({
-      label:   formatMonthLabel(key),
-      revenue: val.revenue,
-      cost:    val.cost,
-      profit:  val.revenue - val.cost,
-      count:   val.count,
-    }));
-}
-
-function formatMonthLabel(key) {
-  const [year, month] = key.split('-');
-  const months = ['Jan','Fev','Mar','Abr','Mai','Jun',
-                   'Jul','Ago','Set','Out','Nov','Dez'];
-  return `${months[parseInt(month)-1]}/${year.slice(2)}`;
-}
+};
 
 // ═══════════════════════════════════════════════════════
-// KPI CARDS
+// RENDERIZAÇÃO DOS CARDS DE KPI
 // ═══════════════════════════════════════════════════════
 
-function renderKPICards(k) {
-  const profitColor = k.totalProfit >= 0 ? '#27ae60' : '#e74c3c';
-  const profitIcon  = k.totalProfit >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
-
+window.renderKPICards = function(kpis) {
   return `
   <div class="dash-kpi-grid">
     <div class="dash-kpi-card blue">
-      <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
+      <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
       <div class="kpi-info">
-        <small>Total de Precificações</small>
-        <strong>${k.total}</strong>
-        <span>${k.last30Count} nos últimos 30 dias</span>
+        <small>Receita Total</small>
+        <strong>${window.formatBRL(kpis.totalRevenue)}</strong>
+        <span>${kpis.totalPieces} peças vendidas</span>
       </div>
     </div>
     <div class="dash-kpi-card orange">
-      <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
+      <div class="kpi-icon"><i class="fas fa-hand-holding-dollar"></i></div>
       <div class="kpi-info">
-        <small>Receita Total Acumulada</small>
-        <strong>${formatBRL(k.totalRevenue)}</strong>
-        <span>Últimos 30d: ${formatBRL(k.rev30)}</span>
+        <small>Lucro Total</small>
+        <strong>${window.formatBRL(kpis.totalProfit)}</strong>
+        <span>Margem média: ${kpis.avgMargin.toFixed(1)}%</span>
       </div>
     </div>
     <div class="dash-kpi-card green">
-      <div class="kpi-icon"><i class="fas ${profitIcon}"></i></div>
+      <div class="kpi-icon"><i class="fas fa-chart-line"></i></div>
       <div class="kpi-info">
-        <small>Lucro Total Acumulado</small>
-        <strong style="color:${profitColor}">${formatBRL(k.totalProfit)}</strong>
-        <span>Margem média: ${k.avgMargin.toFixed(1)}%</span>
+        <small>Receita Mês Atual</small>
+        <strong>${window.formatBRL(kpis.currentMonthRevenue)}</strong>
+        <span>${kpis.currentMonthPieces} peças</span>
       </div>
     </div>
     <div class="dash-kpi-card neutral">
-      <div class="kpi-icon"><i class="fas fa-tag"></i></div>
+      <div class="kpi-icon"><i class="fas fa-sack-dollar"></i></div>
       <div class="kpi-info">
-        <small>Ticket Médio por Peça</small>
-        <strong>${formatBRL(k.avgPrice)}</strong>
-        <span>Custo médio: ${formatBRL(k.avgCost)}</span>
-      </div>
-    </div>
-    <div class="dash-kpi-card neutral">
-      <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
-      <div class="kpi-info">
-        <small>Material Mais Usado</small>
-        <strong>${k.topMaterial}</strong>
-        <span>${k.materialCount[k.topMaterial] || 0} precificações</span>
-      </div>
-    </div>
-    <div class="dash-kpi-card neutral">
-      <div class="kpi-icon"><i class="fas fa-trophy"></i></div>
-      <div class="kpi-info">
-        <small>Peça com Maior Preço</small>
-        <strong>${formatBRL(k.bestPiece?.finalPrice || 0)}</strong>
-        <span>${k.bestPiece?.materialType || '—'} · ${k.bestPiece?.partWeight || 0}g</span>
+        <small>Lucro Mês Atual</small>
+        <strong>${window.formatBRL(kpis.currentMonthProfit)}</strong>
+        <span>${kpis.currentMonthPieces > 0 ? ((kpis.currentMonthProfit/kpis.currentMonthRevenue)*100).toFixed(1)+'%' : '—'} de margem</span>
       </div>
     </div>
   </div>`;
-}
+};
 
 // ═══════════════════════════════════════════════════════
-// META MENSAL
+// METAS
 // ═══════════════════════════════════════════════════════
 
-function renderGoalSection(kpis) {
-  const savedGoal = parseFloat(localStorage.getItem(GOAL_KEY)) || 0;
-  const progress  = savedGoal > 0 ? Math.min(100, (kpis.rev30 / savedGoal) * 100) : 0;
-  const remaining = Math.max(0, savedGoal - kpis.rev30);
-  const barColor  = progress >= 100
-    ? 'linear-gradient(90deg,#27ae60,#2ecc71)'
-    : 'linear-gradient(90deg,var(--orange),var(--yellow))';
+window.renderGoalsCard = function(kpis) {
+  const goal = JSON.parse(localStorage.getItem(GOAL_KEY)) || { revenue: 0, profit: 0 };
+  const revenueProgress = goal.revenue > 0 ? (kpis.currentMonthRevenue / goal.revenue) * 100 : 0;
+  const profitProgress  = goal.profit > 0 ? (kpis.currentMonthProfit / goal.profit) * 100 : 0;
 
   return `
-  <div class="card dash-goal-card">
-    <div class="result-header">
-      <h2><i class="fas fa-bullseye"></i> Meta Mensal de Faturamento</h2>
-      <div style="display:flex;gap:0.6rem;align-items:center;">
-        <input type="number" id="goal-input" placeholder="Meta R$"
-               value="${savedGoal || ''}"
-               style="width:130px;padding:0.45rem 0.7rem;border:2px solid var(--border);
-                      border-radius:8px;font-family:Poppins,sans-serif;font-size:0.88rem;
-                      background:var(--light-gray);color:var(--text);"
-               oninput="updateGoal(this.value)"/>
-        <span style="font-size:0.8rem;color:var(--text-muted)">R$/mês</span>
-      </div>
-    </div>
-    <div class="goal-progress-wrapper">
-      <div class="goal-bar-bg">
-        <div class="goal-bar-fill" style="width:${progress}%;background:${barColor}"></div>
-      </div>
-      <div class="goal-labels">
-        <span>${formatBRL(kpis.rev30)} realizados</span>
-        <span>${progress.toFixed(1)}%</span>
-        <span>${savedGoal > 0
-          ? (remaining > 0 ? `Faltam ${formatBRL(remaining)}` : '🎉 Meta atingida!')
-          : 'Defina sua meta'}</span>
-      </div>
-    </div>
-    <div class="goal-cards">
-      <div class="goal-mini">
-        <small>Realizado (30d)</small>
-        <strong>${formatBRL(kpis.rev30)}</strong>
-      </div>
-      <div class="goal-mini">
-        <small>Meta</small>
-        <strong>${savedGoal > 0 ? formatBRL(savedGoal) : '—'}</strong>
-      </div>
-      <div class="goal-mini">
-        <small>Progresso</small>
-        <strong>${savedGoal > 0 ? progress.toFixed(1)+'%' : '—'}</strong>
-      </div>
-      <div class="goal-mini">
-        <small>Faltam</small>
-        <strong>${savedGoal > 0 ? formatBRL(remaining) : '—'}</strong>
-      </div>
-    </div>
-  </div>`;
-}
-
-function updateGoal(value) {
-  localStorage.setItem(GOAL_KEY, parseFloat(value) || 0);
-  renderDashboard();
-}
-
-// ═══════════════════════════════════════════════════════
-// SEÇÃO DE GRÁFICOS
-// ═══════════════════════════════════════════════════════
-
-function renderChartsSection() {
-  return `
-  <div class="dash-charts-row">
-    <div class="card dash-chart-card">
-      <h2><i class="fas fa-chart-bar"></i> Receita vs Custo por Mês</h2>
-      <canvas id="dash-revenue-chart" height="200"></canvas>
-    </div>
-    <div class="card dash-chart-card">
-      <h2><i class="fas fa-chart-pie"></i> Distribuição por Material</h2>
-      <canvas id="dash-material-chart" width="220" height="220"
-              style="max-width:220px;margin:0 auto;display:block;"></canvas>
-      <div id="dash-material-legend" class="chart-legend" style="margin-top:0.8rem;"></div>
-    </div>
-  </div>
   <div class="card">
-    <h2><i class="fas fa-percent"></i> Evolução da Margem de Lucro</h2>
-    <canvas id="dash-margin-chart" height="160"></canvas>
-  </div>`;
-}
-
-// ═══════════════════════════════════════════════════════
-// TOP 5 PEÇAS
-// ═══════════════════════════════════════════════════════
-
-function renderTopPiecesSection(history) {
-  const sorted = [...history]
-    .sort((a, b) => {
-      const pA = (a.finalPrice - a.directCost) * (a.quantity || 1);
-      const pB = (b.finalPrice - b.directCost) * (b.quantity || 1);
-      return pB - pA;
-    })
-    .slice(0, 5);
-
-  const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
-
-  const rows = sorted.map((e, i) => {
-    const profit = (e.finalPrice - e.directCost) * (e.quantity || 1);
-    return `
-    <div class="top-piece-row">
-      <span class="top-rank">${medals[i]}</span>
-      <div class="top-info">
-        <strong>${e.printerName || 'Peça'}</strong>
-        <small>${e.materialType || '—'} · ${e.partWeight || 0}g · ${e.printHours || 0}h</small>
+    <div class="result-header">
+      <h2><i class="fas fa-bullseye"></i> Metas Mensais</h2>
+      <button class="btn-small" onclick="window.openGoalModal()">
+        <i class="fas fa-cog"></i> Configurar
+      </button>
+    </div>
+    <div class="goal-progress-grid">
+      <div class="goal-item">
+        <small>Meta de Receita: ${window.formatBRL(goal.revenue)}</small>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width:${Math.min(100, revenueProgress)}%;"></div>
+        </div>
+        <span>${revenueProgress.toFixed(1)}% atingido</span>
       </div>
-      <div class="top-values">
-        <span class="top-price">${formatBRL(e.finalPrice)}</span>
-        <span class="top-profit">+${formatBRL(profit)}</span>
-        <span class="top-margin">${(e.profitMargin || 0).toFixed(1)}%</span>
+      <div class="goal-item">
+        <small>Meta de Lucro: ${window.formatBRL(goal.profit)}</small>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width:${Math.min(100, profitProgress)}%;"></div>
+        </div>
+        <span>${profitProgress.toFixed(1)}% atingido</span>
+      </div>
+    </div>
+  </div>`;
+};
+
+window.openGoalModal = function() {
+  const goal = JSON.parse(localStorage.getItem(GOAL_KEY)) || { revenue: 0, profit: 0 };
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay show'; // Usar a classe 'show' para exibir
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i class="fas fa-cog"></i> Configurar Metas Mensais</h3>
+        <button onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label>Meta de Receita (R$)</label>
+          <input type="number" id="goal-revenue" value="${goal.revenue}" min="0" step="100"/>
+        </div>
+        <div class="field">
+          <label>Meta de Lucro (R$)</label>
+          <input type="number" id="goal-profit" value="${goal.profit}" min="0" step="100"/>
+        </div>
+        <button class="btn-calculate" onclick="window.saveGoals()">
+          <i class="fas fa-save"></i> Salvar Metas
+        </button>
       </div>
     </div>`;
-  }).join('');
+  document.body.appendChild(modal);
+};
 
-  return `
-  <div class="card">
-    <h2><i class="fas fa-trophy"></i> Top 5 — Peças Mais Lucrativas</h2>
-    <div class="top-pieces-header">
-      <span>Peça</span><span>Preço</span><span>Lucro</span><span>Margem</span>
-    </div>
-    ${rows}
-  </div>`;
-}
+window.saveGoals = function() {
+  const revenue = parseFloat(document.getElementById('goal-revenue')?.value) || 0;
+  const profit  = parseFloat(document.getElementById('goal-profit')?.value) || 0;
+  localStorage.setItem(GOAL_KEY, JSON.stringify({ revenue, profit }));
+  document.querySelector('.modal-overlay')?.remove();
+  window.renderDashboard();
+  window.showToast('Metas salvas com sucesso! 🎯', 'fa-bullseye');
+};
 
 // ═══════════════════════════════════════════════════════
-// BREAKDOWN POR MATERIAL
+// DADOS MENSAIS
 // ═══════════════════════════════════════════════════════
 
-function renderMaterialBreakdown(history) {
-  const map = {};
+window.buildMonthlyData = function(history) {
+  const monthlyMap = {};
   history.forEach(e => {
-    const m = e.materialType || 'N/A';
-    if (!map[m]) map[m] = { count:0, revenue:0, profit:0 };
-    map[m].count++;
-    map[m].revenue += e.finalPrice  * (e.quantity || 1);
-    map[m].profit  += (e.finalPrice - e.directCost) * (e.quantity || 1);
+    const date = new Date(e.timestamp);
+    const month = date.toLocaleString('pt-BR', { month: 'short', year: 'numeric' });
+    if (!monthlyMap[month]) {
+      monthlyMap[month] = { revenue: 0, cost: 0, profit: 0, count: 0, label: month };
+    }
+    monthlyMap[month].revenue += (e.finalPrice * (e.quantity || 1));
+    monthlyMap[month].cost    += (e.directCost * (e.quantity || 1));
+    monthlyMap[month].profit  += ((e.finalPrice - e.directCost) * (e.quantity || 1));
+    monthlyMap[month].count   += (e.quantity || 1);
+  });
+  return Object.values(monthlyMap);
+};
+
+// ═══════════════════════════════════════════════════════
+// PERFORMANCE POR MATERIAL
+// ═══════════════════════════════════════════════════════
+
+window.renderMaterialPerformance = function(history) {
+  const materialMap = {};
+  history.forEach(e => {
+    const mat = e.materialType || 'Outro';
+    if (!materialMap[mat]) {
+      materialMap[mat] = { revenue: 0, profit: 0, count: 0, material: mat };
+    }
+    materialMap[mat].revenue += (e.finalPrice * (e.quantity || 1));
+    materialMap[mat].profit  += ((e.finalPrice - e.directCost) * (e.quantity || 1));
+    materialMap[mat].count   += (e.quantity || 1);
   });
 
-  const maxRev = Math.max(...Object.values(map).map(x => x.revenue), 1);
+  const materialData = Object.values(materialMap).sort((a, b) => b.revenue - a.revenue);
+  if (!materialData.length) return '';
 
-  const rows = Object.entries(map)
-    .sort((a, b) => b[1].revenue - a[1].revenue)
-    .map(([mat, d]) => `
-      <tr>
-        <td><strong>${mat}</strong></td>
-        <td>${d.count}</td>
-        <td>${formatBRL(d.revenue)}</td>
-        <td style="color:${d.profit >= 0 ? '#27ae60' : '#e74c3c'};font-weight:700">
-          ${formatBRL(d.profit)}
-        </td>
-        <td>
-          <div class="mat-bar-bg">
-            <div class="mat-bar-fill"
-                 style="width:${Math.min(100,(d.revenue/maxRev)*100)}%"></div>
-          </div>
-        </td>
-      </tr>`).join('');
+  const maxRev = Math.max(...materialData.map(d => d.revenue), 1);
+
+  const rows = materialData.map(d => `
+    <tr>
+      <td><strong>${d.material}</strong></td>
+      <td>${d.count}</td>
+      <td>${window.formatBRL(d.revenue)}</td>
+      <td style="color:${d.profit >= 0 ? '#27ae60' : '#e74c3c'};font-weight:700">
+        ${window.formatBRL(d.profit)}
+      </td>
+      <td>
+        <div class="mat-bar-bg">
+          <div class="mat-bar-fill"
+               style="width:${Math.min(100,(d.revenue/maxRev)*100)}%"></div>
+        </div>
+      </td>
+    </tr>`).join('');
 
   return `
   <div class="card">
@@ -375,24 +293,24 @@ function renderMaterialBreakdown(history) {
       </table>
     </div>
   </div>`;
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // EVOLUÇÃO MENSAL
 // ═══════════════════════════════════════════════════════
 
-function renderMonthlyEvolution(history) {
-  const monthly = buildMonthlyData(history);
+window.renderMonthlyEvolution = function(history) {
+  const monthly = window.buildMonthlyData(history);
   if (!monthly.length) return '';
 
   const rows = monthly.map(m => `
     <tr>
       <td><strong>${m.label}</strong></td>
       <td>${m.count} peças</td>
-      <td>${formatBRL(m.revenue)}</td>
-      <td>${formatBRL(m.cost)}</td>
+      <td>${window.formatBRL(m.revenue)}</td>
+      <td>${window.formatBRL(m.cost)}</td>
       <td style="color:${m.profit >= 0 ? '#27ae60' : '#e74c3c'};font-weight:700">
-        ${formatBRL(m.profit)}
+        ${window.formatBRL(m.profit)}
       </td>
       <td>${m.revenue > 0 ? ((m.profit/m.revenue)*100).toFixed(1)+'%' : '—'}</td>
     </tr>`).join('');
@@ -412,17 +330,17 @@ function renderMonthlyEvolution(history) {
       </table>
     </div>
   </div>`;
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // GRÁFICO: RECEITA VS CUSTO
 // ═══════════════════════════════════════════════════════
 
-function drawRevenueChart(history) {
+window.drawRevenueChart = function(history) {
   const canvas = document.getElementById('dash-revenue-chart');
   if (!canvas) return;
 
-  const monthly = buildMonthlyData(history);
+  const monthly = window.buildMonthlyData(history);
   if (!monthly.length) return;
 
   canvas.width  = canvas.offsetWidth || 600;
@@ -497,13 +415,13 @@ function drawRevenueChart(history) {
     ctx.fillText(label, lx+15, 9);
     return lx + ctx.measureText(label).width + 32;
   }, pL);
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // GRÁFICO: PIZZA DE MATERIAIS
 // ═══════════════════════════════════════════════════════
 
-function drawMaterialPieChart(history) {
+window.drawMaterialPieChart = function(history) {
   const canvas = document.getElementById('dash-material-chart');
   if (!canvas) return;
 
@@ -567,13 +485,13 @@ function drawMaterialPieChart(history) {
         ${mat} (${count})
       </div>`).join('');
   }
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // GRÁFICO: MARGEM
 // ═══════════════════════════════════════════════════════
 
-function drawMarginChart(history) {
+window.drawMarginChart = function(history) {
   const canvas = document.getElementById('dash-margin-chart');
   if (!canvas) return;
 
@@ -641,16 +559,16 @@ function drawMarginChart(history) {
     ctx.fillStyle='#f07b30'; ctx.strokeStyle=bg; ctx.lineWidth=2;
     ctx.fill(); ctx.stroke();
   });
-}
+};
 
 // ═══════════════════════════════════════════════════════
 // EXPORTAR CSV
 // ═══════════════════════════════════════════════════════
 
-function exportDashboardCSV() {
-  const history = loadDashboardData();
+window.exportDashboardCSV = function() {
+  const history = window.loadDashboardData();
   if (!history.length) {
-    showToast('Nenhum dado para exportar!', 'fa-triangle-exclamation');
+    window.showToast('Nenhum dado para exportar!', 'fa-triangle-exclamation');
     return;
   }
 
@@ -678,5 +596,5 @@ function exportDashboardCSV() {
   const a    = Object.assign(document.createElement('a'), { href:url, download:`3dpricer-${new Date().toISOString().slice(0,10)}.csv` });
   a.click();
   URL.revokeObjectURL(url);
-  showToast('CSV exportado com sucesso!', 'fa-file-csv');
-}
+  window.showToast('CSV exportado com sucesso!', 'fa-file-csv');
+};
