@@ -720,15 +720,49 @@ h2 i { color: var(--orange); }
 /* ══════════════════════════════════════════
    MODAL COMPARADOR
 ══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   MODAL COMPARADOR
+══════════════════════════════════════════ */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(10,20,40,0.65);
-  z-index: 500; display: flex; align-items: center; justify-content: center;
-  padding: 0.8rem; backdrop-filter: blur(4px); /* Ajustado padding */
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 20, 40, 0.65);
+  z-index: 500;
+  display: none; /* <-- MUDANÇA AQUI: Começa escondido */
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+  opacity: 0; /* Para transição de opacidade */
+  visibility: hidden; /* Para transição de visibilidade */
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
+
+.modal-overlay.show {
+  display: flex; /* <-- MUDANÇA AQUI: Mostra quando tem a classe 'show' */
+  opacity: 1;
+  visibility: visible;
+}
+
 .modal {
-  background: var(--white); border-radius: var(--radius);
-  width: 100%; max-width: 820px; max-height: 90vh;
-  display: flex; flex-direction: column; box-shadow: var(--shadow-md); overflow: hidden;
+  background: var(--white);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 820px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.show .modal {
+  transform: translateY(0);
+}
+
+/* ... (o restante do CSS do modal permanece o mesmo) ... */
 }
 .modal-header {
   display: flex; justify-content: space-between; align-items: center;
