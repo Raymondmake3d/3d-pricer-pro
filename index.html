@@ -37,17 +37,8 @@
   <link rel="stylesheet" href="style-extra.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  
 </head>
-<!-- SCRIPTS — ordem importa! -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-<script src="suggestions.js"></script>
-<script src="export.js"></script>
-<script src="simulator.js"></script>
-<script src="dashboard.js"></script>
-<script src="clients.js"></script>
-<script src="catalog.js"></script>
-<script src="app.js"></script>
+
 <body>
 
 <!-- Banner PWA -->
@@ -100,9 +91,13 @@
     </button>
     <button class="tab" data-tab="clients">
       <i class="fas fa-users"></i> Clientes
+      <span class="tab-badge hidden" id="badge-clients">0</span>
     </button>
     <button class="tab" data-tab="catalog">
       <i class="fas fa-cubes"></i> Catálogo
+    </button>
+    <button class="tab" data-tab="tools">
+      <i class="fas fa-wrench"></i> Ferramentas
     </button>
     <button class="tab" data-tab="tips">
       <i class="fas fa-lightbulb"></i> Otimizações
@@ -121,7 +116,9 @@
 
 <main>
 
-<!-- ABA: PRECIFICAÇÃO -->
+<!-- ═══════════════════════════════════════════
+     ABA: PRECIFICAÇÃO
+═══════════════════════════════════════════ -->
 <div id="tab-calc" class="tab-content active">
 
   <div class="progress-bar-wrapper">
@@ -440,6 +437,15 @@
       <div class="badge premium"><small>Premium (+20%)</small><strong id="r-prem">R$ 0,00</strong></div>
     </div>
 
+    <!-- COMPARADOR DE PLATAFORMAS -->
+    <div class="card" style="margin-top:1.4rem;border-top:3px solid var(--orange);">
+      <h3><i class="fas fa-store"></i> Comparador de Plataformas</h3>
+      <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;">
+        Veja o impacto real das taxas em cada canal de venda.
+      </p>
+      <div id="platform-comparator-grid" class="platform-grid"></div>
+    </div>
+
     <div class="chart-wrapper">
       <h3><i class="fas fa-chart-pie"></i> Composição do Custo</h3>
       <canvas id="costChart" width="280" height="280"></canvas>
@@ -452,7 +458,9 @@
   </section>
 </div>
 
-<!-- ABA: DASHBOARD -->
+<!-- ═══════════════════════════════════════════
+     ABA: DASHBOARD
+═══════════════════════════════════════════ -->
 <div id="tab-dashboard" class="tab-content hidden">
   <div class="card">
     <div class="result-header">
@@ -464,21 +472,179 @@
   </div>
 </div>
 
-<!-- ABA: CLIENTES -->
+<!-- ═══════════════════════════════════════════
+     ABA: CLIENTES
+═══════════════════════════════════════════ -->
 <div id="tab-clients" class="tab-content hidden">
   <div class="card">
     <h2><i class="fas fa-users"></i> Clientes & Orçamentos</h2>
   </div>
 </div>
 
-<!-- ABA: CATÁLOGO -->
+<!-- ═══════════════════════════════════════════
+     ABA: CATÁLOGO
+═══════════════════════════════════════════ -->
 <div id="tab-catalog" class="tab-content hidden">
   <div class="card">
     <h2><i class="fas fa-cubes"></i> Catálogo de Peças</h2>
   </div>
 </div>
 
-<!-- ABA: OTIMIZAÇÕES -->
+<!-- ═══════════════════════════════════════════
+     ABA: FERRAMENTAS (NOVA!)
+═══════════════════════════════════════════ -->
+<div id="tab-tools" class="tab-content hidden">
+
+  <!-- 1. CALCULADORA DE SPOOL -->
+  <div class="card">
+    <div class="result-header">
+      <h2><i class="fas fa-weight-hanging"></i> Calculadora de Spool Restante</h2>
+      <span style="font-size:0.78rem;color:var(--text-muted)">Evite falhas por falta de material!</span>
+    </div>
+    <div class="grid-2" style="margin-top:1rem;">
+      <div class="field">
+        <label>Peso Total do Carretel (g)</label>
+        <input type="number" id="spool-total" placeholder="Ex: 1000" min="1"
+               oninput="calcSpoolRemaining()"/>
+      </div>
+      <div class="field">
+        <label>Material já Usado (g)</label>
+        <input type="number" id="spool-used" placeholder="Ex: 350" min="0"
+               oninput="calcSpoolRemaining()"/>
+      </div>
+      <div class="field">
+        <label>Peso Médio por Peça (g)</label>
+        <input type="number" id="spool-per-piece" placeholder="Ex: 85" min="1"
+               oninput="calcSpoolRemaining()"/>
+      </div>
+      <div class="field">
+        <label>Custo do Carretel (R$)</label>
+        <input type="number" id="spool-price" placeholder="Ex: 120" min="0"
+               oninput="calcSpoolRemaining()"/>
+      </div>
+    </div>
+
+    <div id="spool-result" class="hidden">
+      <div class="dash-kpi-grid" style="margin-top:1rem;">
+        <div class="dash-kpi-card blue">
+          <div class="kpi-icon"><i class="fas fa-weight-hanging"></i></div>
+          <div class="kpi-info">
+            <small>Material Restante</small>
+            <strong id="spool-r-remaining">—</strong>
+            <span id="spool-r-pct">—</span>
+          </div>
+        </div>
+        <div class="dash-kpi-card orange">
+          <div class="kpi-icon"><i class="fas fa-cube"></i></div>
+          <div class="kpi-info">
+            <small>Peças que Cabem</small>
+            <strong id="spool-r-pieces">—</strong>
+            <span>peças completas</span>
+          </div>
+        </div>
+        <div class="dash-kpi-card green">
+          <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
+          <div class="kpi-info">
+            <small>Valor Restante no Spool</small>
+            <strong id="spool-r-value">—</strong>
+            <span>R$/g restante</span>
+          </div>
+        </div>
+        <div class="dash-kpi-card neutral">
+          <div class="kpi-icon"><i class="fas fa-triangle-exclamation"></i></div>
+          <div class="kpi-info">
+            <small>Status</small>
+            <strong id="spool-r-status">—</strong>
+            <span id="spool-r-alert">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra visual do spool -->
+      <div style="margin-top:1rem;">
+        <div style="display:flex;justify-content:space-between;font-size:0.8rem;
+                    color:var(--text-muted);margin-bottom:0.4rem;">
+          <span>Material usado</span>
+          <span id="spool-bar-label">0%</span>
+          <span>Restante</span>
+        </div>
+        <div style="height:18px;background:var(--border);border-radius:9px;overflow:hidden;">
+          <div id="spool-bar-used"
+               style="height:100%;background:linear-gradient(90deg,#e74c3c,#f07b30);
+                      border-radius:9px;transition:width 0.6s ease;width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. COMPARADOR DE PLATAFORMAS -->
+  <div class="card">
+    <div class="result-header">
+      <h2><i class="fas fa-store"></i> Comparador de Plataformas de Venda</h2>
+      <span style="font-size:0.78rem;color:var(--text-muted)">Onde vender com mais lucro?</span>
+    </div>
+    <div class="grid-2" style="margin-top:1rem;">
+      <div class="field">
+        <label>Custo de Produção (R$)</label>
+        <input type="number" id="plat-cost" placeholder="Ex: 18.00" min="0" step="0.01"
+               oninput="calcPlatformComparator()"/>
+      </div>
+      <div class="field">
+        <label>Margem de Lucro Desejada (%)</label>
+        <input type="number" id="plat-margin" placeholder="Ex: 40" min="0" max="100"
+               oninput="calcPlatformComparator()"/>
+      </div>
+      <div class="field">
+        <label>Impostos (%)</label>
+        <input type="number" id="plat-tax" placeholder="Ex: 6" min="0" max="100"
+               oninput="calcPlatformComparator()"/>
+      </div>
+      <div class="field">
+        <label>Embalagem/Envio (R$)</label>
+        <input type="number" id="plat-shipping" placeholder="Ex: 15" min="0"
+               oninput="calcPlatformComparator()"/>
+      </div>
+    </div>
+    <div id="platform-result" class="hidden" style="margin-top:1rem;">
+      <div id="platform-cards-grid" class="platform-grid"></div>
+    </div>
+  </div>
+
+  <!-- 3. ALERTAS DE ORÇAMENTOS PENDENTES -->
+  <div class="card">
+    <div class="result-header">
+      <h2><i class="fas fa-bell"></i> Alertas de Orçamentos Pendentes</h2>
+      <button class="btn-small" onclick="renderPendingAlerts()">
+        <i class="fas fa-arrows-rotate"></i> Atualizar
+      </button>
+    </div>
+    <div id="pending-alerts-container">
+      <div class="tips-placeholder">
+        <i class="fas fa-bell-slash"></i>
+        <p>Nenhum orçamento pendente encontrado.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. RELATÓRIO MENSAL -->
+  <div class="card">
+    <div class="result-header">
+      <h2><i class="fas fa-file-chart-column"></i> Relatório Mensal</h2>
+      <button class="btn-small" onclick="exportMonthlyReportPDF()">
+        <i class="fas fa-file-pdf"></i> Gerar PDF
+      </button>
+    </div>
+    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">
+      Resumo completo do mês com faturamento, lucro, peças e clientes.
+    </p>
+    <div id="monthly-report-preview"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ABA: OTIMIZAÇÕES
+═══════════════════════════════════════════ -->
 <div id="tab-tips" class="tab-content hidden">
   <div class="card">
     <h2><i class="fas fa-lightbulb"></i> Sugestões de Otimização</h2>
@@ -496,7 +662,9 @@
   </div>
 </div>
 
-<!-- ABA: PRODUTOS -->
+<!-- ═══════════════════════════════════════════
+     ABA: PRODUTOS
+═══════════════════════════════════════════ -->
 <div id="tab-products" class="tab-content hidden">
   <div class="card">
     <h2><i class="fas fa-star"></i> Produtos em Destaque & Similares</h2>
@@ -512,7 +680,9 @@
   </div>
 </div>
 
-<!-- ABA: SIMULADOR -->
+<!-- ═══════════════════════════════════════════
+     ABA: SIMULADOR
+═══════════════════════════════════════════ -->
 <div id="tab-simulator" class="tab-content hidden">
   <div class="card">
     <div class="result-header">
@@ -598,7 +768,9 @@
   </div>
 </div>
 
-<!-- ABA: HISTÓRICO -->
+<!-- ═══════════════════════════════════════════
+     ABA: HISTÓRICO
+═══════════════════════════════════════════ -->
 <div id="tab-history" class="tab-content hidden">
   <div class="card">
     <div class="history-header">
@@ -645,12 +817,14 @@
 </footer>
 
 <!-- SCRIPTS — ordem importa! -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="suggestions.js"></script>
 <script src="export.js"></script>
 <script src="simulator.js"></script>
 <script src="dashboard.js"></script>
 <script src="clients.js"></script>
 <script src="catalog.js"></script>
+<script src="tools.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
