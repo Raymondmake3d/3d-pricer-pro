@@ -5,8 +5,8 @@
 // ═══════════════════════════════════════════════════════
 
 const DASHBOARD_KEY = '3dpricer_history';
+const GOAL_KEY      = '3dpricer_goal';
 
-// ── Carrega todos os dados do histórico ──
 function loadDashboardData() {
   try {
     return JSON.parse(localStorage.getItem(DASHBOARD_KEY)) || [];
@@ -16,17 +16,23 @@ function loadDashboardData() {
 }
 
 // ═══════════════════════════════════════════════════════
-// RENDERIZAÇÃO PRINCIPAL DO DASHBOARD
+// RENDERIZAÇÃO PRINCIPAL
 // ═══════════════════════════════════════════════════════
 
 function renderDashboard() {
-  const history = loadDashboardData();
+  const history   = loadDashboardData();
   const container = document.getElementById('tab-dashboard');
   if (!container) return;
 
   if (!history.length) {
     container.innerHTML = `
       <div class="card">
+        <div class="result-header">
+          <h2><i class="fas fa-chart-pie"></i> Dashboard do Negócio</h2>
+          <button class="btn-small" onclick="exportDashboardCSV()">
+            <i class="fas fa-file-csv"></i> Exportar CSV
+          </button>
+        </div>
         <div class="tips-placeholder">
           <i class="fas fa-chart-pie"></i>
           <p>Nenhuma precificação salva ainda.<br/>
@@ -36,27 +42,30 @@ function renderDashboard() {
     return;
   }
 
-  // ── Calcula KPIs ──
   const kpis = calcKPIs(history);
 
   container.innerHTML = `
+    <div class="card">
+      <div class="result-header">
+        <h2><i class="fas fa-chart-pie"></i> Dashboard do Negócio</h2>
+        <button class="btn-small" onclick="exportDashboardCSV()">
+          <i class="fas fa-file-csv"></i> Exportar CSV
+        </button>
+      </div>
+    </div>
     ${renderKPICards(kpis)}
     ${renderGoalSection(kpis)}
-    ${renderChartsSection(history)}
+    ${renderChartsSection()}
     ${renderTopPiecesSection(history)}
     ${renderMaterialBreakdown(history)}
     ${renderMonthlyEvolution(history)}
   `;
 
-  // Renderiza gráficos após inserir HTML
   setTimeout(() => {
     drawRevenueChart(history);
     drawMaterialPieChart(history);
     drawMarginChart(history);
   }, 50);
-
-  // Inicializa meta mensal
-  initGoal(kpis);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -65,19 +74,16 @@ function renderDashboard() {
 
 function calcKPIs(history) {
   const total        = history.length;
-  const totalRevenue = history.reduce((s, e) => s + (e.finalPrice * (e.quantity || 1)), 0);
-  const totalCost    = history.reduce((s, e) => s + (e.directCost * (e.quantity || 1)), 0);
+  const totalRevenue = history.reduce((s, e) => s + (e.finalPrice  * (e.quantity || 1)), 0);
+  const totalCost    = history.reduce((s, e) => s + (e.directCost  * (e.quantity || 1)), 0);
   const totalProfit  = totalRevenue - totalCost;
   const avgMargin    = history.reduce((s, e) => s + (e.profitMargin || 0), 0) / total;
   const avgPrice     = totalRevenue / total;
   const avgCost      = totalCost    / total;
 
-  // Melhor e pior peça
-  const sorted      = [...history].sort((a, b) => b.finalPrice - a.finalPrice);
-  const bestPiece   = sorted[0];
-  const worstPiece  = sorted[sorted.length - 1];
+  const sorted     = [...history].sort((a, b) => b.finalPrice - a.finalPrice);
+  const bestPiece  = sorted[0];
 
-  // Material mais usado
   const materialCount = {};
   history.forEach(e => {
     const m = e.materialType || 'N/A';
@@ -86,24 +92,19 @@ function calcKPIs(history) {
   const topMaterial = Object.entries(materialCount)
     .sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
 
-  // Receita dos últimos 30 dias
-  const now      = Date.now();
-  const last30   = history.filter(e => (now - e.id) < 30 * 24 * 60 * 60 * 1000);
-  const rev30    = last30.reduce((s, e) => s + (e.finalPrice * (e.quantity || 1)), 0);
-
-  // Evolução mensal
-  const monthly = buildMonthlyData(history);
+  const now        = Date.now();
+  const last30     = history.filter(e => (now - e.id) < 30 * 24 * 60 * 60 * 1000);
+  const rev30      = last30.reduce((s, e) => s + (e.finalPrice * (e.quantity || 1)), 0);
 
   return {
     total, totalRevenue, totalCost, totalProfit,
     avgMargin, avgPrice, avgCost,
-    bestPiece, worstPiece, topMaterial,
+    bestPiece, topMaterial,
     rev30, last30Count: last30.length,
-    materialCount, monthly,
+    materialCount,
   };
 }
 
-// ── Agrupa precificações por mês ──
 function buildMonthlyData(history) {
   const map = {};
   history.forEach(e => {
@@ -112,12 +113,12 @@ function buildMonthlyData(history) {
     if (!map[key]) map[key] = { revenue:0, cost:0, count:0 };
     map[key].revenue += e.finalPrice * (e.quantity || 1);
     map[key].cost    += e.directCost * (e.quantity || 1);
-    map[key].count   ++;
+    map[key].count++;
   });
 
   return Object.entries(map)
     .sort(([a],[b]) => a.localeCompare(b))
-    .slice(-6) // últimos 6 meses
+    .slice(-6)
     .map(([key, val]) => ({
       label:   formatMonthLabel(key),
       revenue: val.revenue,
@@ -135,7 +136,7 @@ function formatMonthLabel(key) {
 }
 
 // ═══════════════════════════════════════════════════════
-// CARDS DE KPIs
+// KPI CARDS
 // ═══════════════════════════════════════════════════════
 
 function renderKPICards(k) {
@@ -199,14 +200,13 @@ function renderKPICards(k) {
 // META MENSAL
 // ═══════════════════════════════════════════════════════
 
-const GOAL_KEY = '3dpricer_goal';
-
 function renderGoalSection(kpis) {
   const savedGoal = parseFloat(localStorage.getItem(GOAL_KEY)) || 0;
-  const progress  = savedGoal > 0
-    ? Math.min(100, (kpis.rev30 / savedGoal) * 100)
-    : 0;
+  const progress  = savedGoal > 0 ? Math.min(100, (kpis.rev30 / savedGoal) * 100) : 0;
   const remaining = Math.max(0, savedGoal - kpis.rev30);
+  const barColor  = progress >= 100
+    ? 'linear-gradient(90deg,#27ae60,#2ecc71)'
+    : 'linear-gradient(90deg,var(--orange),var(--yellow))';
 
   return `
   <div class="card dash-goal-card">
@@ -222,29 +222,18 @@ function renderGoalSection(kpis) {
         <span style="font-size:0.8rem;color:var(--text-muted)">R$/mês</span>
       </div>
     </div>
-
     <div class="goal-progress-wrapper">
       <div class="goal-bar-bg">
-        <div class="goal-bar-fill" id="goal-bar"
-             style="width:${progress}%;
-                    background:${progress >= 100
-                      ? 'linear-gradient(90deg,#27ae60,#2ecc71)'
-                      : 'linear-gradient(90deg,var(--orange),var(--yellow))'}">
-        </div>
+        <div class="goal-bar-fill" style="width:${progress}%;background:${barColor}"></div>
       </div>
       <div class="goal-labels">
-        <span id="goal-label-left">${formatBRL(kpis.rev30)} realizados</span>
-        <span id="goal-label-pct">${progress.toFixed(1)}%</span>
-        <span id="goal-label-right">
-          ${savedGoal > 0
-            ? (remaining > 0
-                ? `Faltam ${formatBRL(remaining)}`
-                : '🎉 Meta atingida!')
-            : 'Defina sua meta'}
-        </span>
+        <span>${formatBRL(kpis.rev30)} realizados</span>
+        <span>${progress.toFixed(1)}%</span>
+        <span>${savedGoal > 0
+          ? (remaining > 0 ? `Faltam ${formatBRL(remaining)}` : '🎉 Meta atingida!')
+          : 'Defina sua meta'}</span>
       </div>
     </div>
-
     <div class="goal-cards">
       <div class="goal-mini">
         <small>Realizado (30d)</small>
@@ -252,35 +241,30 @@ function renderGoalSection(kpis) {
       </div>
       <div class="goal-mini">
         <small>Meta</small>
-        <strong id="goal-display">${savedGoal > 0 ? formatBRL(savedGoal) : '—'}</strong>
+        <strong>${savedGoal > 0 ? formatBRL(savedGoal) : '—'}</strong>
       </div>
       <div class="goal-mini">
         <small>Progresso</small>
-        <strong id="goal-pct-display">${savedGoal > 0 ? progress.toFixed(1)+'%' : '—'}</strong>
+        <strong>${savedGoal > 0 ? progress.toFixed(1)+'%' : '—'}</strong>
       </div>
       <div class="goal-mini">
         <small>Faltam</small>
-        <strong id="goal-remaining">${savedGoal > 0 ? formatBRL(remaining) : '—'}</strong>
+        <strong>${savedGoal > 0 ? formatBRL(remaining) : '—'}</strong>
       </div>
     </div>
   </div>`;
 }
 
 function updateGoal(value) {
-  const goal    = parseFloat(value) || 0;
-  localStorage.setItem(GOAL_KEY, goal);
+  localStorage.setItem(GOAL_KEY, parseFloat(value) || 0);
   renderDashboard();
-}
-
-function initGoal(kpis) {
-  // já renderizado inline
 }
 
 // ═══════════════════════════════════════════════════════
 // SEÇÃO DE GRÁFICOS
 // ═══════════════════════════════════════════════════════
 
-function renderChartsSection(history) {
+function renderChartsSection() {
   return `
   <div class="dash-charts-row">
     <div class="card dash-chart-card">
@@ -301,26 +285,25 @@ function renderChartsSection(history) {
 }
 
 // ═══════════════════════════════════════════════════════
-// PEÇAS MAIS LUCRATIVAS
+// TOP 5 PEÇAS
 // ═══════════════════════════════════════════════════════
 
 function renderTopPiecesSection(history) {
   const sorted = [...history]
     .sort((a, b) => {
-      const profitA = (a.finalPrice - a.directCost) * (a.quantity || 1);
-      const profitB = (b.finalPrice - b.directCost) * (b.quantity || 1);
-      return profitB - profitA;
+      const pA = (a.finalPrice - a.directCost) * (a.quantity || 1);
+      const pB = (b.finalPrice - b.directCost) * (b.quantity || 1);
+      return pB - pA;
     })
     .slice(0, 5);
 
+  const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+
   const rows = sorted.map((e, i) => {
     const profit = (e.finalPrice - e.directCost) * (e.quantity || 1);
-    const margin = e.profitMargin || 0;
-    const medal  = ['🥇','🥈','🥉','4️⃣','5️⃣'][i];
-
     return `
     <div class="top-piece-row">
-      <span class="top-rank">${medal}</span>
+      <span class="top-rank">${medals[i]}</span>
       <div class="top-info">
         <strong>${e.printerName || 'Peça'}</strong>
         <small>${e.materialType || '—'} · ${e.partWeight || 0}g · ${e.printHours || 0}h</small>
@@ -328,7 +311,7 @@ function renderTopPiecesSection(history) {
       <div class="top-values">
         <span class="top-price">${formatBRL(e.finalPrice)}</span>
         <span class="top-profit">+${formatBRL(profit)}</span>
-        <span class="top-margin">${margin.toFixed(1)}%</span>
+        <span class="top-margin">${(e.profitMargin || 0).toFixed(1)}%</span>
       </div>
     </div>`;
   }).join('');
@@ -352,10 +335,12 @@ function renderMaterialBreakdown(history) {
   history.forEach(e => {
     const m = e.materialType || 'N/A';
     if (!map[m]) map[m] = { count:0, revenue:0, profit:0 };
-    map[m].count   ++;
+    map[m].count++;
     map[m].revenue += e.finalPrice  * (e.quantity || 1);
     map[m].profit  += (e.finalPrice - e.directCost) * (e.quantity || 1);
   });
+
+  const maxRev = Math.max(...Object.values(map).map(x => x.revenue), 1);
 
   const rows = Object.entries(map)
     .sort((a, b) => b[1].revenue - a[1].revenue)
@@ -364,15 +349,13 @@ function renderMaterialBreakdown(history) {
         <td><strong>${mat}</strong></td>
         <td>${d.count}</td>
         <td>${formatBRL(d.revenue)}</td>
-        <td style="color:${d.profit>=0?'#27ae60':'#e74c3c'};font-weight:700">
+        <td style="color:${d.profit >= 0 ? '#27ae60' : '#e74c3c'};font-weight:700">
           ${formatBRL(d.profit)}
         </td>
         <td>
           <div class="mat-bar-bg">
             <div class="mat-bar-fill"
-                 style="width:${Math.min(100,(d.revenue/
-                   Math.max(...Object.values(map).map(x=>x.revenue)))*100)}%">
-            </div>
+                 style="width:${Math.min(100,(d.revenue/maxRev)*100)}%"></div>
           </div>
         </td>
       </tr>`).join('');
@@ -384,11 +367,8 @@ function renderMaterialBreakdown(history) {
       <table class="dash-table">
         <thead>
           <tr>
-            <th>Material</th>
-            <th>Peças</th>
-            <th>Receita</th>
-            <th>Lucro</th>
-            <th>Volume</th>
+            <th>Material</th><th>Peças</th>
+            <th>Receita</th><th>Lucro</th><th>Volume</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -398,7 +378,7 @@ function renderMaterialBreakdown(history) {
 }
 
 // ═══════════════════════════════════════════════════════
-// EVOLUÇÃO MENSAL (tabela)
+// EVOLUÇÃO MENSAL
 // ═══════════════════════════════════════════════════════
 
 function renderMonthlyEvolution(history) {
@@ -411,12 +391,10 @@ function renderMonthlyEvolution(history) {
       <td>${m.count} peças</td>
       <td>${formatBRL(m.revenue)}</td>
       <td>${formatBRL(m.cost)}</td>
-      <td style="color:${m.profit>=0?'#27ae60':'#e74c3c'};font-weight:700">
+      <td style="color:${m.profit >= 0 ? '#27ae60' : '#e74c3c'};font-weight:700">
         ${formatBRL(m.profit)}
       </td>
-      <td>${m.revenue > 0
-            ? ((m.profit/m.revenue)*100).toFixed(1)+'%'
-            : '—'}</td>
+      <td>${m.revenue > 0 ? ((m.profit/m.revenue)*100).toFixed(1)+'%' : '—'}</td>
     </tr>`).join('');
 
   return `
@@ -426,12 +404,8 @@ function renderMonthlyEvolution(history) {
       <table class="dash-table">
         <thead>
           <tr>
-            <th>Mês</th>
-            <th>Peças</th>
-            <th>Receita</th>
-            <th>Custo</th>
-            <th>Lucro</th>
-            <th>Margem</th>
+            <th>Mês</th><th>Peças</th><th>Receita</th>
+            <th>Custo</th><th>Lucro</th><th>Margem</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -441,7 +415,7 @@ function renderMonthlyEvolution(history) {
 }
 
 // ═══════════════════════════════════════════════════════
-// GRÁFICOS CANVAS
+// GRÁFICO: RECEITA VS CUSTO
 // ═══════════════════════════════════════════════════════
 
 function drawRevenueChart(history) {
@@ -454,13 +428,13 @@ function drawRevenueChart(history) {
   canvas.width  = canvas.offsetWidth || 600;
   canvas.height = 200;
 
-  const ctx    = canvas.getContext('2d');
-  const W      = canvas.width;
-  const H      = canvas.height;
+  const ctx  = canvas.getContext('2d');
+  const W    = canvas.width;
+  const H    = canvas.height;
   const pL=55, pR=20, pT=20, pB=35;
-  const cW     = W - pL - pR;
-  const cH     = H - pT - pB;
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const cW   = W - pL - pR;
+  const cH   = H - pT - pB;
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
 
   ctx.clearRect(0, 0, W, H);
 
@@ -470,14 +444,14 @@ function drawRevenueChart(history) {
 
   // Grid
   for (let i = 0; i <= 4; i++) {
-    const y   = pT + (cH / 4) * i;
+    const y   = pT + (cH/4) * i;
     const val = maxVal * (1 - i/4);
-    ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-    ctx.lineWidth   = 1;
+    ctx.strokeStyle = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+    ctx.lineWidth = 1;
     ctx.setLineDash([4,4]);
     ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(W-pR,y); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle    = isDark ? '#64748b' : '#94a3b8';
+    ctx.fillStyle    = dark ? '#64748b' : '#94a3b8';
     ctx.font         = '9px Poppins,sans-serif';
     ctx.textAlign    = 'right';
     ctx.textBaseline = 'middle';
@@ -488,25 +462,24 @@ function drawRevenueChart(history) {
   monthly.forEach((m, i) => {
     const cx   = pL + barGrpW * i + barGrpW / 2;
     const zero = pT + cH;
+    const rH   = (m.revenue / maxVal) * cH;
+    const cHH  = (m.cost    / maxVal) * cH;
 
-    // Receita
-    const rH = (m.revenue / maxVal) * cH;
-    ctx.fillStyle = isDark ? 'rgba(44,74,124,0.8)' : 'rgba(44,74,124,0.7)';
+    ctx.fillStyle = 'rgba(44,74,124,0.8)';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(cx-barW-2, zero-rH, barW, rH, [4,4,0,0]);
-    else ctx.rect(cx-barW-2, zero-rH, barW, rH);
+    ctx.roundRect
+      ? ctx.roundRect(cx-barW-2, zero-rH, barW, rH, [4,4,0,0])
+      : ctx.rect(cx-barW-2, zero-rH, barW, rH);
     ctx.fill();
 
-    // Custo
-    const cHH = (m.cost / maxVal) * cH;
-    ctx.fillStyle = isDark ? 'rgba(231,76,60,0.65)' : 'rgba(231,76,60,0.55)';
+    ctx.fillStyle = 'rgba(231,76,60,0.65)';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(cx+2, zero-cHH, barW, cHH, [4,4,0,0]);
-    else ctx.rect(cx+2, zero-cHH, barW, cHH);
+    ctx.roundRect
+      ? ctx.roundRect(cx+2, zero-cHH, barW, cHH, [4,4,0,0])
+      : ctx.rect(cx+2, zero-cHH, barW, cHH);
     ctx.fill();
 
-    // Label mês
-    ctx.fillStyle    = isDark ? '#64748b' : '#94a3b8';
+    ctx.fillStyle    = dark ? '#64748b' : '#94a3b8';
     ctx.font         = '9px Poppins,sans-serif';
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'top';
@@ -514,50 +487,41 @@ function drawRevenueChart(history) {
   });
 
   // Legenda
-  const items = [
-    { color:'rgba(44,74,124,0.8)', label:'Receita' },
-    { color:'rgba(231,76,60,0.65)', label:'Custo'  },
-  ];
-  let lx = pL;
-  items.forEach(it => {
-    ctx.fillStyle = it.color;
+  [['rgba(44,74,124,0.8)','Receita'],['rgba(231,76,60,0.65)','Custo']].reduce((lx, [color, label]) => {
+    ctx.fillStyle    = color;
     ctx.fillRect(lx, 4, 12, 10);
-    ctx.fillStyle    = isDark ? '#94a3b8' : '#718096';
+    ctx.fillStyle    = dark ? '#94a3b8' : '#718096';
     ctx.font         = '9px Poppins,sans-serif';
     ctx.textAlign    = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(it.label, lx+15, 9);
-    lx += ctx.measureText(it.label).width + 30;
-  });
+    ctx.fillText(label, lx+15, 9);
+    return lx + ctx.measureText(label).width + 32;
+  }, pL);
 }
+
+// ═══════════════════════════════════════════════════════
+// GRÁFICO: PIZZA DE MATERIAIS
+// ═══════════════════════════════════════════════════════
 
 function drawMaterialPieChart(history) {
   const canvas = document.getElementById('dash-material-chart');
   if (!canvas) return;
 
   const map = {};
-  history.forEach(e => {
-    const m = e.materialType || 'N/A';
-    map[m]  = (map[m] || 0) + 1;
-  });
+  history.forEach(e => { const m = e.materialType||'N/A'; map[m]=(map[m]||0)+1; });
 
-  const colors = ['#2c4a7c','#f07b30','#f5c842','#27ae60',
-                   '#e74c3c','#9b59b6','#3d6199','#e67e22'];
-
-  const entries = Object.entries(map).sort((a,b) => b[1]-a[1]);
-  const total   = entries.reduce((s,[,v]) => s+v, 0);
-
-  const ctx    = canvas.getContext('2d');
-  const W      = canvas.width;
-  const H      = canvas.height;
-  const cx     = W/2, cy = H/2;
-  const radius = Math.min(W,H)/2 - 8;
+  const colors  = ['#2c4a7c','#f07b30','#f5c842','#27ae60','#e74c3c','#9b59b6','#3d6199','#e67e22'];
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const total   = entries.reduce((s,[,v])=>s+v,0);
+  const ctx     = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2;
+  const radius  = Math.min(W,H)/2 - 8;
+  const dark    = document.documentElement.getAttribute('data-theme') === 'dark';
 
   ctx.clearRect(0, 0, W, H);
 
   let startAngle = -Math.PI/2;
-
-  entries.forEach(([mat, count], i) => {
+  entries.forEach(([, count], i) => {
     const slice    = (count/total) * 2 * Math.PI;
     const endAngle = startAngle + slice;
 
@@ -566,43 +530,35 @@ function drawMaterialPieChart(history) {
     ctx.arc(cx, cy, radius, startAngle, endAngle);
     ctx.closePath();
     ctx.fillStyle   = colors[i % colors.length];
-    ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'dark'
-      ? '#1a2a3e' : '#ffffff';
+    ctx.strokeStyle = dark ? '#1a2a3e' : '#ffffff';
     ctx.lineWidth   = 3;
     ctx.fill(); ctx.stroke();
 
-    const pct = (count/total)*100;
-    if (pct > 6) {
+    if ((count/total)*100 > 6) {
       const mid = startAngle + slice/2;
-      const tx  = cx + radius * 0.65 * Math.cos(mid);
-      const ty  = cy + radius * 0.65 * Math.sin(mid);
       ctx.fillStyle    = '#fff';
       ctx.font         = 'bold 10px Poppins,sans-serif';
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`${pct.toFixed(0)}%`, tx, ty);
+      ctx.fillText(`${((count/total)*100).toFixed(0)}%`,
+        cx + radius * 0.65 * Math.cos(mid),
+        cy + radius * 0.65 * Math.sin(mid));
     }
 
     startAngle = endAngle;
   });
 
-  // Donut central
+  // Donut
   ctx.beginPath();
   ctx.arc(cx, cy, radius * 0.42, 0, 2*Math.PI);
-  ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark'
-    ? '#1a2a3e' : '#ffffff';
+  ctx.fillStyle = dark ? '#1a2a3e' : '#ffffff';
   ctx.fill();
-
-  ctx.fillStyle    = '#1a2a4a';
-  ctx.font         = 'bold 10px Poppins,sans-serif';
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.fillStyle='#1a2a4a'; ctx.font='bold 10px Poppins,sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(`${total}`, cx, cy-6);
-  ctx.font      = '9px Poppins,sans-serif';
-  ctx.fillStyle = '#718096';
+  ctx.font='9px Poppins,sans-serif'; ctx.fillStyle='#718096';
   ctx.fillText('peças', cx, cy+7);
 
-  // Legenda
   const legend = document.getElementById('dash-material-legend');
   if (legend) {
     legend.innerHTML = entries.map(([mat, count], i) => `
@@ -613,6 +569,10 @@ function drawMaterialPieChart(history) {
   }
 }
 
+// ═══════════════════════════════════════════════════════
+// GRÁFICO: MARGEM
+// ═══════════════════════════════════════════════════════
+
 function drawMarginChart(history) {
   const canvas = document.getElementById('dash-margin-chart');
   if (!canvas) return;
@@ -620,86 +580,71 @@ function drawMarginChart(history) {
   canvas.width  = canvas.offsetWidth || 600;
   canvas.height = 160;
 
-  const ctx    = canvas.getContext('2d');
-  const W      = canvas.width;
-  const H      = canvas.height;
+  const ctx  = canvas.getContext('2d');
+  const W    = canvas.width;
+  const H    = canvas.height;
   const pL=45, pR=20, pT=20, pB=30;
-  const cW     = W - pL - pR;
-  const cH     = H - pT - pB;
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const cW   = W - pL - pR;
+  const cH   = H - pT - pB;
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
 
   ctx.clearRect(0, 0, W, H);
 
-  // Últimas 10 precificações
   const data = [...history].reverse().slice(0,10).reverse();
   if (data.length < 2) return;
 
-  const margins  = data.map(e => e.profitMargin || 0);
-  const maxM     = Math.max(...margins, 50);
-  const stepX    = cW / (data.length - 1);
+  const margins = data.map(e => e.profitMargin || 0);
+  const maxM    = Math.max(...margins, 50);
+  const stepX   = cW / (data.length - 1);
 
-  // Grid horizontal
-  [0, 20, 40, 60, 80, 100].forEach(v => {
-    if (v > maxM + 5) return;
-    const y = pT + cH - (v / maxM) * cH;
-    ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-    ctx.lineWidth   = 1;
-    ctx.setLineDash([4,4]);
+  [0,20,40,60,80,100].filter(v => v <= maxM + 5).forEach(v => {
+    const y = pT + cH - (v/maxM) * cH;
+    ctx.strokeStyle = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+    ctx.lineWidth=1; ctx.setLineDash([4,4]);
     ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(W-pR,y); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle    = isDark ? '#64748b' : '#94a3b8';
-    ctx.font         = '9px Poppins,sans-serif';
-    ctx.textAlign    = 'right';
-    ctx.textBaseline = 'middle';
+    ctx.fillStyle=dark?'#64748b':'#94a3b8';
+    ctx.font='9px Poppins,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
     ctx.fillText(`${v}%`, pL-5, y);
   });
 
-  // Área preenchida
+  // Área
   ctx.beginPath();
   data.forEach((e, i) => {
     const x = pL + i * stepX;
-    const y = pT + cH - ((e.profitMargin||0) / maxM) * cH;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    const y = pT + cH - ((e.profitMargin||0)/maxM) * cH;
+    i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
   });
-  // Fecha para baixo
-  ctx.lineTo(pL + (data.length-1)*stepX, pT+cH);
+  ctx.lineTo(pL+(data.length-1)*stepX, pT+cH);
   ctx.lineTo(pL, pT+cH);
   ctx.closePath();
-
-  const grad = ctx.createLinearGradient(0, pT, 0, pT+cH);
-  grad.addColorStop(0,   'rgba(240,123,48,0.35)');
-  grad.addColorStop(1,   'rgba(240,123,48,0.02)');
-  ctx.fillStyle = grad;
-  ctx.fill();
+  const grad = ctx.createLinearGradient(0,pT,0,pT+cH);
+  grad.addColorStop(0,'rgba(240,123,48,0.35)');
+  grad.addColorStop(1,'rgba(240,123,48,0.02)');
+  ctx.fillStyle=grad; ctx.fill();
 
   // Linha
   ctx.beginPath();
   data.forEach((e, i) => {
     const x = pL + i * stepX;
-    const y = pT + cH - ((e.profitMargin||0) / maxM) * cH;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    const y = pT + cH - ((e.profitMargin||0)/maxM) * cH;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
   });
-  ctx.strokeStyle = '#f07b30';
-  ctx.lineWidth   = 2.5;
-  ctx.lineJoin    = 'round';
-  ctx.stroke();
+  ctx.strokeStyle='#f07b30'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
 
   // Pontos
-  const bgColor = isDark ? '#1a2a3e' : '#ffffff';
+  const bg = dark ? '#1a2a3e' : '#ffffff';
   data.forEach((e, i) => {
     const x = pL + i * stepX;
-    const y = pT + cH - ((e.profitMargin||0) / maxM) * cH;
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, 2*Math.PI);
-    ctx.fillStyle   = '#f07b30';
-    ctx.strokeStyle = bgColor;
-    ctx.lineWidth   = 2;
+    const y = pT + cH - ((e.profitMargin||0)/maxM) * cH;
+    ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI);
+    ctx.fillStyle='#f07b30'; ctx.strokeStyle=bg; ctx.lineWidth=2;
     ctx.fill(); ctx.stroke();
   });
 }
 
 // ═══════════════════════════════════════════════════════
-// EXPORTAR DASHBOARD CSV
+// EXPORTAR CSV
 // ═══════════════════════════════════════════════════════
 
 function exportDashboardCSV() {
@@ -723,17 +668,14 @@ function exportDashboardCSV() {
     e.printHours   || 0,
     (e.directCost  || 0).toFixed(2).replace('.',','),
     (e.finalPrice  || 0).toFixed(2).replace('.',','),
-    ((e.finalPrice - e.directCost) || 0).toFixed(2).replace('.',','),
-    (e.profitMargin || 0).toFixed(1).replace('.',','),
+    ((e.finalPrice - e.directCost)||0).toFixed(2).replace('.',','),
+    (e.profitMargin||0).toFixed(1).replace('.',','),
     e.quantity || 1,
   ].join(';')).join('\n');
 
-  const csv  = `${header}\n${rows}`;
-  const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\uFEFF'+header+'\n'+rows], { type:'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `3dpricer-historico-${new Date().toISOString().slice(0,10)}.csv`;
+  const a    = Object.assign(document.createElement('a'), { href:url, download:`3dpricer-${new Date().toISOString().slice(0,10)}.csv` });
   a.click();
   URL.revokeObjectURL(url);
   showToast('CSV exportado com sucesso!', 'fa-file-csv');
