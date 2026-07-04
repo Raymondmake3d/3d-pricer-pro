@@ -14,8 +14,8 @@ const urlsToCache = [
   '/3d-pricer-pro/suggestions.js',
   '/3d-pricer-pro/export.js',
   '/3d-pricer-pro/manifest.json',
-  '/3d-pricer-pro/icon.svg',         // ✅ raiz do projeto
- 
+  ''/3d-pricer-pro/icons/icon-192.png',
+'/3d-pricer-pro/icons/icon-512.png',
 ];
 
 self.addEventListener('install', event => {
