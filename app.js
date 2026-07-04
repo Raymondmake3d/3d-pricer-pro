@@ -777,6 +777,7 @@ document.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") window.closeComparator();
 });
+});
 // ═══════════════════════════════════════════════════════
 // DARK MODE
 // ═══════════════════════════════════════════════════════
