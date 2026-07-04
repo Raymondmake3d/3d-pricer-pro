@@ -444,45 +444,147 @@ window.calculate = function() {
 // ═══════════════════════════════════════════════════════
 // RENDERIZAÇÃO DO RESULTADO
 // ═══════════════════════════════════════════════════════
+window.calculate = function() {
+  const printerName      = window.getStr('printerName') || 'Impressora';
+  const printerType      = window.getStr('printerType');
+  const printerCostRaw   = window.getVal('printerCost');
+  const printerLifespan  = window.getVal('printerLifespan');
+  const printerWatts     = window.getVal('printerWatts');
+  const maintenanceRaw   = window.getVal('maintenanceCost');
+  const spaceCostMonthly = window.getVal('spaceCost');
+  const monthlyHours     = window.getVal('monthlyHours');
 
-window.renderResult = function(r) {
-  const ids = {
-    'r-material':      r.materialCost,
-    'r-support':       r.supportCost,
-    'r-finishing':     r.finishingCost,
-    'r-energy':        r.energyCost,
-    'r-depreciation':  r.depreciationCost,
-    'r-maintenance':   r.maintenanceCost,
-    'r-consumables':   r.consumablesCost,
-    'r-space':         r.spaceCost,
-    'r-labor':         r.laborCost,
-    'r-setup':         r.setupCost,
-    'r-washcure':      r.washCureCost,
-    'r-failure':       r.failureReserve,
-    'r-postprocess':   r.postProcessCost,
-    'r-packaging':     r.packagingCost,
-    'r-other':         r.otherCosts,
-    'r-directcost':    r.directCost,
-    'r-tax':           r.taxAmount,
-    'r-platform':      r.platformFeeAmount,
-    'r-profit':        r.profitAmount,
-    'r-finalprice':    r.finalPrice,
-    'r-minprice':      r.minPrice,
-    'r-premiumprice':  r.premiumPrice,
-    'r-batchprice':    r.batchPrice,
-    'r-discounted':    r.discountedPrice,
+  const materialType    = window.getStr('materialType');
+  const spoolCost       = window.getVal('spoolCost');
+  const spoolWeight     = window.getVal('spoolWeight');
+  const partWeight      = window.getVal('partWeight');
+  const postProcessCost = window.getVal('postProcessCost');
+  const packagingCost   = window.getVal('packagingCost');
+
+  const printHours    = window.getVal('printHours');
+  const energyRate    = window.getVal('energyRate');
+  const laborCostPerH = window.getVal('laborCost');   // R$/hora
+  const setupCost     = window.getVal('setupCost');   // R$ direto
+  const washCureCost  = window.getVal('washCureCost');
+  const failureRate   = window.getVal('failureReserve'); // % falhas
+  const otherCosts    = window.getVal('otherCosts');
+  const quantity      = Math.max(1, window.getVal('quantity') || 1);
+
+  const profitMargin  = window.getVal('profitMargin');
+  const taxRate       = window.getVal('taxRate');
+  const platformFee   = window.getVal('platformFee');
+  const maxDiscount   = window.getVal('maxDiscount');
+
+  // Validações básicas
+  if (printerLifespan <= 0 || spoolWeight <= 0 || printHours <= 0) {
+    window.showToast('Preencha os campos obrigatórios!', 'fa-triangle-exclamation');
+    return;
+  }
+
+  // ── Custos ──
+  const materialCostPerGram = spoolWeight > 0 ? spoolCost / spoolWeight : 0;
+  const materialCost        = materialCostPerGram * partWeight;
+  const finishingCost       = window.calcFinishingCost();
+  const energyCost          = (printerWatts / 1000) * printHours * energyRate;
+  const depreciationCost    = printerLifespan > 0
+    ? (printerCostRaw / printerLifespan) * printHours : 0;
+  const maintenanceCost     = monthlyHours > 0
+    ? (maintenanceRaw / monthlyHours) * printHours : 0;
+  const spaceCost           = monthlyHours > 0
+    ? (spaceCostMonthly / monthlyHours) * printHours : 0;
+  const consumablesCost     = window.calcConsumablesCost(printHours);
+  const laborCost           = laborCostPerH * printHours;
+  const failureReserve      = materialCost * (failureRate / 100);
+
+  const directCost =
+    materialCost + finishingCost +
+    energyCost + depreciationCost + maintenanceCost +
+    spaceCost + consumablesCost +
+    laborCost + setupCost + washCureCost +
+    failureReserve + postProcessCost +
+    packagingCost + otherCosts;
+
+  // ── Preço ──
+  const taxAmount           = directCost * (taxRate / 100);
+  const baseBeforePlatform  = directCost + taxAmount;
+  const withPlatform        = platformFee > 0
+    ? baseBeforePlatform / (1 - platformFee / 100)
+    : baseBeforePlatform;
+  const platformFeeAmount   = withPlatform - baseBeforePlatform;
+  const profitAmount        = withPlatform * (profitMargin / 100);
+  const finalPrice          = withPlatform + profitAmount;
+
+  const minPrice        = directCost * 1.05;
+  const premiumPrice    = finalPrice * 1.20;
+  const discountedPrice = finalPrice * (1 - maxDiscount / 100);
+  const batchPrice      = finalPrice * quantity;
+  const realMargin      = finalPrice > 0
+    ? ((profitAmount / finalPrice) * 100).toFixed(1) : '0.0';
+
+  window._lastResult = {
+    printerName, printerType, materialType,
+    partWeight, printHours, spoolCost, spoolWeight,
+    energyRate, laborCostPerH, taxRate, platformFee,
+    packagingCost, otherCosts, maxDiscount,
+    profitMargin, quantity, failureRate,
+    postProcessCost, materialCostPerGram,
+    materialCost, finishingCost, energyCost,
+    depreciationCost, maintenanceCost, spaceCost,
+    consumablesCost, laborCost, setupCost,
+    washCureCost, failureReserve, directCost,
+    taxAmount, platformFeeAmount, profitAmount,
+    finalPrice, minPrice, premiumPrice,
+    discountedPrice, batchPrice, realMargin,
   };
 
-  Object.entries(ids).forEach(([id, val]) => window.setResult(id, val));
+  window.renderResult(window._lastResult);
+  window.updateProgress();
 
-  const marginEl = document.getElementById('r-margin');
-  if (marginEl) {
-    const margin = r.finalPrice > 0
-      ? ((r.profitAmount / r.finalPrice) * 100).toFixed(1)
-      : '0.0';
-    marginEl.textContent = `${margin}%`;
-  }
+  const tips = window.generateDynamicTips?.(window._lastResult);
+  if (tips) window.renderDynamicTips?.(tips);
+
+  document.getElementById('result-section')?.classList.remove('hidden');
+  setTimeout(() =>
+    document.getElementById('result-section')
+      ?.scrollIntoView({ behavior:'smooth', block:'start' }), 100
+  );
+
+  window.showToast('Precificação concluída! 🎉', 'fa-circle-check');
 };
+
+window.renderResult = function(r) {
+  // KPIs principais
+  window.setResult('directCost',    r.directCost);
+  window.setResult('finalPrice',    r.finalPrice);
+  window.setResult('profitAmount',  r.profitAmount);
+  window.setResult('minPrice',      r.minPrice);
+  window.setResult('premiumPrice',  r.premiumPrice);
+  window.setResult('discountedPrice', r.discountedPrice);
+
+  // Margem e desconto (texto %)
+  const marginEl   = document.getElementById('profitMarginResult');
+  const discountEl = document.getElementById('maxDiscountResult');
+  if (marginEl)   marginEl.textContent   = `${r.realMargin}%`;
+  if (discountEl) discountEl.textContent = `${r.maxDiscount}%`;
+
+  // Detalhamento de custos
+  window.setResult('materialCost',         r.materialCost);
+  window.setResult('energyCost',           r.energyCost);
+  window.setResult('depreciationCost',     r.depreciationCost);
+  window.setResult('consumablesCost',      r.consumablesCost);
+  window.setResult('maintenanceCostResult',r.maintenanceCost);
+  window.setResult('spaceCostResult',      r.spaceCost);
+  window.setResult('laborCostResult',      r.laborCost);
+  window.setResult('setupCostResult',      r.setupCost);
+  window.setResult('washCureCostResult',   r.washCureCost);
+  window.setResult('postProcessCostResult',r.postProcessCost);
+  window.setResult('packagingCostResult',  r.packagingCost);
+  window.setResult('failureReserveResult', r.failureReserve);
+  window.setResult('otherCostsResult',     r.otherCosts);
+  window.setResult('taxAmount',            r.taxAmount);
+  window.setResult('platformFeeAmount',    r.platformFeeAmount);
+};
+
 
 // ═══════════════════════════════════════════════════════
 // DICAS DINÂMICAS
