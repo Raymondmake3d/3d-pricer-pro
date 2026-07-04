@@ -673,21 +673,113 @@ window.initProductFilters = function() {
 // ═══════════════════════════════════════════════════════
 // COMPARADOR DE MATERIAIS
 // ═══════════════════════════════════════════════════════
+// ===============================
+// COMPARADOR DE MATERIAIS (FIX)
+// ===============================
 
-window.openComparator = function() {
-  const modal   = document.getElementById('comparator-modal');
-  const content = document.getElementById('comparator-content');
-  if (!modal) return;
-  if (content && window.generateComparatorHTML) {
-    content.innerHTML = window.generateComparatorHTML();
-  }
-  modal.classList.remove('hidden');
+window.MATERIAL_SPECS = {
+  PLA:      { temp: "190–220°C", resistencia: "Média", flex: "Baixa", dificuldade: "Baixa", uso: "Peças decorativas, protótipos" },
+  PETG:     { temp: "220–250°C", resistencia: "Alta", flex: "Média", dificuldade: "Média", uso: "Peças funcionais gerais" },
+  ABS:      { temp: "230–260°C", resistencia: "Alta", flex: "Média", dificuldade: "Alta", uso: "Peças técnicas" },
+  ASA:      { temp: "240–270°C", resistencia: "Alta", flex: "Média", dificuldade: "Alta", uso: "Uso externo (UV)" },
+  TPU:      { temp: "210–240°C", resistencia: "Média", flex: "Alta", dificuldade: "Média", uso: "Peças flexíveis" },
+  "PLA-CF": { temp: "200–230°C", resistencia: "Alta", flex: "Baixa", dificuldade: "Média", uso: "Peças rígidas leves" },
+  "PETG-CF":{ temp: "230–260°C", resistencia: "Alta", flex: "Baixa", dificuldade: "Média", uso: "Peças estruturais" },
+  PA:       { temp: "240–280°C", resistencia: "Muito alta", flex: "Média", dificuldade: "Alta", uso: "Engrenagens, mecânica" },
+  "PA-CF":  { temp: "260–300°C", resistencia: "Muito alta", flex: "Baixa", dificuldade: "Alta", uso: "Alta performance" },
+  PC:       { temp: "260–310°C", resistencia: "Muito alta", flex: "Média", dificuldade: "Alta", uso: "Peças de engenharia" },
+  "RESIN-STD":  { temp: "N/A", resistencia: "Média", flex: "Baixa", dificuldade: "Média", uso: "Modelos visuais" },
+  "RESIN-ABS":  { temp: "N/A", resistencia: "Alta", flex: "Baixa", dificuldade: "Média", uso: "Protótipos funcionais" },
+  "RESIN-8K":   { temp: "N/A", resistencia: "Média", flex: "Baixa", dificuldade: "Média", uso: "Detalhe fino" },
+  "RESIN-FLEX": { temp: "N/A", resistencia: "Média", flex: "Alta", dificuldade: "Média", uso: "Peças elásticas" },
+  "RESIN-TOUGH":{ temp: "N/A", resistencia: "Alta", flex: "Média", dificuldade: "Média", uso: "Impacto moderado" },
+  "RESIN-CAST": { temp: "N/A", resistencia: "Baixa", flex: "Baixa", dificuldade: "Alta", uso: "Fundição" }
 };
 
-window.closeComparator = function() {
-  document.getElementById('comparator-modal')?.classList.add('hidden');
+function getMaterialOptionsFromSelect() {
+  const sel = document.getElementById("materialType");
+  if (!sel) return Object.keys(window.MATERIAL_SPECS);
+
+  const values = [...sel.options]
+    .map(o => o.value)
+    .filter(v => v && v !== "OTHER");
+
+  const unique = [...new Set(values)];
+  return unique.length ? unique : Object.keys(window.MATERIAL_SPECS);
+}
+
+window.openComparator = function () {
+  const modal = document.getElementById("comparator-modal");
+  const content = document.getElementById("comparator-content");
+  if (!modal || !content) return;
+
+  const mats = getMaterialOptionsFromSelect();
+  const opts = mats.map(m => `<option value="${m}">${m}</option>`).join("");
+
+  content.innerHTML = `
+    <div style="display:grid;gap:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;">
+        <select id="cmp-a" class="input">${opts}</select>
+        <select id="cmp-b" class="input">${opts}</select>
+        <button class="btn-small" onclick="window.runMaterialComparison()">Comparar</button>
+      </div>
+      <div id="cmp-result" style="overflow:auto;"></div>
+    </div>
+  `;
+
+  // Seleção inicial diferente
+  const a = document.getElementById("cmp-a");
+  const b = document.getElementById("cmp-b");
+  if (a && b && mats.length > 1) b.selectedIndex = 1;
+
+  modal.classList.remove("hidden");
+  window.runMaterialComparison();
 };
 
+window.runMaterialComparison = function () {
+  const aVal = document.getElementById("cmp-a")?.value;
+  const bVal = document.getElementById("cmp-b")?.value;
+  const out = document.getElementById("cmp-result");
+  if (!aVal || !bVal || !out) return;
+
+  const a = window.MATERIAL_SPECS[aVal] || {};
+  const b = window.MATERIAL_SPECS[bVal] || {};
+
+  out.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:.92rem;">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #334155;">Critério</th>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #334155;">${aVal}</th>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #334155;">${bVal}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:8px;">Temperatura</td><td style="padding:8px;">${a.temp || "—"}</td><td style="padding:8px;">${b.temp || "—"}</td></tr>
+        <tr><td style="padding:8px;">Resistência</td><td style="padding:8px;">${a.resistencia || "—"}</td><td style="padding:8px;">${b.resistencia || "—"}</td></tr>
+        <tr><td style="padding:8px;">Flexibilidade</td><td style="padding:8px;">${a.flex || "—"}</td><td style="padding:8px;">${b.flex || "—"}</td></tr>
+        <tr><td style="padding:8px;">Dificuldade</td><td style="padding:8px;">${a.dificuldade || "—"}</td><td style="padding:8px;">${b.dificuldade || "—"}</td></tr>
+        <tr><td style="padding:8px;">Uso recomendado</td><td style="padding:8px;">${a.uso || "—"}</td><td style="padding:8px;">${b.uso || "—"}</td></tr>
+      </tbody>
+    </table>
+  `;
+};
+
+window.closeComparator = function () {
+  const modal = document.getElementById("comparator-modal");
+  if (modal) modal.classList.add("hidden");
+};
+
+// Fechar clicando fora
+document.addEventListener("click", (e) => {
+  const overlay = document.getElementById("comparator-modal");
+  if (overlay && e.target === overlay) window.closeComparator();
+});
+
+// Fechar com ESC
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") window.closeComparator();
+});
 // ═══════════════════════════════════════════════════════
 // DARK MODE
 // ═══════════════════════════════════════════════════════
