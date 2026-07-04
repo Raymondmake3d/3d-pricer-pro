@@ -866,7 +866,17 @@ window.closePWABanner = function() {
 // ═══════════════════════════════════════════════════════
 // INICIALIZAÇÃO
 // ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Força modal fechado ao iniciar
+  const modal = document.getElementById('comparator-modal');
+  if (modal) modal.classList.add('hidden');
 
+  // Garante conteúdo mínimo (evita modal vazio)
+  const content = document.getElementById('comparator-content');
+  if (content && !content.innerHTML.trim()) {
+    content.innerHTML = '<p style="color:#94a3b8;padding:12px;">Selecione materiais para comparar.</p>';
+  }
+});
 document.addEventListener('DOMContentLoaded', () => {
   window.applyStoredTheme();
   window.setDefaults();
